@@ -1,0 +1,235 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ action }} un élément du feed</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'vendor/fonts/boxicons.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
+</head>
+
+<body>
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo">
+                    <a href="/" class="app-brand-link">
+                        <span class="app-brand-text demo menu-text fw-bolder ms-2">EduSocial</span>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item">
+                        <a href="/" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                            <div>Accueil</div>
+                        </a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="{% url 'feed:list' %}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-news"></i>
+                            <div>Feed</div>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="layout-page">
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm"></i>
+                        </a>
+                    </div>
+                    <div class="navbar-nav-right d-flex align-items-center">
+                        <div class="navbar-nav align-items-center">
+                            <div class="nav-item d-flex align-items-center">
+                                <span class="fw-semibold">{{ action }} un élément</span>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <nav aria-label="breadcrumb" class="mb-3">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'feed:list' %}">Feed</a>
+                                </li>
+                                {% if feed_item %}
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'feed:detail' feed_item.pk %}">{{ feed_item.title }}</a>
+                                </li>
+                                {% endif %}
+                                <li class="breadcrumb-item active">{{ action }}</li>
+                            </ol>
+                        </nav>
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h4 class="mb-0">
+                                            <i class="bx {% if action == 'Créer' %}bx-plus-circle{% else %}bx-edit{% endif %} me-1"></i>
+                                            {{ action }} un élément du feed
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            <i class="bx bx-error-circle"></i>
+                                            <strong>Erreurs:</strong>
+                                            <ul class="mb-0">
+                                                {% for error in form.non_field_errors %}
+                                                <li>{{ error }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+
+                                        <form method="post" novalidate>
+                                            {% csrf_token %}
+
+                                            <div class="mb-3">
+                                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                                    <strong>{{ form.title.label }}</strong>
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.title }}
+                                                {% if form.title.help_text %}
+                                                <div class="form-text">{{ form.title.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.title.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.title.errors.0 }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="{{ form.description.id_for_label }}" class="form-label">
+                                                    <strong>{{ form.description.label }}</strong>
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.description }}
+                                                {% if form.description.help_text %}
+                                                <div class="form-text">{{ form.description.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.description.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.description.errors.0 }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="{{ form.content_type.id_for_label }}" class="form-label">
+                                                    <strong>{{ form.content_type.label }}</strong>
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                {{ form.content_type }}
+                                                {% if form.content_type.help_text %}
+                                                <div class="form-text">{{ form.content_type.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.content_type.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.content_type.errors.0 }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="{{ form.deadline.id_for_label }}" class="form-label">
+                                                    <strong>{{ form.deadline.label }}</strong>
+                                                </label>
+                                                {{ form.deadline }}
+                                                {% if form.deadline.help_text %}
+                                                <div class="form-text">{{ form.deadline.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.deadline.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.deadline.errors.0 }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <div class="form-check">
+                                                    {{ form.is_active }}
+                                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                                        {{ form.is_active.label }}
+                                                    </label>
+                                                </div>
+                                                {% if form.is_active.help_text %}
+                                                <div class="form-text">{{ form.is_active.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.is_active.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.is_active.errors.0 }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+
+                                            <div class="d-flex gap-2 mt-4">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bx bx-check me-1"></i> Enregistrer
+                                                </button>
+                                                <a href="{% if feed_item %}{% url 'feed:detail' feed_item.pk %}{% else %}{% url 'feed:list' %}{% endif %}" 
+                                                   class="btn btn-label-secondary">
+                                                    <i class="bx bx-x me-1"></i> Annuler
+                                                </a>
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <small class="text-muted">
+                                                    <span class="text-danger">*</span> Champs obligatoires
+                                                </small>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl py-2">
+                            © 2025 EduSocial - Plateforme éducative IA
+                        </div>
+                    </footer>
+                    <div class="content-backdrop fade"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static 'vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'vendor/js/menu.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

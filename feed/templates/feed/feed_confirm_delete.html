@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supprimer - {{ feed_item.title }}</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'vendor/fonts/boxicons.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
+</head>
+
+<body>
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo">
+                    <a href="/" class="app-brand-link">
+                        <span class="app-brand-text demo menu-text fw-bolder ms-2">EduSocial</span>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item">
+                        <a href="/" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                            <div>Accueil</div>
+                        </a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="{% url 'feed:list' %}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-news"></i>
+                            <div>Feed</div>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="layout-page">
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm"></i>
+                        </a>
+                    </div>
+                    <div class="navbar-nav-right d-flex align-items-center">
+                        <div class="navbar-nav align-items-center">
+                            <div class="nav-item d-flex align-items-center">
+                                <span class="fw-semibold">Confirmer la suppression</span>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <nav aria-label="breadcrumb" class="mb-3">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'feed:list' %}">Feed</a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'feed:detail' feed_item.pk %}">{{ feed_item.title }}</a>
+                                </li>
+                                <li class="breadcrumb-item active">Supprimer</li>
+                            </ol>
+                        </nav>
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-6">
+                                <div class="card border-danger">
+                                    <div class="card-header bg-danger">
+                                        <h4 class="mb-0 text-white">
+                                            <i class="bx bx-error-circle me-1"></i>
+                                            Confirmer la suppression
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-warning d-flex align-items-center">
+                                            <i class="bx bx-info-circle me-2"></i>
+                                            <div>
+                                                <strong>Attention !</strong> Cette action est irréversible.
+                                            </div>
+                                        </div>
+
+                                        <p class="mb-3">
+                                            Êtes-vous sûr de vouloir supprimer cet élément ?
+                                        </p>
+
+                                        <div class="card bg-light mb-4">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ feed_item.title }}</h5>
+                                                <p class="card-text text-muted">
+                                                    {{ feed_item.description|truncatewords:20 }}
+                                                </p>
+                                                <div class="small text-muted">
+                                                    <div class="mb-2">
+                                                        <i class="bx bx-tag me-1"></i> 
+                                                        <strong>Type:</strong> {{ feed_item.get_content_type_display }}
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <i class="bx bx-user me-1"></i> 
+                                                        <strong>Auteur:</strong> {{ feed_item.author.username }}
+                                                    </div>
+                                                    <div>
+                                                        <i class="bx bx-calendar me-1"></i> 
+                                                        <strong>Créé le:</strong> {{ feed_item.created_at|date:"d/m/Y à H:i" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" class="btn btn-danger flex-fill">
+                                                    <i class="bx bx-trash me-1"></i> Oui, supprimer définitivement
+                                                </button>
+                                                <a href="{% url 'feed:detail' feed_item.pk %}" 
+                                                   class="btn btn-label-secondary flex-fill">
+                                                    <i class="bx bx-x me-1"></i> Non, annuler
+                                                </a>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl py-2">
+                            © 2025 EduSocial - Plateforme éducative IA
+                        </div>
+                    </footer>
+                    <div class="content-backdrop fade"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static 'vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'vendor/js/menu.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

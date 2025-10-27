@@ -22,6 +22,8 @@ from web_project.views import SystemView
 urlpatterns = [
     path("admin/", admin.site.urls),
 
+    path('feed/', include('feed.urls')),
+
     # Dashboard urls
     path("", include("apps.dashboards.urls")),
 
