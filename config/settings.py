@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     "apps.forms",
     "apps.form_layouts",
     "apps.tables",
+    'rest_framework',
+    'resources',
 ]
 
 MIDDLEWARE = [
@@ -93,6 +95,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 DATABASES = {
