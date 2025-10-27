@@ -11,7 +11,8 @@ class ForceMongoBackendMiddleware:
         self.django_backend = "django.contrib.auth.backends.ModelBackend"
 
     def __call__(self, request):
-        if request.session.get(BACKEND_SESSION_KEY) == self.django_backend:
+        backend = request.session.get(BACKEND_SESSION_KEY)
+
+        if backend != self.backend_path:
             request.session[BACKEND_SESSION_KEY] = self.backend_path
         return self.get_response(request)
-

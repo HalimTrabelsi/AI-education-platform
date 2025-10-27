@@ -1,4 +1,9 @@
+from pathlib import Path
+from uuid import uuid4
+
 from django import forms
+from django.core.files.storage import default_storage
+
 from .models import User
 
 
@@ -19,6 +24,8 @@ class StyledFormMixin:
             attrs = {"class": "form-control"}
             if isinstance(field.widget, forms.Select):
                 attrs["class"] = "form-select"
+            if isinstance(field.widget, forms.FileInput):
+                attrs.setdefault("accept", "image/*")
             attrs.update(self.widget_classes.get(name, {}))
             field.widget.attrs = {**attrs, **field.widget.attrs}
 
@@ -66,10 +73,16 @@ class RegisterForm(StyledFormMixin, forms.Form):
         choices=ROLE_CHOICES,
         widget=forms.Select(),
     )
+    profile_image = forms.ImageField(
+        label="Photo de profil",
+        required=False,
+        error_messages={"invalid": "Veuillez choisir une image valide."},
+    )
 
     widget_classes = {
         "password1": {"class": "form-control input-password-toggle"},
         "password2": {"class": "form-control input-password-toggle"},
+        "profile_image": {"class": "form-control"},
     }
 
     def clean_username(self):
@@ -98,6 +111,14 @@ class RegisterForm(StyledFormMixin, forms.Form):
             role=self.cleaned_data["role"],
         )
         user.set_password(self.cleaned_data["password1"])
+
+        image = self.files.get("profile_image")
+        if image:
+            ext = Path(image.name).suffix or ".png"
+            filename = f"profiles/{uuid4().hex}{ext}"
+            stored_path = default_storage.save(filename, image)
+            user.profile_image = stored_path.replace("\\", "/")
+
         user.save()
         return user
 

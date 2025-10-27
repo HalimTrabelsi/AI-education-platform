@@ -12,6 +12,7 @@ class User(Document):
         choices=["student", "teacher", "moderator"],
         default="student",
     )
+    profile_image = StringField()
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"

@@ -1,4 +1,6 @@
 from types import SimpleNamespace
+from django.conf import settings
+from django.templatetags.static import static
 
 
 class DjangoUserAdapter:
@@ -61,3 +63,26 @@ class DjangoUserAdapter:
 
     def get_document(self):
         return self._user
+
+    @property
+    def display_name(self):
+        return getattr(self._user, "username", "") or getattr(self._user, "email", "")
+
+    @property
+    def role_label(self):
+        labels = {
+            "student": "Etudiant",
+            "teacher": "Enseignant",
+            "moderator": "Moderateur",
+        }
+        role = getattr(self._user, "role", "")
+        return labels.get(role, role.title())
+
+    @property
+    def profile_image_url(self):
+        image = getattr(self._user, "profile_image", None)
+        if image:
+            base = settings.MEDIA_URL.rstrip("/")
+            path = image.lstrip("/")
+            return f"{base}/{path}" if base else f"/{path}"
+        return static("img/avatars/1.png")

@@ -43,9 +43,9 @@ def _redirect_for_role(user):
 
 def register_view(request):
     if request.method == "POST":
-        form = RegisterForm(request.POST)
+        form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
-            user = DjangoUserAdapter(form.save())
+            form.save()
             messages.success(request, "Compte cree avec succes ! Veuillez vous connecter.")
             return redirect("accounts:login")
         messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
@@ -67,6 +67,7 @@ def login_view(request):
                 password=form.cleaned_data["password"],
             )
             if user:
+                request.session.pop(SESSION_KEY, None)
                 auth_login(request, user, backend="accounts.backends.MongoUserBackend")
                 messages.success(request, "Connexion reussie.")
                 return redirect(_redirect_for_role(user))
