@@ -3,5 +3,7 @@ pip install -r requirements.txt
 python manage.py migrate
 
 User: halimtrabelsi73@gmail.com
-      Halim123
+      Halim123|
+
+Start server :
 python manage.py runserver
