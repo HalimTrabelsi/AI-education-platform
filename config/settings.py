@@ -65,6 +65,7 @@ MIDDLEWARE = [
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "accounts.middleware.ForceMongoBackendMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -98,8 +99,7 @@ TEMPLATES = [
 ]
 
 LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "dashboard"
-LOGIN_REDIRECT_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "index"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
@@ -113,10 +113,11 @@ DATABASES = {
 }
 connect(
     db=os.getenv("MONGO_DB", "edusocial"),
-    host=os.getenv("MONGO_URI"),
+    host=os.getenv("MONGO_URI", "mongodb://localhost:27017/edusocial"),
     alias="default",
 )
-
+AUTHENTICATION_BACKENDS = ["accounts.backends.MongoUserBackend"]
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"  # avoid hitting the SQL database
 
 
 AUTH_PASSWORD_VALIDATORS = [

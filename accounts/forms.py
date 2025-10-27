@@ -1,21 +1,119 @@
 from django import forms
-from django.contrib.auth.models import User
-from .models import Profile
+from .models import User
 
-class RegisterForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput)
-    role = forms.ChoiceField(choices=Profile.ROLE_CHOICES)
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'role']
+ROLE_CHOICES = [
+    ("student", "Etudiant"),
+    ("teacher", "Enseignant"),
+    ("moderator", "Moderateur"),
+]
 
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.set_password(self.cleaned_data['password'])
-        if commit:
-            user.save()
-            # mettre à jour le profil
-            user.profile.role = self.cleaned_data['role']
-            user.profile.save()
+
+class StyledFormMixin:
+    """Inject Sneat friendly classes and placeholders on init."""
+
+    widget_classes = {}
+
+    def _apply_widget_attrs(self):
+        for name, field in self.fields.items():
+            attrs = {"class": "form-control"}
+            if isinstance(field.widget, forms.Select):
+                attrs["class"] = "form-select"
+            attrs.update(self.widget_classes.get(name, {}))
+            field.widget.attrs = {**attrs, **field.widget.attrs}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._apply_widget_attrs()
+
+
+class RegisterForm(StyledFormMixin, forms.Form):
+    username = forms.CharField(
+        max_length=150,
+        label="Nom d'utilisateur",
+        error_messages={"required": "Veuillez saisir un nom d'utilisateur."},
+        widget=forms.TextInput(
+            attrs={"placeholder": "jdupont", "autocomplete": "username"}
+        ),
+    )
+    email = forms.EmailField(
+        label="Adresse e-mail",
+        error_messages={"required": "Veuillez saisir une adresse e-mail valide."},
+        widget=forms.EmailInput(
+            attrs={
+                "placeholder": "jean.dupont@email.com",
+                "autocomplete": "email",
+            }
+        ),
+    )
+    password1 = forms.CharField(
+        label="Mot de passe",
+        error_messages={"required": "Veuillez saisir un mot de passe."},
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "********", "autocomplete": "new-password"}
+        ),
+    )
+    password2 = forms.CharField(
+        label="Confirmation du mot de passe",
+        error_messages={"required": "Veuillez confirmer le mot de passe."},
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "********", "autocomplete": "new-password"}
+        ),
+    )
+    role = forms.ChoiceField(
+        label="Role",
+        error_messages={"required": "Veuillez choisir un role."},
+        choices=ROLE_CHOICES,
+        widget=forms.Select(),
+    )
+
+    widget_classes = {
+        "password1": {"class": "form-control input-password-toggle"},
+        "password2": {"class": "form-control input-password-toggle"},
+    }
+
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        if User.objects(username=username):
+            raise forms.ValidationError("Nom d'utilisateur deja pris.")
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data["email"]
+        if User.objects(email=email):
+            raise forms.ValidationError("Adresse e-mail deja utilisee.")
+        return email
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("password1") and cleaned.get("password2"):
+            if cleaned["password1"] != cleaned["password2"]:
+                self.add_error("password2", "Les mots de passe ne correspondent pas.")
+        return cleaned
+
+    def save(self):
+        user = User(
+            username=self.cleaned_data["username"],
+            email=self.cleaned_data["email"],
+            role=self.cleaned_data["role"],
+        )
+        user.set_password(self.cleaned_data["password1"])
+        user.save()
         return user
+
+
+class LoginForm(StyledFormMixin, forms.Form):
+    username = forms.CharField(
+        label="Nom d'utilisateur",
+        error_messages={"required": "Veuillez saisir votre nom d'utilisateur."},
+        widget=forms.TextInput(
+            attrs={"placeholder": "jdupont", "autocomplete": "username"}
+        ),
+    )
+    password = forms.CharField(
+        label="Mot de passe",
+        error_messages={"required": "Veuillez saisir votre mot de passe."},
+        widget=forms.PasswordInput(
+            attrs={"placeholder": "********", "autocomplete": "current-password"}
+        ),
+    )
