@@ -33,6 +33,13 @@ ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
+    "accounts",
+    "resources",
+    "feed",
+    "quiz",
+    "moderation",
+    "searchx",
+    "community",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -90,6 +97,9 @@ TEMPLATES = [
     },
 ]
 
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGIN_REDIRECT_URL = "accounts:login"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
