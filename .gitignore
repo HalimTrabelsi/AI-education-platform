@@ -1,4 +1,20 @@
 # Ignoring src and assets folders
+# Django / Python
+__pycache__/
+*.pyc
+*.pyo
+*.db
+db.sqlite3
+*.log
+# Ignore virtual environments
+venv/
+.venv/
+staticfiles/
+media/
+
+.env
+.idea/
+.vscode/
 
 # Exclude everything from vendors
 /src/assets/vendor

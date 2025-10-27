@@ -1,0 +1,7 @@
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+python manage.py migrate
+
+User: halimtrabelsi73@gmail.com
+      Halim123
+python manage.py runserver
