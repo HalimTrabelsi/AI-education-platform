@@ -14,6 +14,29 @@
     <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
     <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
+    
+    <style>
+        .ai-suggestion-box {
+            background: #f8f9fa;
+            border-left: 4px solid #17a2b8;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .ai-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+    </style>
 </head>
 
 <body>
@@ -88,10 +111,11 @@
                         <div class="row justify-content-center">
                             <div class="col-lg-8">
                                 <div class="card">
-                                    <div class="card-header">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
                                         <h4 class="mb-0">
                                             <i class="bx {% if action == 'Créer' %}bx-plus-circle{% else %}bx-edit{% endif %} me-1"></i>
                                             {{ action }} un élément du feed
+                                            <span class="ai-badge">🤖 IA Activée</span>
                                         </h4>
                                     </div>
                                     <div class="card-body">
@@ -107,9 +131,10 @@
                                         </div>
                                         {% endif %}
 
-                                        <form method="post" novalidate>
+                                        <form method="post" novalidate id="feedForm">
                                             {% csrf_token %}
 
+                                            <!-- Titre -->
                                             <div class="mb-3">
                                                 <label for="{{ form.title.id_for_label }}" class="form-label">
                                                     <strong>{{ form.title.label }}</strong>
@@ -126,22 +151,7 @@
                                                 {% endif %}
                                             </div>
 
-                                            <div class="mb-3">
-                                                <label for="{{ form.description.id_for_label }}" class="form-label">
-                                                    <strong>{{ form.description.label }}</strong>
-                                                    <span class="text-danger">*</span>
-                                                </label>
-                                                {{ form.description }}
-                                                {% if form.description.help_text %}
-                                                <div class="form-text">{{ form.description.help_text }}</div>
-                                                {% endif %}
-                                                {% if form.description.errors %}
-                                                <div class="invalid-feedback d-block">
-                                                    {{ form.description.errors.0 }}
-                                                </div>
-                                                {% endif %}
-                                            </div>
-
+                                            <!-- Type de contenu -->
                                             <div class="mb-3">
                                                 <label for="{{ form.content_type.id_for_label }}" class="form-label">
                                                     <strong>{{ form.content_type.label }}</strong>
@@ -158,6 +168,30 @@
                                                 {% endif %}
                                             </div>
 
+                                            <!-- Description avec assistance IA -->
+                                            <div class="mb-3">
+                                                <label for="{{ form.description.id_for_label }}" class="form-label">
+                                                    <strong>{{ form.description.label }}</strong>
+                                                    <span class="text-danger">*</span>
+                                                    <button type="button" class="btn btn-sm btn-outline-info ms-2" id="checkContentBtn">
+                                                        <i class="bx bx-brain"></i> Vérifier avec IA
+                                                    </button>
+                                                </label>
+                                                {{ form.description }}
+                                                {% if form.description.help_text %}
+                                                <div class="form-text">{{ form.description.help_text }}</div>
+                                                {% endif %}
+                                                {% if form.description.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.description.errors.0 }}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                <!-- Zone de suggestions IA -->
+                                                <div id="aiSuggestionsContainer"></div>
+                                            </div>
+
+                                            <!-- Date limite -->
                                             <div class="mb-3">
                                                 <label for="{{ form.deadline.id_for_label }}" class="form-label">
                                                     <strong>{{ form.deadline.label }}</strong>
@@ -173,6 +207,7 @@
                                                 {% endif %}
                                             </div>
 
+                                            <!-- Actif -->
                                             <div class="mb-3">
                                                 <div class="form-check">
                                                     {{ form.is_active }}
@@ -190,6 +225,7 @@
                                                 {% endif %}
                                             </div>
 
+                                            <!-- Boutons d'action -->
                                             <div class="d-flex gap-2 mt-4">
                                                 <button type="submit" class="btn btn-primary">
                                                     <i class="bx bx-check me-1"></i> Enregistrer
@@ -206,6 +242,23 @@
                                                 </small>
                                             </div>
                                         </form>
+                                    </div>
+                                </div>
+
+                                <!-- Carte d'aide IA -->
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="bx bx-help-circle text-info"></i> 
+                                            Aide de l'assistant IA
+                                        </h6>
+                                        <ul class="mb-0">
+                                            <li><strong>Programme:</strong> Ajoutez chapitres, numéros de page</li>
+                                            <li><strong>Échéance:</strong> Précisez la date et le mode de rendu</li>
+                                            <li><strong>Difficulté:</strong> Formulez une question précise</li>
+                                            <li><strong>Ressource:</strong> Incluez des liens utiles</li>
+                                            <li><strong>Annonce:</strong> Utilisez un ton formel</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>
@@ -231,5 +284,166 @@
     <script src="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
     <script src="{% static 'vendor/js/menu.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Script IA en temps réel -->
+    <script>
+    $(document).ready(function() {
+        const checkBtn = $('#checkContentBtn');
+        const descriptionField = $('#id_description');
+        const contentTypeField = $('#id_content_type');
+        const suggestionsContainer = $('#aiSuggestionsContainer');
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+        
+        // Fonction pour vérifier le contenu avec l'IA
+        checkBtn.on('click', function() {
+            const text = descriptionField.val().trim();
+            const contentType = contentTypeField.val();
+            
+            if (!text) {
+                showAlert('Veuillez entrer une description d\'abord.', 'warning');
+                return;
+            }
+            
+            // Désactiver le bouton et afficher le loading
+            checkBtn.prop('disabled', true);
+            checkBtn.html('<span class="spinner-border spinner-border-sm me-1"></span> Analyse...');
+            
+            // Requête AJAX
+            $.ajax({
+                url: "{% url 'feed:ai_check_content' %}",
+                type: 'POST',
+                data: {
+                    text: text,
+                    content_type: contentType,
+                    csrfmiddlewaretoken: csrfToken
+                },
+                success: function(data) {
+                    checkBtn.prop('disabled', false);
+                    checkBtn.html('<i class="bx bx-brain"></i> Vérifier avec IA');
+                    
+                    if (data.success) {
+                        displayAISuggestions(data);
+                    } else {
+                        showAlert('Erreur: ' + (data.error || 'Inconnu'), 'danger');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    checkBtn.prop('disabled', false);
+                    checkBtn.html('<i class="bx bx-brain"></i> Vérifier avec IA');
+                    showAlert('Erreur réseau: ' + error, 'danger');
+                }
+            });
+        });
+        
+        // Afficher les suggestions de l'IA
+        function displayAISuggestions(data) {
+            let html = '';
+            let hasContent = false;
+            
+            // Suggestions d'amélioration
+            if (data.improvements && data.improvements.length > 0) {
+                hasContent = true;
+                html += '<div class="alert alert-warning mt-3">';
+                html += '<h6 class="alert-heading"><i class="bx bx-bulb"></i> Suggestions d\'amélioration:</h6>';
+                html += '<ul class="mb-0">';
+                data.improvements.forEach(function(suggestion) {
+                    html += '<li>' + escapeHtml(suggestion) + '</li>';
+                });
+                html += '</ul></div>';
+            }
+            
+            // Dates extraites
+            if (data.extracted_dates && data.extracted_dates.length > 0) {
+                hasContent = true;
+                html += '<div class="alert alert-info mt-3">';
+                html += '<h6 class="alert-heading"><i class="bx bx-calendar"></i> Dates détectées:</h6>';
+                html += '<p class="mb-0">' + data.extracted_dates.join(', ') + '</p>';
+                html += '</div>';
+            }
+            
+            // Suggestion de ton
+            if (data.tone_suggestion) {
+                hasContent = true;
+                html += '<div class="alert alert-secondary mt-3">';
+                html += '<i class="bx bx-message-detail"></i> ' + escapeHtml(data.tone_suggestion);
+                html += '</div>';
+            }
+            
+            // Problèmes de grammaire
+            if (data.grammar_issues && data.grammar_issues.length > 0) {
+                hasContent = true;
+                html += '<div class="alert alert-danger mt-3">';
+                html += '<h6 class="alert-heading"><i class="bx bx-edit"></i> Grammaire et orthographe:</h6>';
+                html += '<ul class="mb-0">';
+                data.grammar_issues.forEach(function(issue) {
+                    html += '<li>' + escapeHtml(issue.message);
+                    if (issue.replacements && issue.replacements.length > 0) {
+                        html += ' <small class="text-muted">(Suggestions: ' + 
+                                issue.replacements.join(', ') + ')</small>';
+                    }
+                    html += '</li>';
+                });
+                html += '</ul></div>';
+            }
+            
+            // Si aucun problème
+            if (!hasContent) {
+                html = '<div class="alert alert-success mt-3">';
+                html += '<i class="bx bx-check-circle"></i> ';
+                html += '<strong>Excellent !</strong> Aucun problème détecté. Votre contenu est de bonne qualité.';
+                html += '</div>';
+            }
+            
+            suggestionsContainer.html(html);
+            
+            // Scroll vers les suggestions
+            $('html, body').animate({
+                scrollTop: suggestionsContainer.offset().top - 100
+            }, 500);
+        }
+        
+        // Afficher une alerte temporaire
+        function showAlert(message, type) {
+            const alert = $('<div class="alert alert-' + type + ' alert-dismissible mt-3">' +
+                          message +
+                          '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                          '</div>');
+            suggestionsContainer.html(alert);
+            
+            setTimeout(function() {
+                alert.fadeOut(function() {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+        
+        // Échapper le HTML pour éviter les failles XSS
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+        
+        // Auto-vérification après 3 secondes d'inactivité
+        let typingTimer;
+        descriptionField.on('keyup', function() {
+            clearTimeout(typingTimer);
+            if ($(this).val().length > 50) {
+                typingTimer = setTimeout(function() {
+                    checkBtn.trigger('click');
+                }, 3000);
+            }
+        });
+        
+        descriptionField.on('keydown', function() {
+            clearTimeout(typingTimer);
+        });
+    });
+    </script>
 </body>
 </html>

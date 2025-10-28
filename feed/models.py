@@ -1,5 +1,5 @@
-from mongoengine import Document, StringField, DateTimeField, BooleanField
-from datetime import datetime
+from mongoengine import Document, StringField, DateTimeField, BooleanField, ListField, FloatField
+from datetime import datetime, timedelta
 from django.utils import timezone
 
 
@@ -28,6 +28,13 @@ class FeedItem(Document):
     updated_at = DateTimeField(default=datetime.utcnow, verbose_name="Dernière mise à jour")
     deadline = DateTimeField(null=True, verbose_name="Date limite")
     is_active = BooleanField(default=True, verbose_name="Actif")
+    
+    ai_suggestions = ListField(StringField(), verbose_name="Suggestions IA")
+    ai_extracted_dates = ListField(StringField(), verbose_name="Dates extraites")
+    ai_quality_score = FloatField(default=0.0, verbose_name="Score qualité IA")
+    ai_tone = StringField(max_length=50, verbose_name="Ton détecté")
+    suggested_resources = ListField(StringField(), verbose_name="Ressources suggérées")
+    is_ai_generated = BooleanField(default=False, verbose_name="Généré par IA")
     
     meta = {
         'collection': 'feed_feeditem',
