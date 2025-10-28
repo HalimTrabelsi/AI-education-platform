@@ -1,0 +1,126 @@
+{% extends "layout/layout_blank.html" %}
+{% load static %}
+
+{% block title %}Inscription{% endblock %}
+
+{% block page_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'vendor/css/pages/page-auth.css' %}">
+{% endblock page_css %}
+
+{% block content %}
+  <div class="container-xxl">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+      <div class="authentication-inner">
+        <div class="card px-sm-6 px-0">
+          <div class="card-body">
+            <div class="app-brand justify-content-center mb-6">
+              <a href="{% url 'index' %}" class="app-brand-link gap-2">
+                <span class="app-brand-logo demo">{% include 'partials/logo.html' %}</span>
+                <span class="app-brand-text demo text-heading fw-bold">{% get_theme_variables 'template_name' %}</span>
+              </a>
+            </div>
+
+            <h4 class="mb-1">Creer un compte</h4>
+            <p class="mb-6">Rejoignez la plateforme et choisissez votre role.</p>
+            <form method="post" novalidate class="mb-6">
+              {% csrf_token %}
+              {{ form.non_field_errors }}
+
+              <div class="mb-6">
+                <label class="form-label" for="{{ form.username.id_for_label }}">
+                  {{ form.username.label }}
+                </label>
+                {{ form.username }}
+                <div class="text-danger small mt-1">
+                  {% if form.username.errors %}
+                    {{ form.username.errors|join:", " }}
+                  {% else %}
+                    &nbsp;
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <label class="form-label" for="{{ form.email.id_for_label }}">
+                  {{ form.email.label }}
+                </label>
+                {{ form.email }}
+                <div class="text-danger small mt-1">
+                  {% if form.email.errors %}
+                    {{ form.email.errors|join:", " }}
+                  {% else %}
+                    &nbsp;
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <label class="form-label" for="{{ form.password1.id_for_label }}">
+                  {{ form.password1.label }}
+                </label>
+                <div class="input-group input-group-merge">
+                  {{ form.password1 }}
+                  <span class="input-group-text cursor-pointer">
+                    <i class="icon-base bx bx-hide"></i>
+                  </span>
+                </div>
+                <div class="text-danger small mt-1">
+                  {% if form.password1.errors %}
+                    {{ form.password1.errors|join:", " }}
+                  {% else %}
+                    &nbsp;
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <label class="form-label" for="{{ form.password2.id_for_label }}">
+                  {{ form.password2.label }}
+                </label>
+                <div class="input-group input-group-merge">
+                  {{ form.password2 }}
+                  <span class="input-group-text cursor-pointer">
+                    <i class="icon-base bx bx-hide"></i>
+                  </span>
+                </div>
+                <div class="text-danger small mt-1">
+                  {% if form.password2.errors %}
+                    {{ form.password2.errors|join:", " }}
+                  {% else %}
+                    &nbsp;
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <label class="form-label" for="{{ form.role.id_for_label }}">
+                  {{ form.role.label }}
+                </label>
+                {{ form.role }}
+                <div class="text-danger small mt-1">
+                  {% if form.role.errors %}
+                    {{ form.role.errors|join:", " }}
+                  {% else %}
+                    &nbsp;
+                  {% endif %}
+                </div>
+              </div>
+
+              <button class="btn btn-primary d-grid w-100" type="submit">
+                Creer un compte
+              </button>
+            </form>
+
+            <p class="text-center">
+              <span>Deja inscrit ?</span>
+              <a href="{% url 'accounts:login' %}">
+                <span>Se connecter</span>
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

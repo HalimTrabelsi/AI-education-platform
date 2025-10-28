@@ -24,6 +24,7 @@ urlpatterns = [
 
     path('feed/', include('feed.urls')),
 
+    path("accounts/", include("accounts.urls")),
     # Dashboard urls
     path("", include("apps.dashboards.urls")),
 

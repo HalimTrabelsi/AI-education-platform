@@ -33,6 +33,13 @@ ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
+    "accounts",
+    "resources",
+    "feed",
+    "quiz",
+    "moderation",
+    "searchx",
+    "community",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -49,7 +56,7 @@ INSTALLED_APPS = [
     "apps.forms",
     "apps.form_layouts",
     "apps.tables",
-    'feed',
+    
 ]
 
 MIDDLEWARE = [
@@ -59,6 +66,7 @@ MIDDLEWARE = [
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "accounts.middleware.ForceMongoBackendMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -91,6 +99,8 @@ TEMPLATES = [
     },
 ]
 
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "index"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
@@ -104,10 +114,12 @@ DATABASES = {
 }
 connect(
     db=os.getenv("MONGO_DB", "edusocial"),
-    host=os.getenv("MONGO_URI"),
+    host=os.getenv("MONGO_URI", "mongodb://localhost:27017/edusocial"),
     alias="default",
 )
-
+AUTHENTICATION_BACKENDS = ["accounts.backends.MongoUserBackend"]
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+ 
 
 
 AUTH_PASSWORD_VALIDATORS = [

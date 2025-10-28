@@ -1,0 +1,81 @@
+{% extends "layout/layout_blank.html" %}
+{% load static %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block page_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'vendor/css/pages/page-auth.css' %}">
+{% endblock page_css %}
+
+{% block content %}
+  <div class="container-xxl">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+      <div class="authentication-inner">
+        <div class="card px-sm-6 px-0">
+          <div class="card-body">
+            <div class="app-brand justify-content-center mb-6">
+              <a href="{% url 'index' %}" class="app-brand-link gap-2">
+                <span class="app-brand-logo demo">{% include 'partials/logo.html' %}</span>
+                <span class="app-brand-text demo text-heading fw-bold">{% get_theme_variables 'template_name' %}</span>
+              </a>
+            </div>
+
+            <h4 class="mb-1">Ravi de vous revoir &#128075;</h4>
+            <p class="mb-6">Connectez-vous pour acc&eacute;der &agrave; votre espace.</p>
+            <form method="post" novalidate class="mb-6">
+              {% csrf_token %}
+              {{ form.non_field_errors }}
+
+              <div class="mb-6">
+                <label class="form-label" for="{{ form.username.id_for_label }}">
+                  {{ form.username.label }}
+                </label>
+                {{ form.username }}
+                <div class="text-danger small mt-1">
+                  {% if form.username.errors %}
+                    {{ form.username.errors|join:", " }}
+                  {% else %}
+                    &nbsp;
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-6 form-password-toggle">
+                <label class="form-label" for="{{ form.password.id_for_label }}">
+                  {{ form.password.label }}
+                </label>
+                <div class="input-group input-group-merge">
+                  {{ form.password }}
+                  <span class="input-group-text cursor-pointer">
+                    <i class="icon-base bx bx-hide"></i>
+                  </span>
+                </div>
+                <div class="text-danger small mt-1">
+                  {% if form.password.errors %}
+                    {{ form.password.errors|join:", " }}
+                  {% else %}
+                    &nbsp;
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <button class="btn btn-primary d-grid w-100" type="submit">
+                  Se connecter
+                </button>
+              </div>
+            </form>
+
+            <p class="text-center">
+              <span>Pas encore de compte ?</span>
+              <a href="{% url 'accounts:register' %}">
+                <span>Cr&eacute;er un compte</span>
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

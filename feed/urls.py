@@ -11,11 +11,11 @@ urlpatterns = [
     path('create/', views.feed_create, name='create'),
     
     # Détail
-    path('<int:pk>/', views.feed_detail, name='detail'),
+    path('<str:pk>/', views.feed_detail, name='detail'),
     
     # Modification
-    path('<int:pk>/update/', views.feed_update, name='update'),
+    path('<str:pk>/update/', views.feed_update, name='update'),
     
     # Suppression
-    path('<int:pk>/delete/', views.feed_delete, name='delete'),
+    path('<str:pk>/delete/', views.feed_delete, name='delete'),
 ]
