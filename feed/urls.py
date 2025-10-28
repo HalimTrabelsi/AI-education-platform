@@ -18,4 +18,6 @@ urlpatterns = [
     
     # Suppression
     path('<str:pk>/delete/', views.feed_delete, name='delete'),
+
+    path('export/pdf/', views.feed_export_pdf, name='export_pdf'),
 ]

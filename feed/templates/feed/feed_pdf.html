@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <title>Rapport - Liste des Contenus</title>
+    <style>
+        body {
+            font-family: 'Helvetica', Arial, sans-serif;
+            margin: 30px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #003366;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 10px;
+        }
+        .stats {
+            margin-bottom: 25px;
+            background: #f9f9f9;
+            padding: 10px 15px;
+            border-left: 4px solid #003366;
+        }
+        .stats p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+        th {
+            background-color: #e6f0ff;
+            color: #003366;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .urgent {
+            background-color: #ffe6e6 !important;
+        }
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #888;
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Liste des Contenus du Feed</h1>
+    
+    <div class="stats">
+        <p><strong>Total des contenus actifs :</strong> {{ stats.total_items }}</p>
+        <p><strong>Types de contenu distincts :</strong> {{ stats.content_types }}</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Type</th>
+                <th>Auteur</th>
+                <th>Créé le</th>
+                <th>Échéance</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in feed_items %}
+            <tr {% if item.is_urgent %}class="urgent"{% endif %}>
+                <td>{{ item.title }}</td>
+                <td>{{ item.get_content_type_display }}</td>
+                <td>{{ item.author.username }}</td>
+                <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
+                <td>{% if item.deadline %}{{ item.deadline|date:"d/m/Y H:i" }}{% else %}-{% endif %}</td>
+                <td>{{ item.description|truncatewords:50 }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">Aucun contenu trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        © 2025 EduSocial - Plateforme éducative IA
+    </div>
+</body>
+</html>

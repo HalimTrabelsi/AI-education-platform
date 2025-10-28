@@ -6,6 +6,9 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from .models import FeedItem
 from .forms import FeedItemForm, FeedItemSearchForm
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 
 
 def feed_list(request):
@@ -233,3 +236,63 @@ def feed_delete(request, pk):
     }
     
     return render(request, 'feed/feed_confirm_delete.html', context)
+
+def feed_export_pdf(request):
+    """
+    Exporte la liste des feed items en PDF avec les mêmes filtres que la vue liste.
+    """
+    # Récupérer tous les items actifs (même logique que feed_list)
+    feed_items = FeedItem.objects(is_active=True)
+    
+    search_form = FeedItemSearchForm(request.GET)
+    
+    if search_form.is_valid():
+        search_query = search_form.cleaned_data.get('search_query')
+        if search_query:
+            feed_items = feed_items.filter(
+                title__icontains=search_query
+            ) | feed_items.filter(
+                description__icontains=search_query
+            )
+        
+        content_type = search_form.cleaned_data.get('content_type')
+        if content_type:
+            feed_items = feed_items.filter(content_type=content_type)
+        
+        ordering = search_form.cleaned_data.get('ordering')
+        if ordering:
+            feed_items = feed_items.order_by(ordering)
+    
+    # Récupérer tous les items (sans pagination pour le PDF)
+    feed_items_list = list(feed_items)
+    
+    # Statistiques (même que feed_list)
+    stats = {
+        'total_items': FeedItem.objects(is_active=True).count(),
+        'content_types': len(FeedItem.objects(is_active=True).distinct('content_type'))
+    }
+    
+    context = {
+        'feed_items': feed_items_list,
+        'search_form': search_form,
+        'stats': stats,
+        'page_title': 'Export PDF - Feed'
+    }
+    
+    # Rendre le template PDF
+    template_path = 'feed/feed_pdf.html'
+    template = get_template(template_path)
+    html = template.render(context)
+    
+    # Créer la réponse PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="feed_list.pdf"'
+    
+    # Générer le PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    
+    # Gérer les erreurs
+    if pisa_status.err:
+        return HttpResponse('Erreur lors de la génération du PDF <pre>' + html + '</pre>')
+    
+    return response
