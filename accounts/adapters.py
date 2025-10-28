@@ -74,6 +74,7 @@ class DjangoUserAdapter:
             "student": "Etudiant",
             "teacher": "Enseignant",
             "moderator": "Moderateur",
+            "admin": "Administrateur",
         }
         role = getattr(self._user, "role", "")
         return labels.get(role, role.title())

@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField, EmailField
+from mongoengine import BooleanField, Document, EmailField, StringField
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -9,10 +9,11 @@ class User(Document):
     email = EmailField(required=True, unique=True)
     password_hash = StringField(required=True)
     role = StringField(
-        choices=["student", "teacher", "moderator"],
+        choices=["student", "teacher", "moderator", "admin"],
         default="student",
     )
     profile_image = StringField()
+    is_blocked = BooleanField(default=False)
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"
@@ -31,7 +32,7 @@ class User(Document):
 
     @property
     def is_active(self) -> bool:
-        return True
+        return not self.is_blocked
 
     @property
     def is_anonymous(self) -> bool:
@@ -39,11 +40,11 @@ class User(Document):
 
     @property
     def is_staff(self) -> bool:
-        return self.role == "moderator"
+        return self.role in {"moderator", "admin"}
 
     @property
     def is_superuser(self) -> bool:
-        return self.role == "moderator"
+        return self.role == "admin"
 
     @property
     def pk(self) -> str:

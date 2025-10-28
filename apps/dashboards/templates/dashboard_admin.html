@@ -1,0 +1,128 @@
+﻿{% extends layout_path %}
+{% load static %}
+
+{% block title %}Dashboard - Admin{% endblock %}
+
+{% block vendor_css %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}"/>
+{% endblock vendor_css %}
+
+{% block vendor_js %}
+  {{ block.super }}
+  <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
+{% endblock vendor_js %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-xxl-4 col-md-6 mb-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h5 class="card-title mb-1">Utilisateurs inscrits</h5>
+              <small class="text-body-secondary">Comptes actifs et bloques</small>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <img src="{% static 'img/icons/unicons/chart-success.png' %}" alt="users" class="rounded"/>
+            </div>
+          </div>
+          <h3 class="mb-1">{{ total_users }}</h3>
+          <p class="text-body-secondary mb-0">{{ active_users }} actifs - {{ blocked_users }} bloques</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-4 col-md-6 mb-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h5 class="card-title mb-1">Repartition par role</h5>
+              <small class="text-body-secondary">Vue rapide des responsabilites</small>
+            </div>
+            <div class="avatar flex-shrink-0">
+              <img src="{% static 'img/icons/unicons/wallet-info.png' %}" alt="roles" class="rounded"/>
+            </div>
+          </div>
+          <ul class="list-unstyled mb-0">
+            {% for role, count in role_counts %}
+              <li class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-body">{{ role }}</span>
+                <span class="fw-medium">{{ count }}</span>
+              </li>
+            {% empty %}
+              <li class="text-body-secondary">Aucun utilisateur</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xxl-4 col-md-12 mb-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-4">Creer un compte</h5>
+          <p class="text-body-secondary mb-4">L'inscription est reservee a l'administrateur. Creez de nouveaux comptes pour les enseignants, moderateurs ou etudiants.</p>
+          <a href="{% url 'accounts:register' %}" class="btn btn-primary">Nouveau compte</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-1">Gestion des utilisateurs</h5>
+        <p class="text-body-secondary mb-0">Bloquez ou reactivez des comptes en un clic.</p>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nom d'utilisateur</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th class="text-center">Statut</th>
+            <th class="text-end">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td class="text-heading fw-medium">{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role|title }}</td>
+              <td class="text-center">
+                {% if user.is_blocked %}
+                  <span class="badge bg-label-danger">Bloque</span>
+                {% else %}
+                  <span class="badge bg-label-success">Actif</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                {% if request.user.pk|stringformat:'s' == user.id|stringformat:'s' %}
+                  <span class="text-body-secondary">-</span>
+                {% else %}
+                  <form method="post" action="{% url 'accounts:toggle-user-block' user.id %}" class="d-inline">
+                    {% csrf_token %}
+                    {% if user.is_blocked %}
+                      <button type="submit" class="btn btn-sm btn-outline-success">Debloquer</button>
+                    {% else %}
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Bloquer</button>
+                    {% endif %}
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center text-body-secondary py-6">Aucun utilisateur a afficher.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

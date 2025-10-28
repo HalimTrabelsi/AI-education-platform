@@ -11,6 +11,7 @@ ROLE_CHOICES = [
     ("student", "Etudiant"),
     ("teacher", "Enseignant"),
     ("moderator", "Moderateur"),
+    ("admin", "Administrateur"),
 ]
 
 
