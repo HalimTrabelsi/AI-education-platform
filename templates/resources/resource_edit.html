@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifier une Ressource</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input[type="text"], select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; }
+        button { margin-top: 20px; padding: 10px 15px; border: none; background-color: #f0ad4e; color: #fff; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #ec971f; }
+        a { display: block; margin-top: 15px; text-align: center; color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Modifier une Ressource</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        <label for="title">Titre</label>
+        <input type="text" id="title" name="title" value="{{ resource.title }}" required>
+
+        <label for="resource_type">Type</label>
+        <select id="resource_type" name="resource_type" required>
+            <option value="PDF" {% if resource.resource_type == "PDF" %}selected{% endif %}>PDF</option>
+            <option value="Video" {% if resource.resource_type == "Video" %}selected{% endif %}>Vidéo</option>
+            <option value="Audio" {% if resource.resource_type == "Audio" %}selected{% endif %}>Audio</option>
+        </select>
+
+        <label for="tags">Tags (séparés par des virgules)</label>
+<input type="text" id="tags" name="tags" value="{{ resource.tags_list|join:', ' }}">
+
+
+        <div class="d-flex justify-content-between">
+    <a href="{% url 'front_office_resource_list' %}" class="btn btn-secondary">← Retour</a>
+    <button type="submit" class="btn btn-success">Modifier la ressource</button>
+</div>
+
+    </form>
+</body>
+</html>

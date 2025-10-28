@@ -34,7 +34,7 @@ ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 INSTALLED_APPS = [
     "django.contrib.admin",
     "accounts",
-    "resources",
+    "resources.apps.ResourcesConfig",
     "feed",
     "quiz",
     "moderation",
@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "apps.forms",
     "apps.form_layouts",
     "apps.tables",
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -103,6 +104,8 @@ LOGIN_REDIRECT_URL = "index"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 DATABASES = {
