@@ -1,12 +1,10 @@
-
-
 from pyexpat.errors import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
 from objectif.utils import _get_mongo_user
 from .models import Objective
-from .forms import ObjectiveForm  # tu dois créer un formulaire Django pour Objective
+from .forms import ObjectiveForm
 import google.generativeai as genai
 from django.http import HttpResponse, JsonResponse
 
@@ -20,8 +18,199 @@ from bson import ObjectId
 import os
 import requests
 
+# Import pour le PDF
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
 
 genai.configure(api_key="AIzaSyBCutcN7kxoQ8frc9GHPGXlBMneulZCHzc")
+
+# =============================================================================
+# NOUVELLES FONCTIONS DE CALCUL DES ATTRIBUTS
+# =============================================================================
+
+def calculer_progression_par_dates(obj):
+    """Calcule la progression basée sur les dates (début et échéance)"""
+    if not getattr(obj, 'date_debut', None) or not getattr(obj, 'date_echeance', None):
+        return 0
+    
+    aujourd_hui = timezone.now().date()
+    
+    # Convertir en date si c'est un datetime
+    date_debut = obj.date_debut.date() if hasattr(obj.date_debut, 'date') else obj.date_debut
+    date_echeance = obj.date_echeance.date() if hasattr(obj.date_echeance, 'date') else obj.date_echeance
+    
+    # Si pas encore commencé
+    if aujourd_hui < date_debut:
+        return 0
+    
+    # Si échéance dépassée
+    if aujourd_hui > date_echeance:
+        return 100
+    
+    # Calcul du pourcentage de temps écoulé
+    duree_totale = (date_echeance - date_debut).days
+    temps_ecoule = (aujourd_hui - date_debut).days
+    
+    if duree_totale > 0:
+        progression_temporelle = int((temps_ecoule / duree_totale) * 100)
+        return min(progression_temporelle, 100)
+    
+    return 0
+
+def calculer_progression_par_etat(obj):
+    """Calcule la progression basée sur l'état de l'objectif"""
+    etat = getattr(obj, 'etat', 'en attente')
+    
+    if etat == 'terminé':
+        return 100
+    elif etat == 'en cours':
+        return 50  # Valeur intermédiaire
+    elif etat == 'en attente':
+        return 10  # Juste commencé
+    else:
+        return 0
+
+def calculer_progression_par_priorite(obj):
+    """Calcule la progression basée sur la priorité et le temps écoulé"""
+    priorite = getattr(obj, 'priorite', 'moyenne')
+    facteur_priorite = {
+        'haute': 1.3,   # Avance plus vite
+        'moyenne': 1.0, # Vitesse normale
+        'basse': 0.7    # Avance plus lentement
+    }.get(priorite, 1.0)
+    
+    progression_base = calculer_progression_par_dates(obj)
+    return min(int(progression_base * facteur_priorite), 100)
+
+def calculer_progression_par_taches(obj):
+    """Calcule la progression basée sur le nombre de tâches"""
+    taches = getattr(obj, 'taches', [])
+    if not taches:
+        return 0
+    
+    # Plus de tâches = progression potentiellement plus lente
+    facteur_complexite = min(len(taches) / 10, 2.0)
+    
+    progression_base = calculer_progression_par_dates(obj)
+    if facteur_complexite > 0:
+        progression_ajustee = progression_base / facteur_complexite
+        return min(int(progression_ajustee), 100)
+    
+    return progression_base
+
+def calculer_progression_intelligente(obj):
+    """Calcule la progression en combinant plusieurs méthodes"""
+    methodes = [
+        calculer_progression_par_dates(obj),
+        calculer_progression_par_etat(obj),
+        calculer_progression_par_priorite(obj),
+        calculer_progression_par_taches(obj)
+    ]
+    
+    # Poids différents pour chaque méthode
+    poids = [0.4, 0.3, 0.2, 0.1]  # Dates + État + Priorité + Tâches
+    
+    progression_ponderee = sum(methode * poids for methode, poids in zip(methodes, poids))
+    
+    # Ajustement basé sur la dernière mise à jour
+    derniere_maj = getattr(obj, 'derniere_mise_a_jour', None)
+    if derniere_maj:
+        jours_depuis_maj = (timezone.now().date() - derniere_maj.date()).days
+        if jours_depuis_maj > 7:  # Si pas de mise à jour depuis une semaine
+            progression_ponderee *= 0.9  # Légère pénalité
+    
+    return min(int(progression_ponderee), 100)
+
+def calculer_progression_automatique(obj):
+    """Calcule la progression basée sur les données disponibles"""
+    # Si progression manuelle existe, on l'utilise en priorité
+    progression_manuelle = getattr(obj, 'progression', 0)
+    if progression_manuelle > 0:
+        return progression_manuelle
+    
+    # Sinon, calcul intelligent basé sur les données disponibles
+    return calculer_progression_intelligente(obj)
+
+def calculer_temps_total_automatique(obj):
+    """Calcule le temps total basé sur la durée de l'objectif"""
+    if not getattr(obj, 'date_debut', None) or not getattr(obj, 'date_echeance', None):
+        return getattr(obj, 'temps_total', 0)
+    
+    # Convertir en date si c'est un datetime
+    date_debut = obj.date_debut.date() if hasattr(obj.date_debut, 'date') else obj.date_debut
+    date_echeance = obj.date_echeance.date() if hasattr(obj.date_echeance, 'date') else obj.date_echeance
+    
+    duree_jours = (date_echeance - date_debut).days
+    
+    # Estimation : 2 heures de travail par jour en moyenne
+    temps_estime = round(duree_jours * 2, 1)
+    return max(temps_estime, getattr(obj, 'temps_total', 0))
+
+def calculer_nb_sessions_automatique(obj):
+    """Estime le nombre de sessions basé sur la durée"""
+    temps_total = calculer_temps_total_automatique(obj)
+    
+    # Estimation : sessions de 1.5 heures en moyenne
+    if temps_total > 0:
+        return max(int(temps_total / 1.5), getattr(obj, 'nb_sessions', 1))
+    
+    return getattr(obj, 'nb_sessions', 1)
+
+def calculer_jours_restants(obj):
+    """Calcule les jours restants jusqu'à l'échéance"""
+    if not getattr(obj, 'date_echeance', None):
+        return "-"
+    
+    aujourd_hui = timezone.now().date()
+    date_echeance = obj.date_echeance
+    
+    # Convertir en date si c'est un datetime
+    if hasattr(date_echeance, 'date'):
+        date_echeance = date_echeance.date()
+    
+    if date_echeance < aujourd_hui:
+        return "Dépassé"
+    
+    jours_restants = (date_echeance - aujourd_hui).days
+    return jours_restants
+
+def calculer_efficacite(obj, progression, temps_total):
+    """Calcule l'efficacité (progression par heure)"""
+    if temps_total == 0 or progression == 0:
+        return "N/A"
+    
+    efficacite = progression / temps_total if temps_total > 0 else 0
+    
+    if efficacite > 3:
+        return "🚀 Excellente"
+    elif efficacite > 1.5:
+        return "👍 Bonne"
+    elif efficacite > 0.5:
+        return "📊 Moyenne"
+    else:
+        return "🐌 Faible"
+
+def calculer_tous_les_attributs(obj):
+    """Calcule tous les attributs automatiques d'un objectif"""
+    progression = calculer_progression_automatique(obj)
+    temps_total = calculer_temps_total_automatique(obj)
+    nb_sessions = calculer_nb_sessions_automatique(obj)
+    jours_restants = calculer_jours_restants(obj)
+    efficacite = calculer_efficacite(obj, progression, temps_total)
+    
+    return {
+        'progression': progression,
+        'temps_total': temps_total,
+        'nb_sessions': nb_sessions,
+        'jours_restants': jours_restants,
+        'efficacite': efficacite
+    }
+
+# =============================================================================
+# VUES EXISTANTES (AVEC NOUVELLES FONCTIONS DE CALCUL)
+# =============================================================================
 
 @login_required
 def list_objectif(request):
@@ -52,8 +241,7 @@ def update_objectif(request, id):
         if form.is_valid():
             for key, value in form.cleaned_data.items():
                 setattr(objectif, key, value)
-            objectif.derniere_mise_a_jour = date = datetime.datetime.utcnow()  # ✅ correct
-
+            objectif.derniere_mise_a_jour = datetime.datetime.utcnow()
             objectif.save()
             return redirect("objectif:list")
     else:
@@ -78,14 +266,14 @@ def delete_objectif(request, id):
         return redirect("objectif:list")
     return render(request, "objectif/confirm_delete.html", {"objectif": objectif})
 
-
-
-
 @login_required
 def objective_details(request, obj_id):
     """Page de détails d'un objectif avec QR Code et Calendrier"""
     try:
         obj = Objective.objects.get(id=obj_id)
+        
+        # CALCUL DES ATTRIBUTS AUTOMATIQUES
+        attributs_calcules = calculer_tous_les_attributs(obj)
         
         # Préparer les données pour l'affichage
         details = {
@@ -95,13 +283,18 @@ def objective_details(request, obj_id):
             'niveau': getattr(obj, 'niveau', 'Non spécifié'),
             'priorite': getattr(obj, 'priorite', 'Non spécifié'),
             'etat': getattr(obj, 'etat', 'Non spécifié'),
-            'progression': getattr(obj, 'progression', 0),
+            
+            # ATTRIBUTS CALCULÉS AUTOMATIQUEMENT
+            'progression': attributs_calcules['progression'],
+            'nb_sessions': attributs_calcules['nb_sessions'],
+            'temps_total': attributs_calcules['temps_total'],
+            'jours_restants': attributs_calcules['jours_restants'],
+            'efficacite': attributs_calcules['efficacite'],
+            
             'date_creation': getattr(obj, 'date_creation', 'Non spécifiée'),
             'date_debut': getattr(obj, 'date_debut', 'Non spécifiée'),
             'date_echeance': getattr(obj, 'date_echeance', 'Non spécifiée'),
             'derniere_mise_a_jour': getattr(obj, 'derniere_mise_a_jour', 'Non spécifiée'),
-            'nb_sessions': getattr(obj, 'nb_sessions', 0),
-            'temps_total': getattr(obj, 'temps_total', 0),
             'taches': getattr(obj, 'taches', []),
             'ressources': getattr(obj, 'ressources', []),
             'tags': getattr(obj, 'tags', []),
@@ -285,7 +478,6 @@ def calendar_events_api(request):
     
     return JsonResponse(events, safe=False)
 
-
 @login_required
 def generate_qrcode(request, obj_id):
     """Générer un QR Code pour un objectif"""
@@ -318,10 +510,13 @@ def generate_qrcode(request, obj_id):
         return HttpResponse("Objectif non trouvé", status=404)
 
 @login_required
-def objective_details(request, obj_id):
+def objective_details_ia(request, obj_id):
     """Page de détails d'un objectif avec analyse IA"""
     try:
         obj = Objective.objects.get(id=obj_id, user_id=str(request.user.id))
+        
+        # CALCUL DES ATTRIBUTS AUTOMATIQUES
+        attributs_calcules = calculer_tous_les_attributs(obj)
         
         # Préparer les données pour l'affichage
         details = {
@@ -331,13 +526,18 @@ def objective_details(request, obj_id):
             'niveau': getattr(obj, 'niveau', 'Non spécifié'),
             'priorite': getattr(obj, 'priorite', 'Non spécifié'),
             'etat': getattr(obj, 'etat', 'Non spécifié'),
-            'progression': getattr(obj, 'progression', 0),
+            
+            # ATTRIBUTS CALCULÉS AUTOMATIQUEMENT
+            'progression': attributs_calcules['progression'],
+            'nb_sessions': attributs_calcules['nb_sessions'],
+            'temps_total': attributs_calcules['temps_total'],
+            'jours_restants': attributs_calcules['jours_restants'],
+            'efficacite': attributs_calcules['efficacite'],
+            
             'date_creation': getattr(obj, 'date_creation', 'Non spécifiée'),
             'date_debut': getattr(obj, 'date_debut', 'Non spécifiée'),
             'date_echeance': getattr(obj, 'date_echeance', 'Non spécifiée'),
             'derniere_mise_a_jour': getattr(obj, 'derniere_mise_a_jour', 'Non spécifiée'),
-            'nb_sessions': getattr(obj, 'nb_sessions', 0),
-            'temps_total': getattr(obj, 'temps_total', 0),
             'taches': getattr(obj, 'taches', []),
             'ressources': getattr(obj, 'ressources', []),
             'tags': getattr(obj, 'tags', []),
@@ -376,173 +576,15 @@ def objective_details(request, obj_id):
         
     except Objective.DoesNotExist:
         return HttpResponse("Objectif non trouvé", status=404)
-def generate_calendar_data(obj):
-    """Générer les données pour le calendrier avec gestion robuste des dates"""
-    calendar_data = {
-        'events': [],
-        'timeline': [],
-        'deadline_alert': None
-    }
-    
-    # Date d'échéance
-    if hasattr(obj, 'date_echeance') and obj.date_echeance:
-        try:
-            deadline = obj.date_echeance
-            # Convertir en date si c'est un datetime
-            if isinstance(deadline, datetime.datetime):
-                deadline_date = deadline.date()
-            elif hasattr(deadline, 'date'):
-                deadline_date = deadline.date()
-            else:
-                deadline_date = deadline
-            
-            calendar_data['events'].append({
-                'date': deadline_date.isoformat(),
-                'title': 'Échéance',
-                'type': 'deadline',
-                'description': f'Échéance: {obj.titre}'
-            })
-            
-            # Alerte si échéance proche
-            today = timezone.now().date()
-            # S'assurer que les deux sont des date objects
-            if isinstance(deadline_date, datetime.date) and not isinstance(deadline_date, datetime.datetime):
-                days_until_deadline = (deadline_date - today).days
-                if days_until_deadline <= 7:
-                    calendar_data['deadline_alert'] = {
-                        'days_left': days_until_deadline,
-                        'is_urgent': days_until_deadline <= 3
-                    }
-                    
-        except (TypeError, AttributeError) as e:
-            print(f"Erreur traitement date échéance: {e}")
-            print(f"Type deadline: {type(deadline)}, valeur: {deadline}")
-    
-    # Date de début
-    if hasattr(obj, 'date_debut') and obj.date_debut:
-        try:
-            start_date = obj.date_debut
-            # Convertir en date si c'est un datetime
-            if isinstance(start_date, datetime.datetime):
-                start_date_date = start_date.date()
-            elif hasattr(start_date, 'date'):
-                start_date_date = start_date.date()
-            else:
-                start_date_date = start_date
-            
-            calendar_data['events'].append({
-                'date': start_date_date.isoformat(),
-                'title': 'Début',
-                'type': 'start',
-                'description': f'Début: {obj.titre}'
-            })
-        except (TypeError, AttributeError) as e:
-            print(f"Erreur traitement date début: {e}")
-            print(f"Type start_date: {type(start_date)}, valeur: {start_date}")
-    
-    # Générer une timeline basée sur la progression
-    progression = getattr(obj, 'progression', 0)
-    if progression > 0:
-        calendar_data['timeline'].append({
-            'date': timezone.now().date().isoformat(),
-            'progress': progression,
-            'description': f'Progression: {progression}%'
-        })
-    
-    return calendar_data
-
-@login_required
-def objective_calendar(request):
-    """Vue calendrier pour tous les objectifs"""
-    all_objectifs = list(Objective.objects.all())
-    
-    calendar_events = []
-    for obj in all_objectifs:
-        # Échéance
-        if hasattr(obj, 'date_echeance') and obj.date_echeance:
-            deadline = obj.date_echeance
-            if timezone.is_aware(deadline):
-                deadline = deadline.date()
-            
-            calendar_events.append({
-                'id': str(obj.id),
-                'title': f'📅 {obj.titre}',
-                'start': deadline.isoformat(),
-                'end': deadline.isoformat(),
-                'color': '#ff4444',
-                'type': 'deadline',
-                'url': f'/objectives/details/{obj.id}/'
-            })
-        
-        # Date de début
-        if hasattr(obj, 'date_debut') and obj.date_debut:
-            start_date = obj.date_debut
-            if timezone.is_aware(start_date):
-                start_date = start_date.date()
-            
-            calendar_events.append({
-                'id': str(obj.id) + '_start',
-                'title': f'🚀 Début: {obj.titre}',
-                'start': start_date.isoformat(),
-                'end': start_date.isoformat(),
-                'color': '#00aa00',
-                'type': 'start',
-                'url': f'/objectives/details/{obj.id}/'
-            })
-    
-    context = {
-        'calendar_events': json.dumps(calendar_events),
-        'objectifs_count': len(all_objectifs)
-    }
-    
-    return render(request, 'objectif/calendar.html', context)
-
-@login_required
-def calendar_events_api(request):
-    """API pour les événements du calendrier"""
-    all_objectifs = list(Objective.objects.all())
-    
-    events = []
-    for obj in all_objectifs:
-        # Échéance
-        if hasattr(obj, 'date_echeance') and obj.date_echeance:
-            deadline = obj.date_echeance
-            if timezone.is_aware(deadline):
-                deadline = deadline.date()
-            
-            events.append({
-                'id': str(obj.id),
-                'title': f'Échéance: {obj.titre}',
-                'start': deadline.isoformat(),
-                'end': deadline.isoformat(),
-                'color': '#dc3545',
-                'textColor': 'white',
-                'url': f'/objectives/details/{obj.id}/'
-            })
-        
-        # Date de début
-        if hasattr(obj, 'date_debut') and obj.date_debut:
-            start_date = obj.date_debut
-            if timezone.is_aware(start_date):
-                start_date = start_date.date()
-            
-            events.append({
-                'id': str(obj.id) + '_start',
-                'title': f'Début: {obj.titre}',
-                'start': start_date.isoformat(),
-                'end': start_date.isoformat(),
-                'color': '#28a745',
-                'textColor': 'white',
-                'url': f'/objectives/details/{obj.id}/'
-            })
-    
-    return JsonResponse(events, safe=False)
 
 @login_required
 def objective_json(request, obj_id):
     """API JSON des détails d'un objectif"""
     try:
         obj = Objective.objects.get(id=obj_id)
+        
+        # CALCUL DES ATTRIBUTS AUTOMATIQUES
+        attributs_calcules = calculer_tous_les_attributs(obj)
         
         # Sérialiser l'objectif
         data = {
@@ -553,13 +595,13 @@ def objective_json(request, obj_id):
             'niveau': getattr(obj, 'niveau', ''),
             'priorite': getattr(obj, 'priorite', ''),
             'etat': getattr(obj, 'etat', ''),
-            'progression': getattr(obj, 'progression', 0),
+            'progression': attributs_calcules['progression'],
             'date_creation': getattr(obj, 'date_creation', '').isoformat() if hasattr(obj, 'date_creation') and obj.date_creation else '',
             'date_debut': getattr(obj, 'date_debut', '').isoformat() if hasattr(obj, 'date_debut') and obj.date_debut else '',
             'date_echeance': getattr(obj, 'date_echeance', '').isoformat() if hasattr(obj, 'date_echeance') and obj.date_echeance else '',
             'derniere_mise_a_jour': getattr(obj, 'derniere_mise_a_jour', '').isoformat() if hasattr(obj, 'derniere_mise_a_jour') and obj.derniere_mise_a_jour else '',
-            'nb_sessions': getattr(obj, 'nb_sessions', 0),
-            'temps_total': getattr(obj, 'temps_total', 0),
+            'nb_sessions': attributs_calcules['nb_sessions'],
+            'temps_total': attributs_calcules['temps_total'],
             'taches': getattr(obj, 'taches', []),
             'ressources': getattr(obj, 'ressources', []),
             'tags': getattr(obj, 'tags', []),
@@ -572,14 +614,6 @@ def objective_json(request, obj_id):
         
     except Objective.DoesNotExist:
         return JsonResponse({'error': 'Objectif non trouvé'}, status=404)
-
-
-
-
-
-
-
-
 
 @login_required
 def chatbot_view(request):
@@ -597,10 +631,6 @@ def chatbot_view(request):
         print(f"Erreur dans chatbot_view: {e}")
         # En cas d'erreur, retourner une liste vide
         return render(request, "objectif/chat.html", {"objectifs": []})
-    
-
-
-
 
 @login_required
 def chatbot_api(request):
@@ -673,6 +703,7 @@ RÉPONSE :
             }, status=500)
 
     return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
 @login_required
 def trigger_ia_analysis(request, obj_id):
     """Déclenche une analyse IA complète pour un objectif"""
@@ -906,7 +937,7 @@ def generate_complete_ia_analysis(obj):
             obj.score_priorite_ia = float(result.get("score_priorite_ia", 0.5))
             obj.objectif_recommande = bool(result.get("objectif_recommande", False))
             
-            obj.derniere_mise_a_jour = datetime.utcnow()
+            obj.derniere_mise_a_jour = datetime.datetime.utcnow()
             obj.save()
             
             print("✅ Analyse IA sauvegardée avec succès")
@@ -922,13 +953,15 @@ def generate_complete_ia_analysis(obj):
         import traceback
         traceback.print_exc()
         return False
-    
-    
+
 @login_required
 def generate_pdf_bilan(request, obj_id):
     """Génère un bilan PDF complet de l'objectif"""
     try:
         obj = Objective.objects.get(id=obj_id, user_id=str(request.user.id))
+        
+        # CALCUL DES ATTRIBUTS AUTOMATIQUES POUR LE PDF
+        attributs_calcules = calculer_tous_les_attributs(obj)
         
         # Créer le buffer PDF
         buffer = io.BytesIO()
@@ -968,7 +1001,7 @@ def generate_pdf_bilan(request, obj_id):
             alignment=1,
             textColor=colors.gray
         )
-        story.append(Paragraph(f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}", date_style))
+        story.append(Paragraph(f"Généré le {datetime.datetime.now().strftime('%d/%m/%Y à %H:%M')}", date_style))
         story.append(Spacer(1, 20))
         
         # Section 1: Informations générales
@@ -981,9 +1014,9 @@ def generate_pdf_bilan(request, obj_id):
             ['Niveau', getattr(obj, 'niveau', 'Non spécifié')],
             ['Priorité', getattr(obj, 'priorite', 'Non spécifiée')],
             ['État', getattr(obj, 'etat', 'Non spécifié')],
-            ['Progression', f"{getattr(obj, 'progression', 0)}%"],
-            ['Sessions réalisées', str(getattr(obj, 'nb_sessions', 0))],
-            ['Temps total', f"{getattr(obj, 'temps_total', 0)} heures"],
+            ['Progression', f"{attributs_calcules['progression']}%"],
+            ['Sessions réalisées', str(attributs_calcules['nb_sessions'])],
+            ['Temps total', f"{attributs_calcules['temps_total']} heures"],
             ['Date création', obj.date_creation.strftime("%d/%m/%Y %H:%M") if obj.date_creation else 'Non spécifiée'],
             ['Date début', obj.date_debut.strftime("%d/%m/%Y %H:%M") if obj.date_debut else 'Non spécifiée'],
             ['Date échéance', obj.date_echeance.strftime("%d/%m/%Y %H:%M") if obj.date_echeance else 'Non spécifiée'],
@@ -1010,7 +1043,7 @@ def generate_pdf_bilan(request, obj_id):
         story.append(Paragraph("📈 PROGRESSION", section_style))
         
         # Créer un diagramme de progression simple
-        progression = getattr(obj, 'progression', 0)
+        progression = attributs_calcules['progression']
         progression_data = [
             ['Progression actuelle', f"{progression}%"]
         ]
@@ -1031,13 +1064,13 @@ def generate_pdf_bilan(request, obj_id):
         if hasattr(obj, 'analyse_ia') and obj.analyse_ia:
             story.append(Paragraph("🤖 ANALYSE INTELLIGENCE ARTIFICIELLE", section_style))
             
-            # Score de viabilité
-            score = getattr(obj, 'score_viabilite', 0)
+            # Score de priorité IA
+            score = getattr(obj, 'score_priorite_ia', 0)
             score_data = [
-                ['Score de viabilité', f"{score*100:.1f}%"],
-                ['Difficulté estimée', getattr(obj, 'estimation_difficulte', 'Non évalué').title()],
-                ['Délai réaliste', getattr(obj, 'delai_realiste', 'Non évalué').replace('_', ' ').title()],
-                ['Priorité recommandée', getattr(obj, 'priorite_recommandee', 'Non évalué').title()]
+                ['Score de priorité IA', f"{score*100:.1f}%"],
+                ['Difficulté estimée', getattr(obj, 'niveau_difficulte', 'Non évalué').title()],
+                ['Délai réaliste', getattr(obj, 'delai_realisme', 'Non évalué').replace('_', ' ').title()],
+                ['Recommandé par IA', 'Oui' if getattr(obj, 'objectif_recommande', False) else 'Non']
             ]
             
             score_table = Table(score_data, colWidths=[150, 350])
@@ -1059,40 +1092,19 @@ def generate_pdf_bilan(request, obj_id):
             story.append(Paragraph(obj.analyse_ia, styles['Normal']))
             story.append(Spacer(1, 12))
             
-            # Recommandations stratégiques
-            if hasattr(obj, 'recommandations_strategiques') and obj.recommandations_strategiques:
-                story.append(Paragraph("<b>Recommandations stratégiques:</b>", styles['Heading3']))
-                for reco in obj.recommandations_strategiques:
+            # Points forts
+            if hasattr(obj, 'points_forts') and obj.points_forts:
+                story.append(Paragraph("<b>Points forts:</b>", styles['Heading3']))
+                for point in obj.points_forts:
+                    story.append(Paragraph(f"• {point}", styles['Normal']))
+                story.append(Spacer(1, 12))
+            
+            # Recommandations
+            if hasattr(obj, 'recommendations') and obj.recommendations:
+                story.append(Paragraph("<b>Recommandations:</b>", styles['Heading3']))
+                for reco in obj.recommendations:
                     story.append(Paragraph(f"• {reco}", styles['Normal']))
                 story.append(Spacer(1, 12))
-            
-            # Plan d'action
-            if hasattr(obj, 'plan_action') and obj.plan_action:
-                story.append(Paragraph("<b>Plan d'action détaillé:</b>", styles['Heading3']))
-                for i, action in enumerate(obj.plan_action, 1):
-                    story.append(Paragraph(f"{i}. {action}", styles['Normal']))
-                story.append(Spacer(1, 12))
-            
-            # Points clés
-            if hasattr(obj, 'points_cles') and obj.points_cles:
-                story.append(Paragraph("<b>Points clés à surveiller:</b>", styles['Heading3']))
-                for point in obj.points_cles:
-                    story.append(Paragraph(f"⚡ {point}", styles['Normal']))
-                story.append(Spacer(1, 12))
-            
-            # Recommandation immédiate
-            if hasattr(obj, 'recommandation_immediate') and obj.recommandation_immediate:
-                story.append(Paragraph("<b>Action immédiate recommandée:</b>", styles['Heading3']))
-                immediate_style = ParagraphStyle(
-                    'ImmediateAction',
-                    parent=styles['Normal'],
-                    backColor=colors.HexColor('#fff3cd'),
-                    borderPadding=10,
-                    leftIndent=10,
-                    textColor=colors.HexColor('#856404')
-                )
-                story.append(Paragraph(obj.recommandation_immediate, immediate_style))
-                story.append(Spacer(1, 15))
         
         # Section 4: Tâches à réaliser
         if hasattr(obj, 'taches') and obj.taches:
@@ -1163,7 +1175,7 @@ def generate_pdf_bilan(request, obj_id):
         
         # Retourner le PDF
         response = HttpResponse(buffer, content_type='application/pdf')
-        filename = f"bilan_{obj.titre.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+        filename = f"bilan_{obj.titre.replace(' ', '_').lower()}_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
         

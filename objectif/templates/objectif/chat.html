@@ -1,7 +1,6 @@
-{% load static %}
+{% extends 'layout/layout_vertical.html' %}
 
-<!DOCTYPE html>
-<html lang="fr">
+{% block layout %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -485,5 +484,4 @@
     messageInput.focus();
 });
     </script>
-</body>
-</html>
+{% endblock %}

@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
+{% extends 'layout/layout_vertical.html' %}
+{% block layout %}
+
+
     <title>Calendrier des Objectifs</title>
     <meta charset="utf-8">
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
@@ -12,8 +13,8 @@
         .actions { text-align: center; margin: 20px 0; }
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; margin: 0 5px; }
     </style>
-</head>
-<body>
+
+
     <div class="container">
         <div class="header">
             <h1>🗓️ Calendrier des Objectifs</h1>
@@ -60,5 +61,6 @@
             calendar.render();
         });
     </script>
-</body>
-</html>
+
+
+{% endblock %}

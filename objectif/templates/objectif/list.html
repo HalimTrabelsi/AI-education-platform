@@ -1,5 +1,73 @@
-{% extends 'layout/partials/menu/vertical/vertical_menu.html' %}
+{% extends 'layout/layout_vertical.html' %}
 {% block content %}
-hi
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css"/>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+<h1>Mes Objectifs</h1>
+
+<!-- 🟢 Bouton pour créer un nouvel objectif -->
+<div style="margin-bottom: 20px;">
+    <a href="{% url 'objectifs:create' %}" class="btn btn-primary" style="background-color:#007bff; border:none; padding:8px 15px; border-radius:6px; text-decoration:none; color:white;">
+        ➕ Créer un nouvel objectif
+    </a>
+</div>
+
+<table id="objectifs-table" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <th>Titre</th>
+      <th>Filière</th>
+      <th>Niveau</th>
+      <th>Priorité</th>
+      <th>État</th>
+      <th>Suggestion IA</th>
+      <th>Score IA</th>
+      <th>Recommandé</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for obj in objectifs %}
+    <tr>
+      <td>{{ obj.titre }}</td>
+      <td>{{ obj.filiere }}</td>
+      <td>{{ obj.niveau }}</td>
+      <td>{{ obj.priorite }}</td>
+      <td>{{ obj.etat }}</td>
+      <td>{{ obj.suggestion_ia|default:"—" }}</td>
+      <td>{{ obj.score_priorite_ia|floatformat:2 }}</td>
+      <td>{% if obj.objectif_recommande %}✅{% else %}❌{% endif %}</td>
+      <td>
+        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+            <a href="{% url 'objectifs:objective_details' obj.id %}" class="btn btn-info btn-sm">📋 Détails</a>
+            <a href="{% url 'objectifs:update' obj.id %}" class="btn btn-warning btn-sm">✏️ Modifier</a>
+            <a href="{% url 'objectifs:generate_qrcode' obj.id %}" class="btn btn-success btn-sm" download>📱 QR Code</a>
+            <a href="{% url 'objectifs:delete' obj.id %}" class="btn btn-danger btn-sm">🗑️ Supprimer</a>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<!-- JQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css"/>
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#objectifs-table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        order: [[ 0, 'asc' ]], // tri par titre
+        columnDefs: [
+            { orderable: false, targets: 8 } // désactiver tri pour la colonne Actions
+        ]
+    });
+});
+</script>
 
 {% endblock %}

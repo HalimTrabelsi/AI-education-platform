@@ -1,7 +1,6 @@
-{% extends "layout/layout_vertical.html" %}
+{% extends 'layout/layout_vertical.html' %}
 
-<!DOCTYPE html>
-<html>
+{% block content %}<html>
 <head>
     <title>Détails - {{ details.titre }}</title>
     <meta charset="utf-8">
@@ -111,7 +110,6 @@
         }
     </style>
 </head>
-<body>
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -527,5 +525,6 @@ class="btn btn-info"           style="display: inline-flex; align-items: center;
             }
         });
     </script>
-</body>
-</html>
+
+
+{% endblock %}
