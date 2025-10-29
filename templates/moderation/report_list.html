@@ -82,10 +82,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 reportBody.innerHTML=`<tr><td colspan="8" class="text-center py-4 text-muted">Aucun signalement trouvé.</td></tr>`;
             } else {
                 reportBody.innerHTML = data.reports.map(r=>{
-                    const aiTags = [];
-                    if(r.ai_confidence > 0.4) aiTags.push("Signalements");
-                    if(r.is_plagiarism) aiTags.push("anti-plagiat");
-                    if(r.is_nsfw || r.ai_confidence > 0.7) aiTags.push("détection IA de triche / NSFW");
+const aiTags = [];
+if (r.ai_confidence > 0.4) aiTags.push("Signalements");
+if (r.is_plagiarism) aiTags.push("anti-plagiat");
+if (r.is_nsfw || r.ai_confidence > 0.55) aiTags.push("détection IA de triche / NSFW");
+
                     const flagsHTML = aiTags.length ? aiTags.map(t=>`<span class="badge bg-info me-1">${t}</span>`).join('') : '<span class="text-muted">Aucun</span>';
 
                     const aiClass = r.ai_confidence > 0.7 ? 'bg-danger text-white' :

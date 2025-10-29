@@ -95,6 +95,15 @@ def report_data(request):
 
     data = []
     for r in page_obj:
+        # === Auto-Generate AI Tags ===
+        ai_tags = []
+        if r.ai_confidence and r.ai_confidence > 0.4:
+            ai_tags.append("Signalements")
+        if r.is_plagiarism:
+            ai_tags.append("anti-plagiat")
+        if r.is_nsfw or (r.ai_confidence and r.ai_confidence > 0.55):
+            ai_tags.append("détection IA de triche / NSFW")
+
         data.append({
             'id': str(r.id),
             'title': r.title,
@@ -102,7 +111,7 @@ def report_data(request):
             'is_plagiarism': r.is_plagiarism,
             'is_nsfw': r.is_nsfw,
             'ai_confidence': float(r.ai_confidence or 0.0),
-            'ai_flags': r.ai_flags or "",
+            'ai_flags': ", ".join(ai_tags) if ai_tags else "Aucun",
             'risk_label': r.risk_label,
             'created_at': r.created_at.strftime('%Y-%m-%d %H:%M:%S')
         })
@@ -114,6 +123,7 @@ def report_data(request):
         'has_next': page_obj.has_next(),
         'has_previous': page_obj.has_previous(),
     })
+
 
 # ------------------------------
 # STATS ENDPOINT
