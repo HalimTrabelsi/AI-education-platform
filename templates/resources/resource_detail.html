@@ -18,15 +18,8 @@
             text-align: center;
             border-bottom: 5px solid #e9ecef;
         }
-        .course-header h1 {
-            font-weight: 700;
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-        }
-        .course-header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
+        .course-header h1 { font-weight: 700; font-size: 2.2rem; margin-bottom: 10px; }
+        .course-header p { font-size: 1.1rem; opacity: 0.9; }
         .course-content {
             max-width: 1100px;
             margin: 40px auto;
@@ -35,82 +28,37 @@
             box-shadow: 0 4px 25px rgba(0,0,0,0.1);
             overflow: hidden;
         }
-        .media-container {
-            flex: 1;
-            min-width: 350px;
-            background-color: #f8f9fa;
+        .media-container { flex: 1; min-width: 350px; background-color: #f8f9fa; }
+        .media-container img, .media-container video, .media-container iframe {
+            width: 100%; height: 100%; max-height: 500px; object-fit: cover; border-radius: 1rem 0 0 1rem;
         }
-        .media-container img,
-        .media-container video,
-        .media-container iframe {
-            width: 100%;
-            height: 100%;
-            max-height: 500px;
-            object-fit: cover;
-            border-radius: 1rem 0 0 1rem;
-        }
-        .course-details {
-            flex: 1.2;
-            padding: 40px;
-        }
-        .course-details h2 {
-            font-weight: 600;
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-        }
-        .course-details p.description {
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
+        .course-details { flex: 1.2; padding: 40px; }
+        .course-details h2 { font-weight: 600; font-size: 1.8rem; margin-bottom: 15px; }
+        .course-details p.description { font-size: 1.1rem; line-height: 1.6; }
         .badge {
-            background-color: #e9ecef;
-            color: #212529;
-            margin-right: 6px;
-            border-radius: 0.5rem;
-            padding: 0.5em 0.8em;
+            background-color: #e9ecef; color: #212529;
+            margin-right: 6px; border-radius: 0.5rem; padding: 0.5em 0.8em;
         }
         .btn-course {
-            background-color: red;
-            color: white;
-            font-weight: 500;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 10px 20px;
-            transition: all 0.3s ease;
+            background-color: red; color: white; font-weight: 500;
+            border: none; border-radius: 0.5rem; padding: 10px 20px; transition: all 0.3s ease;
         }
-        .btn-course:hover {
-            background-color: darkred;
-        }
+        .btn-course:hover { background-color: darkred; }
         .back-btn {
-            display: inline-block;
-            margin: 20px auto 0;
-            text-decoration: none;
-            color: red;
-            font-weight: 500;
+            display: inline-block; margin: 20px auto 0;
+            text-decoration: none; color: red; font-weight: 500;
         }
-        .back-btn:hover {
-            text-decoration: underline;
-        }
-        #ai-summary-container {
-            margin-top: 30px;
-        }
+        .back-btn:hover { text-decoration: underline; }
+        #ai-summary-container { margin-top: 30px; }
         #ai-summary-result {
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 1rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-height: 400px;
-            overflow-y: auto;
-            font-size: 1rem;
-            line-height: 1.6;
+            padding: 20px; background-color: #f8f9fa;
+            border-radius: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-height: 400px; overflow-y: auto; font-size: 1rem; line-height: 1.6;
         }
+        #download-summary-container { margin-top: 15px; text-align: center; display: none; }
         @media (max-width: 992px) {
-            .course-content {
-                flex-direction: column;
-            }
-            .media-container img,
-            .media-container video,
-            .media-container iframe {
+            .course-content { flex-direction: column; }
+            .media-container img, .media-container video, .media-container iframe {
                 border-radius: 1rem 1rem 0 0;
             }
         }
@@ -128,7 +76,6 @@
 
 <!-- Contenu principal -->
 <div class="course-content d-flex flex-lg-row flex-column">
-    <!-- Partie média -->
     <div class="media-container">
         {% if resource.file %}
             {% if resource.resource_type == 'IMAGE' %}
@@ -146,7 +93,6 @@
         {% endif %}
     </div>
 
-    <!-- Partie texte -->
     <div class="course-details">
         <h2>À propos de cette ressource</h2>
         {% if resource.description %}
@@ -157,15 +103,11 @@
         {% if tags %}
             <div class="mt-3">
                 <strong>Tags associés :</strong><br>
-                {% for tag in tags %}
-                    <span class="badge">{{ tag }}</span>
-                {% endfor %}
+                {% for tag in tags %}<span class="badge">{{ tag }}</span>{% endfor %}
             </div>
         {% endif %}
         {% if file_url %}
-            <a href="{{ file_url }}" target="_blank" class="btn btn-course mt-4">
-                Voir le cours complet
-            </a>
+            <a href="{{ file_url }}" target="_blank" class="btn btn-course mt-4">Voir le cours complet</a>
         {% endif %}
     </div>
 </div>
@@ -188,6 +130,11 @@
             {% endfor %}
         {% endif %}
     </div>
+
+    <!-- Bouton téléchargement PDF -->
+    <div id="download-summary-container">
+        <a id="download-summary-btn" class="btn btn-course" href="#">Télécharger le résumé PDF</a>
+    </div>
 </div>
 
 <script>
@@ -196,19 +143,19 @@ document.getElementById('ai-summary-form').addEventListener('submit', function(e
 
     const formData = new FormData(this);
     const resultDiv = document.getElementById('ai-summary-result');
+    const downloadContainer = document.getElementById('download-summary-container');
+    const downloadBtn = document.getElementById('download-summary-btn');
 
     resultDiv.innerHTML = "<p><em>Résumé en cours de génération... Patientez un instant.</em></p>";
+    downloadContainer.style.display = "none";
 
     fetch(this.action, {
         method: 'POST',
         body: formData,
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
     })
     .then(res => res.json())
     .then(data => {
-        // Découpe en paragraphes
         const paragraphs = data.summary.split(/\n\n|\. /);
         resultDiv.innerHTML = "";
         paragraphs.forEach(p => {
@@ -218,6 +165,10 @@ document.getElementById('ai-summary-form').addEventListener('submit', function(e
                 resultDiv.appendChild(para);
             }
         });
+
+        // Afficher le bouton téléchargement PDF
+        downloadBtn.href = "{% url 'download_summary_pdf' resource.id %}";
+        downloadContainer.style.display = "block";
     })
     .catch(err => {
         console.error(err);

@@ -11,6 +11,7 @@ from .views import (
     resource_edit,
     resource_delete,
     generate_summary_view,
+    download_summary_pdf,
 )
 
 # --- Déclaration du router DRF ---
@@ -31,6 +32,11 @@ urlpatterns = [
 
 
     path('api/<str:resource_id>/generate-summary/', generate_summary_view, name='generate_summary'),
+    path(
+    'front/resource/<str:resource_id>/download-summary/',
+    download_summary_pdf,
+    name='download_summary_pdf'
+),
 
 ]
 

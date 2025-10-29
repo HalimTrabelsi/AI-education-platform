@@ -13,6 +13,20 @@ from urllib.parse import quote
 from .ai_summary import generate_summary
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from .signals import extract_text
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.styles import ParagraphStyle
+
+
+
+
 
 # --------------------------
 # Helper MongoEngine
@@ -87,54 +101,31 @@ def front_office_resource_add(request):
             tags = [t.strip() for t in data.get('tags', '').split(',') if t.strip()]
 
             uploaded_file = request.FILES['file']
-            
             filename = slugify(os.path.splitext(uploaded_file.name)[0])
             extension = os.path.splitext(uploaded_file.name)[1].lower()
             file_path = os.path.join('resources', f"{filename}{extension}")
             saved_path = default_storage.save(file_path, uploaded_file)
-            full_path = os.path.join(settings.MEDIA_ROOT, saved_path)
 
-            # --- Extraction texte PDF ---
-            content_text = ""
-            if extension == '.pdf':
-                try:
-                    import pdfplumber
-                    with pdfplumber.open(full_path) as pdf:
-                        for page in pdf.pages:
-                            text = page.extract_text()
-                            if text:
-                                content_text += text + "\n"
-                    print("Texte extrait PDF (pdfplumber) :", content_text[:200])
-
-                    # Fallback OCR si PDF scanné
-                    if not content_text.strip():
-                        from pdf2image import convert_from_path
-                        import pytesseract
-                        pages = convert_from_path(full_path)
-                        for page_img in pages:
-                            content_text += pytesseract.image_to_string(page_img) + "\n"
-                        print("Texte extrait PDF (OCR) :", content_text[:200])
-
-                except Exception as e:
-                    print(f"Erreur extraction texte PDF : {e}")
-
-            # Créer la ressource
+            # Création de la ressource (content_text vide, le signal post_save s'en occupe)
             resource = Resource(
                 title=data['title'],
                 description=data.get('description', ''),
                 file=saved_path,
                 resource_type=data['resource_type'],
                 tags=tags,
-                content_text=content_text
+                content_text=""
             )
             resource.save()
 
+            # 🔹 Appel manuel du signal pour générer texte et résumé
+            extract_text(sender=Resource, instance=resource, created=True)
+
+            print(f"💾 Ressource '{resource.title}' enregistrée et résumé généré.")
             return redirect('front_office_resource_list')
     else:
         form = ResourceForm()
 
     return render(request, 'resources/resource_ajout.html', {'form': form})
-
 def resource_edit(request, pk):
     resource = get_resource_or_404(pk)
     if request.method == "POST":
@@ -173,8 +164,90 @@ def generate_summary_view(request, resource_id):
 
     return redirect('front_office_resource_detail', resource.id)
 
-def get_resource_or_404(pk):
-    try:
-        return Resource.objects.get(pk=pk)  # pk fonctionne avec MongoEngine
-    except Resource.DoesNotExist:
-        raise Http404
+
+def download_summary_pdf(request, resource_id):
+    resource = get_resource_or_404(resource_id)
+
+    if not resource.summary:
+        return HttpResponse("Aucun résumé disponible.", status=404)
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            rightMargin=40, leftMargin=40,
+                            topMargin=60, bottomMargin=40)
+    
+    styles = getSampleStyleSheet()
+    story = []
+
+    # Personnalisation du titre
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=20,
+        textColor=colors.red,
+        alignment=1,  # centré
+        spaceAfter=20
+    )
+    story.append(Paragraph(resource.title, title_style))
+
+    # Type de ressource
+    type_style = ParagraphStyle(
+        'TypeStyle',
+        parent=styles['Normal'],
+        fontSize=12,
+        textColor=colors.darkred,
+        spaceAfter=15
+    )
+    story.append(Paragraph(f"Type de ressource : {resource.resource_type}", type_style))
+
+    # Ajouter un encadré pour le résumé
+    box_data = [[Paragraph(resource.summary.replace("\n", "<br/>"), styles['Normal'])]]
+    box_table = Table(box_data, colWidths=[doc.width])
+    box_table.setStyle(TableStyle([
+        ('BOX', (0,0), (-1,-1), 1, colors.grey),
+        ('BACKGROUND', (0,0), (-1,-1), colors.whitesmoke),
+        ('LEFTPADDING', (0,0), (-1,-1), 10),
+        ('RIGHTPADDING', (0,0), (-1,-1), 10),
+        ('TOPPADDING', (0,0), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 10),
+    ]))
+    story.append(box_table)
+    story.append(Spacer(1, 12))
+
+    # Générer le PDF
+    doc.build(story)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{slugify(resource.title)}_résumé.pdf"'
+    return response
+
+
+
+
+
+    resource = get_resource_or_404(resource_id)
+
+    if not resource.summary:
+        return HttpResponse("Aucun résumé disponible.", status=404)
+
+    # Créer un buffer en mémoire
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    textobject = pdf.beginText(40, height - 50)
+    textobject.setFont("Helvetica", 12)
+
+    # Ajouter le résumé ligne par ligne
+    for line in resource.summary.split('\n'):
+        textobject.textLine(line)
+    
+    pdf.drawText(textobject)
+    pdf.showPage()
+    pdf.save()
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{resource.title}_résumé.pdf"'
+    return response

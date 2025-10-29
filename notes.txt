@@ -7,3 +7,12 @@ User: halimtrabelsi73@gmail.com
 
 Start server :
 python manage.py runserver
+
+
+commandes ramez :
+
+python -m pip install reportlab
+pip install pdfplumber
+pip install pdf2image pytesseract
+tesseract --version
+

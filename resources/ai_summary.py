@@ -28,3 +28,13 @@ def generate_summary(text):
         result = _summarizer(segment, max_length=150, min_length=40, do_sample=False)
         summaries.append(result[0]['summary_text'])
     return " ".join(summaries)
+
+
+def generate_resource_summary(resource):
+    """
+    Génère un résumé à partir d'une instance Resource.
+    Si aucun texte n'est présent, retourne un message par défaut.
+    """
+    if not resource.content_text:
+        return "Aucun texte disponible pour générer un résumé."
+    return generate_summary(resource.content_text)
