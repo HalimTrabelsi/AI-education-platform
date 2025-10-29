@@ -12,7 +12,7 @@ urlpatterns = [
     path("", home_redirect_view, name="index"),
     # Dashboard urls
     path("dashboard/", include("apps.dashboards.urls")),
-    path('objectives/', include('objectif.urls', namespace='objectifs')),
+    path("objectives/", include(("objectif.urls", "objectifs"), namespace="objectifs")),
     # layouts urls
     path("", include("apps.layouts.urls")),
 

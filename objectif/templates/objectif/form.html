@@ -1,60 +1,51 @@
 {% extends "layout/layout_vertical.html" %}
+{% load static %}
+
+{% block title %}{{ title|default:"Objectif" }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Modifier un objectif</h2>
-    <form method="POST" novalidate>
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="id_titre" class="form-label">Titre :</label>
-            <input type="text" class="form-control" id="id_titre" name="titre" value="{{ form.titre.value|default_if_none:'' }}" required>
-        </div>
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-xl-7">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">{{ title|default:"Nouvel objectif" }}</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" novalidate>
+          {% csrf_token %}
 
-        <div class="mb-3">
-            <label for="id_description" class="form-label">Description :</label>
-            <textarea class="form-control" id="id_description" name="description">{{ form.description.value|default_if_none:'' }}</textarea>
-        </div>
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+              {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
 
-        <div class="mb-3">
-            <label for="id_filiere" class="form-label">Filière :</label>
-            <input type="text" class="form-control" id="id_filiere" name="filiere" value="{{ form.filiere.value|default_if_none:'' }}" required>
-        </div>
+          {% for field in form %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {% if field.field.widget.input_type == "select" %}
+                {{ field.as_widget(attrs={"class": "form-select"}) }}
+              {% else %}
+                {{ field.as_widget(attrs={"class": "form-control"}) }}
+              {% endif %}
+              {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+              {% endif %}
+              {% for error in field.errors %}
+                <div class="text-danger small mt-1">{{ error }}</div>
+              {% endfor %}
+            </div>
+          {% endfor %}
 
-        <div class="mb-3">
-            <label for="id_niveau" class="form-label">Niveau :</label>
-            <input type="text" class="form-control" id="id_niveau" name="niveau" value="{{ form.niveau.value|default_if_none:'' }}" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="id_priorite" class="form-label">Priorité :</label>
-            <select class="form-select" id="id_priorite" name="priorite">
-                <option value="haute" {% if form.priorite.value == 'haute' %}selected{% endif %}>Haute</option>
-                <option value="moyenne" {% if form.priorite.value == 'moyenne' %}selected{% endif %}>Moyenne</option>
-                <option value="basse" {% if form.priorite.value == 'basse' %}selected{% endif %}>Basse</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="id_etat" class="form-label">Etat :</label>
-            <select class="form-select" id="id_etat" name="etat">
-                <option value="non commencé" {% if form.etat.value == 'non commencé' %}selected{% endif %}>Non commencé</option>
-                <option value="en cours" {% if form.etat.value == 'en cours' %}selected{% endif %}>En cours</option>
-                <option value="terminé" {% if form.etat.value == 'terminé' %}selected{% endif %}>Terminé</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="id_date_debut" class="form-label">Date début :</label>
-            <input type="datetime-local" class="form-control" id="id_date_debut" name="date_debut" value="{{ form.date_debut.value|default_if_none:'' }}">
-        </div>
-
-        <div class="mb-3">
-            <label for="id_date_echeance" class="form-label">Date échéance :</label>
-            <input type="datetime-local" class="form-control" id="id_date_echeance" name="date_echeance" value="{{ form.date_echeance.value|default_if_none:'' }}">
-        </div>
-
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
-        <a href="{% url 'objectifs:list' %}" class="btn btn-secondary">Retour à la liste</a>
-    </form>
+          <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'objectifs:list' %}" class="btn btn-outline-secondary">Annuler</a>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

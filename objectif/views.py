@@ -27,8 +27,10 @@ genai.configure(api_key="AIzaSyBCutcN7kxoQ8frc9GHPGXlBMneulZCHzc")
 def list_objectif(request):
     # 🔹 Filtrer par user connecté
     objectifs = Objective.objects(user_id=str(request.user.id))
-    return render(request, "objectif/list.html", {"objectifs": objectifs})
-
+    return render(request, "objectif/list.html", {
+    "objectifs": objectifs,
+    "layout_path": "layout/layout_vertical.html"
+    })
 @login_required
 def create_objectif(request):
     if request.method == "POST":
@@ -39,10 +41,14 @@ def create_objectif(request):
                 **form.cleaned_data
             )
             obj.save()
-            return redirect("objectif:list")
+            return redirect("objectifs:list")
     else:
         form = ObjectiveForm()
-    return render(request, "objectif/form.html", {"form": form, "title": "Créer un objectif"})
+    return render(request, "objectif/form.html", {
+    "form": form,
+    "title": "New objective",
+    "layout_path": "layout/layout_vertical.html"
+    })
 
 @login_required
 def update_objectif(request, id):
@@ -55,7 +61,7 @@ def update_objectif(request, id):
             objectif.derniere_mise_a_jour = date = datetime.datetime.utcnow()  # ✅ correct
 
             objectif.save()
-            return redirect("objectif:list")
+            return redirect("objectifs:list")
     else:
         initial = {
             "titre": objectif.titre,
@@ -68,15 +74,22 @@ def update_objectif(request, id):
             "date_echeance": objectif.date_echeance,
         }
         form = ObjectiveForm(initial=initial)
-    return render(request, "objectif/form.html", {"form": form, "title": "Modifier un objectif"})
+    return render(request, "objectif/form.html", {
+    "form": form,
+    "title": "Edit objective",
+    "layout_path": "layout/layout_vertical.html"
+    })
 
 @login_required
 def delete_objectif(request, id):
     objectif = Objective.objects.get(id=id, user_id=str(request.user.id))
     if request.method == "POST":
         objectif.delete()
-        return redirect("objectif:list")
-    return render(request, "objectif/confirm_delete.html", {"objectif": objectif})
+        return redirect("objectifs:list")
+    return render(request, "objectif/confirm_delete.html", {
+    "objectif": objectif,
+    "layout_path": "layout/layout_vertical.html"
+    })
 
 
 
@@ -127,7 +140,10 @@ def objective_details(request, obj_id):
             'today': timezone.now().date()
         }
 
-        return render(request, 'objectif/details.html', context)
+        return render(request, 'objectif/details.html', {
+    **context,
+    "layout_path": "layout/layout_vertical.html"
+        })
 
     except Objective.DoesNotExist:
         return HttpResponse("Objectif non trouvé", status=404)
@@ -242,7 +258,10 @@ def objective_calendar(request):
         'objectifs_count': len(all_objectifs)
     }
 
-    return render(request, 'objectif/calendar.html', context)
+    return render(request, 'objectif/calendar.html', {
+    **context,
+    "layout_path": "layout/layout_vertical.html"
+    })
 
 @login_required
 def calendar_events_api(request):
@@ -372,7 +391,10 @@ def objective_details(request, obj_id):
             'has_ia_analysis': bool(getattr(obj, 'analyse_ia', ''))
         }
 
-        return render(request, 'objectif/details.html', context)
+        return render(request, "objectif/chat.html", {
+    "objectifs": objectifs,
+    "layout_path": "layout/layout_vertical.html"
+    })
 
     except Objective.DoesNotExist:
         return HttpResponse("Objectif non trouvé", status=404)
@@ -695,7 +717,7 @@ def trigger_ia_analysis(request, obj_id):
             except:
                 request.session['analysis_message'] = "error:❌ Erreur lors de la génération de l'analyse IA"
 
-        return redirect('objectif:details', obj_id=obj_id)
+        return redirect("objectifs:detail", obj_id=obj_id)
 
     except Exception as e:
         print(f"Erreur dans trigger_ia_analysis: {e}")
@@ -703,7 +725,7 @@ def trigger_ia_analysis(request, obj_id):
             messages.error(request, f"❌ Erreur lors de l'analyse IA: {str(e)}")
         except:
             request.session['analysis_message'] = f"error:❌ Erreur lors de l'analyse IA: {str(e)}"
-        return redirect('objectif:details', obj_id=obj_id)
+        return redirect("objectifs:detail", obj_id=obj_id)
 
 @login_required
 def get_ia_analysis(request, obj_id):

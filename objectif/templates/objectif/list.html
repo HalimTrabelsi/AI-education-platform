@@ -1,79 +1,108 @@
-{% extends 'layout/layout_vertical.html' %}
+{% extends "layout/layout_vertical.html" %}
 {% load static %}
-{% load i18n %}
-
-{% block title %}Mes Objectifs{% endblock %}
+{% block title %}Mes objectifs{% endblock %}
 
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css"/>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-
-<h1>Mes Objectifs</h1>
-
-<!-- 🟢 Bouton pour créer un nouvel objectif -->
-<div style="margin-bottom: 20px;">
-    <a href="{% url 'objectifs:create' %}" class="btn btn-primary" style="background-color:#007bff; border:none; padding:8px 15px; border-radius:6px; text-decoration:none; color:white;">
-        ➕ Créer un nouvel objectif
-    </a>
-</div>
-
-<table id="objectifs-table" class="display" style="width:100%">
-  <thead>
-    <tr>
-      <th>Titre</th>
-      <th>Filière</th>
-      <th>Niveau</th>
-      <th>Priorité</th>
-      <th>État</th>
-      <th>Suggestion IA</th>
-      <th>Score IA</th>
-      <th>Recommandé</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for obj in objectifs %}
-    <tr>
-      <td>{{ obj.titre }}</td>
-      <td>{{ obj.filiere }}</td>
-      <td>{{ obj.niveau }}</td>
-      <td>{{ obj.priorite }}</td>
-      <td>{{ obj.etat }}</td>
-      <td>{{ obj.suggestion_ia|default:"—" }}</td>
-      <td>{{ obj.score_priorite_ia|floatformat:2 }}</td>
-      <td>{% if obj.objectif_recommande %}✅{% else %}❌{% endif %}</td>
-      <td>
-        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-            <a href="{% url 'objectifs:objective_details' obj.id %}" class="btn btn-info btn-sm">📋 Détails</a>
-            <a href="{% url 'objectifs:update' obj.id %}" class="btn btn-warning btn-sm">✏️ Modifier</a>
-            <a href="{% url 'objectifs:generate_qrcode' obj.id %}" class="btn btn-success btn-sm" download>📱 QR Code</a>
-            <a href="{% url 'objectifs:delete' obj.id %}" class="btn btn-danger btn-sm">🗑️ Supprimer</a>
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+          <h5 class="mb-1">Mes objectifs</h5>
+          <p class="mb-0 text-body-secondary">Suivez vos objectifs, leur priorité et leur état d’avancement.</p>
         </div>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<!-- JQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- DataTables -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css"/>
-<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-
-<script>
-$(document).ready(function() {
-    $('#objectifs-table').DataTable({
-        paging: true,
-        searching: true,
-        ordering: true,
-        order: [[ 0, 'asc' ]], // tri par titre
-        columnDefs: [
-            { orderable: false, targets: 8 } // désactiver tri pour la colonne Actions
-        ]
-    });
-});
-</script>
-
+        <div class="d-flex align-items-center gap-2">
+          <a href="{% url 'objectifs:calendar' %}" class="btn btn-outline-secondary">
+            <i class="bx bx-calendar me-1"></i> Calendrier
+          </a>
+          <a href="{% url 'objectifs:create' %}" class="btn btn-primary">
+            <i class="bx bx-plus me-1"></i> Nouvel objectif
+          </a>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-borderless align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Titre</th>
+              <th>Filière</th>
+              <th>Niveau</th>
+              <th>Priorité</th>
+              <th>État</th>
+              <th>Suggestion IA</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for obj in objectifs %}
+              <tr>
+                <td class="fw-semibold">{{ obj.titre }}</td>
+                <td>{{ obj.filiere|default:"—" }}</td>
+                <td>{{ obj.niveau|default:"—" }}</td>
+                <td>
+                  {% if obj.priorite == "haute" %}
+                    <span class="badge bg-label-danger text-uppercase">Haute</span>
+                  {% elif obj.priorite == "moyenne" %}
+                    <span class="badge bg-label-warning text-uppercase">Moyenne</span>
+                  {% elif obj.priorite == "basse" %}
+                    <span class="badge bg-label-success text-uppercase">Basse</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary text-uppercase">N/A</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if obj.etat == "terminé" %}
+                    <span class="badge bg-label-success text-uppercase">Terminé</span>
+                  {% elif obj.etat == "en cours" %}
+                    <span class="badge bg-label-info text-uppercase">En cours</span>
+                  {% elif obj.etat == "non commencé" %}
+                    <span class="badge bg-label-secondary text-uppercase">À démarrer</span>
+                  {% else %}
+                    <span class="badge bg-label-secondary text-uppercase">{{ obj.etat|default:"N/A" }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if obj.suggestion_ia %}
+                    <span class="text-truncate d-inline-block" style="max-width: 220px;" title="{{ obj.suggestion_ia }}">
+                      {{ obj.suggestion_ia }}
+                    </span>
+                  {% else %}
+                    <span class="text-body-secondary">—</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <div class="btn-group" role="group">
+                    <a href="{% url 'objectifs:detail' obj.id %}" class="btn btn-sm btn-outline-primary" title="Détails">
+                      <i class="bx bx-show"></i>
+                    </a>
+                    <a href="{% url 'objectifs:update' obj.id %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                      <i class="bx bx-edit"></i>
+                    </a>
+                    <a href="{% url 'objectifs:qrcode' obj.id %}" class="btn btn-sm btn-outline-success" title="QR code" download>
+                      <i class="bx bx-qr"></i>
+                    </a>
+                    <a href="{% url 'objectifs:bilan_pdf' obj.id %}" class="btn btn-sm btn-outline-info" title="Bilan PDF">
+                      <i class="bx bx-file"></i>
+                    </a>
+                    <a href="{% url 'objectifs:delete' obj.id %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                      <i class="bx bx-trash"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-body-secondary py-5">
+                  <i class="bx bx-target fs-1 d-block mb-2"></i>
+                  Aucun objectif enregistré pour le moment.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

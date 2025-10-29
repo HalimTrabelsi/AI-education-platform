@@ -1,489 +1,223 @@
+{% extends "layout/layout_vertical.html" %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduBot - Assistant IA</title>
-    <style>
-        /* Reset et base */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% block title %}Assistant IA{% endblock %}
 
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #f8fafc;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Layout principal */
-        .container {
-            display: flex;
-            height: 100vh;
-            background: white;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 320px;
-            background: white;
-            border-right: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid #e2e8f0;
-            background: #f8fafc;
-        }
-
-        .sidebar-header h2 {
-            color: #1e293b;
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .objectives-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-        }
-
-        .objective-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .objective-card:hover {
-            border-color: #3b82f6;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-        }
-
-        .objective-title {
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .objective-meta {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-secondary { background: #f1f5f9; color: #475569; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-info { background: #dbeafe; color: #1e40af; }
-
-        .progress-bar {
-            height: 4px;
-            background: #e2e8f0;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #3b82f6;
-            transition: width 0.3s ease;
-        }
-
-        .sidebar-footer {
-            padding: 16px;
-            border-top: 1px solid #e2e8f0;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 12px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-
-        /* Zone de chat */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: white;
-        }
-
-        .chat-header {
-            padding: 20px;
-            border-bottom: 1px solid #e2e8f0;
-            background: white;
-        }
-
-        .chat-header h1 {
-            color: #1e293b;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f8fafc;
-        }
-
-        .message {
-            display: flex;
-            margin-bottom: 20px;
-            animation: slideIn 0.3s ease;
-        }
-
-        .user-message {
-            justify-content: flex-end;
-        }
-
-        .message-bubble {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .bot-message .message-bubble {
-            background: white;
-            border: 1px solid #e2e8f0;
-            color: #374151;
-        }
-
-        .user-message .message-bubble {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .message-time {
-            font-size: 11px;
-            color: #64748b;
-            margin-top: 4px;
-        }
-
-        .user-message .message-time {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .chat-input {
-            padding: 20px;
-            border-top: 1px solid #e2e8f0;
-            background: white;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .message-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s ease;
-        }
-
-        .message-input:focus {
-            border-color: #3b82f6;
-        }
-
-        .send-btn {
-            padding: 12px 24px;
-            background: #3b82f6;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s ease;
-        }
-
-        .send-btn:hover {
-            background: #2563eb;
-        }
-
-        .send-btn:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-        }
-
-        /* Suggestions */
-        .suggestions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-
-        .suggestion-btn {
-            padding: 8px 12px;
-            background: white;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 12px;
-            color: #374151;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .suggestion-btn:hover {
-            border-color: #3b82f6;
-            color: #3b82f6;
-        }
-
-        /* Animations */
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Scrollbar */
-        .chat-messages::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .chat-messages::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 3px;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            
-            .message-bubble {
-                max-width: 85%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>📚 Mes Objectifs</h2>
-            </div>
-            
-            <div class="objectives-list">
-                {% if objectifs %}
-                    {% for obj in objectifs %}
-                    <div class="objective-card">
-                        <div class="objective-title">{{ obj.titre }}</div>
-                        <div class="objective-meta">
-                            <span class="badge badge-{% if obj.etat == 'terminé' %}success{% elif obj.etat == 'en cours' %}warning{% else %}secondary{% endif %}">
-                                {{ obj.etat }}
-                            </span>
-                            <span class="badge badge-{% if obj.priorite == 'haute' %}danger{% elif obj.priorite == 'moyenne' %}warning{% else %}info{% endif %}">
-                                {{ obj.priorite }}
-                            </span>
-                        </div>
-                        {% if obj.progression %}
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: {{ obj.progression }}%"></div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div style="text-align: center; padding: 40px 20px; color: #64748b;">
-                        <p>Aucun objectif défini</p>
-                    </div>
-                {% endif %}
-            </div>
-            
-            <div class="sidebar-footer">
-                <button class="btn-primary">+ Nouvel Objectif</button>
-            </div>
-        </div>
-
-        <!-- Zone de chat -->
-        <div class="chat-area">
-            <div class="chat-header">
-                <h1>🤖 EduBot Assistant</h1>
-            </div>
-            
-            <div class="chat-messages" id="chatMessages">
-                <!-- Message de bienvenue -->
-                <div class="message">
-                    <div class="message-bubble">
-                        <div>Bonjour ! 👋 Je suis EduBot, votre assistant éducatif.</div>
-                        <div style="margin-top: 8px;">Je peux vous aider à organiser vos études, prioriser vos objectifs et répondre à vos questions.</div>
-                        <div class="message-time">{{ current_time|date:"H:i" }}</div>
-                    </div>
+{% block content %}
+<div class="row gy-4">
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-1">Vos objectifs</h5>
+        <p class="mb-0 text-body-secondary">Sélectionnez un objectif pour contextualiser les réponses d’EduBot.</p>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush" id="objectivesList">
+          {% for objectif in objectifs %}
+            <button type="button"
+                    class="list-group-item list-group-item-action d-flex flex-column align-items-start gap-1 text-start"
+                    data-objective="{{ objectif.id }}"
+                    data-title="{{ objectif.titre }}"
+                    data-status="{{ objectif.etat }}"
+                    data-priority="{{ objectif.priorite }}"
+                    data-progress="{{ objectif.progression|default:0 }}">
+              <span class="fw-semibold">{{ objectif.titre }}</span>
+              <small class="text-body-secondary">
+                Priorité : {{ objectif.priorite|default:"—" }} · État : {{ objectif.etat|default:"—" }}
+              </small>
+              {% if objectif.progression %}
+                <div class="progress w-100" style="height: 4px;">
+                  <div class="progress-bar bg-primary" role="progressbar"
+                       style="width: {{ objectif.progression }}%;" aria-valuenow="{{ objectif.progression }}"
+                       aria-valuemin="0" aria-valuemax="100"></div>
                 </div>
+              {% endif %}
+            </button>
+          {% empty %}
+            <div class="p-4 text-center text-body-secondary">
+              <i class="bx bx-target fs-1 d-block mb-2"></i>
+              Aucun objectif pour le moment.
             </div>
-            
-            <div class="chat-input">
-                <form id="chatForm">
-                    <div class="input-group">
-                        <input type="text" 
-                               class="message-input" 
-                               id="messageInput"
-                               placeholder="Tapez votre message..."
-                               autocomplete="off">
-                        <button type="submit" class="send-btn" id="sendBtn">
-                            Envoyer
-                        </button>
-                    </div>
-                    
-                    <div class="suggestions">
-                        <button type="button" class="suggestion-btn" data-message="Comment organiser mon temps ?">
-                            📅 Organisation
-                        </button>
-                        <button type="button" class="suggestion-btn" data-message="Quelle priorité donner à mes objectifs ?">
-                            🎯 Priorisation
-                        </button>
-                        <button type="button" class="suggestion-btn" data-message="Comment améliorer ma concentration ?">
-                            💡 Concentration
-                        </button>
-                    </div>
-                </form>
-            </div>
+          {% endfor %}
         </div>
+      </div>
+      <div class="card-footer d-flex justify-content-between">
+        <a href="{% url 'objectifs:list' %}" class="btn btn-outline-secondary btn-sm">
+          <i class="bx bx-list-ul me-1"></i> Liste
+        </a>
+        <a href="{% url 'objectifs:create' %}" class="btn btn-primary btn-sm">
+          <i class="bx bx-plus me-1"></i> Nouvel objectif
+        </a>
+      </div>
     </div>
+  </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-    const chatForm = document.getElementById('chatForm');
-    const messageInput = document.getElementById('messageInput');
-    const chatMessages = document.getElementById('chatMessages');
-    const sendBtn = document.getElementById('sendBtn');
-    const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-1">EduBot</h5>
+          <p class="mb-0 text-body-secondary">Assistant IA pour vous guider dans vos objectifs académiques.</p>
+        </div>
+        <div id="selectedObjectiveChip" class="badge bg-label-primary d-none text-wrap"></div>
+      </div>
+      <div class="card-body d-flex flex-column">
+        <div class="border rounded p-3 mb-3 flex-grow-1 overflow-auto" id="chatMessages" style="max-height: 420px;">
+          <div class="text-body-secondary text-center">
+            <p class="mb-0">Commencez une conversation en sélectionnant un objectif ou en envoyant un message.</p>
+          </div>
+        </div>
+        <form id="chatForm" class="pt-2">
+          {% csrf_token %}
+          <input type="hidden" name="objective_id" id="selectedObjectiveInput">
+          <div class="input-group">
+            <input type="text" class="form-control" id="messageInput" name="message"
+                   placeholder="Posez votre question à EduBot..." autocomplete="off">
+            <button class="btn btn-primary" type="submit" id="sendBtn">
+              <i class="bx bx-send"></i>
+            </button>
+          </div>
+          <div class="d-flex flex-wrap gap-2 mt-2">
+            <button class="btn btn-outline-secondary btn-sm suggestion-btn" type="button"
+                    data-message="Comment améliorer ma gestion du temps ?">
+              Gestion du temps
+            </button>
+            <button class="btn btn-outline-secondary btn-sm suggestion-btn" type="button"
+                    data-message="Quelle priorité donner à mes objectifs actuels ?">
+              Priorités
+            </button>
+            <button class="btn btn-outline-secondary btn-sm suggestion-btn" type="button"
+                    data-message="Comment rester motivé pour atteindre mes objectifs ?">
+              Motivation
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
-    function addMessage(content, isUser = false) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`; // Correction ici
-        
-        const time = new Date().toLocaleTimeString('fr-FR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+{% block page_js %}
+  {{ block.super }}
+  <script>
+    (function () {
+      const chatForm = document.getElementById("chatForm");
+      const messageInput = document.getElementById("messageInput");
+      const messagesWrapper = document.getElementById("chatMessages");
+      const sendBtn = document.getElementById("sendBtn");
+      const objectiveChip = document.getElementById("selectedObjectiveChip");
+      const objectiveInput = document.getElementById("selectedObjectiveInput");
+      const suggestionButtons = document.querySelectorAll(".suggestion-btn");
+      let activeObjectiveButton = null;
+
+      function scrollToBottom() {
+        messagesWrapper.scrollTop = messagesWrapper.scrollHeight;
+      }
+
+      function addMessage(content, variant) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "d-flex mb-3";
+
+        const bubble = document.createElement("div");
+        bubble.className = "px-3 py-2 rounded-3";
+        bubble.innerHTML = content;
+
+        if (variant === "user") {
+          wrapper.classList.add("justify-content-end");
+          bubble.classList.add("bg-primary", "text-white", "ms-auto");
+        } else {
+          wrapper.classList.add("justify-content-start");
+          bubble.classList.add("bg-label-secondary", "text-body");
+        }
+
+        wrapper.appendChild(bubble);
+        messagesWrapper.appendChild(wrapper);
+        scrollToBottom();
+      }
+
+      function setActiveObjective(button) {
+        if (activeObjectiveButton) {
+          activeObjectiveButton.classList.remove("active");
+        }
+
+        activeObjectiveButton = button;
+
+        if (!button) {
+          objectiveInput.value = "";
+          objectiveChip.classList.add("d-none");
+          return;
+        }
+
+        button.classList.add("active");
+        const title = button.dataset.title || "Objectif sélectionné";
+        const status = button.dataset.status || "État inconnu";
+
+        objectiveInput.value = button.dataset.objective || "";
+        objectiveChip.textContent = `${title} · ${status}`;
+        objectiveChip.classList.remove("d-none");
+      }
+
+      document.querySelectorAll("#objectivesList button").forEach((btn) => {
+        btn.addEventListener("click", () => setActiveObjective(btn));
+      });
+
+      suggestionButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const message = btn.dataset.message || "";
+          if (message) {
+            sendMessage(message);
+          }
         });
-        
-        messageDiv.innerHTML = `
-            <div class="message-bubble">
-                <div>${content}</div>
-                <div class="message-time">${time}</div>
-            </div>
-        `;
-        
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+      });
 
-    function sendMessage(message) {
-        if (!message.trim()) return;
+      function sendMessage(message) {
+        if (!message.trim()) {
+          return;
+        }
 
-        // Message utilisateur
-        addMessage(message, true);
-        messageInput.value = '';
+        addMessage(message, "user");
+        messageInput.value = "";
+        messageInput.focus();
         sendBtn.disabled = true;
 
-        // Simulation réponse IA avec délai
-        setTimeout(() => {
-            let response;
-            
-            // Réponses contextuelles selon le message
-            if (message.toLowerCase().includes('organiser') || message.includes('temps')) {
-                response = "Je comprends votre question. Voici mes recommandations pour organiser votre temps :<br><br>• Utilisez la technique Pomodoro (25 min travail / 5 min pause)<br>• Créez un emploi du temps hebdomadaire<br>• Priorisez les tâches importantes et urgentes<br>• Réservez du temps pour les révisions";
-            } else if (message.toLowerCase().includes('priorité') || message.includes('objectifs')) {
-                response = "Voici une stratégie qui pourrait vous aider à prioriser vos objectifs :<br><br>• Identifiez vos objectifs à long terme<br>• Utilisez la matrice d'Eisenhower (important/urgent)<br>• Fixez des deadlines réalistes<br>• Revoyez régulièrement vos priorités";
-            } else if (message.toLowerCase().includes('santé') || message.toLowerCase().includes('coeur')) {
-                response = "Excellente question ! Pour la santé du cœur :<br><br>• Pratiquez 30 min d'exercice quotidien<br>• Adoptez une alimentation équilibrée<br>• Gérez votre stress<br>• Dormez 7-8 heures par nuit<br>• Évitez le tabac et limitez l'alcool";
-            } else if (message.toLowerCase().includes('concentration')) {
-                response = "Pour améliorer votre concentration :<br><br>• Éliminez les distractions (téléphone, réseaux sociaux)<br>• Créez un environnement de travail calme<br>• Faites des pauses régulières<br>• Pratiquez la méditation ou la pleine conscience";
-            } else {
-                response = "Je comprends votre question. En tant qu'assistant éducatif, je peux vous aider avec : l'organisation du temps, la priorisation des objectifs, les techniques d'étude, la gestion du stress, et bien plus encore. Pouvez-vous préciser votre demande ?";
+        const formData = new FormData(chatForm);
+        formData.set("message", message);
+
+        fetch("{% url 'objectifs:assistant_api' %}", {
+          method: "POST",
+          headers: {
+            "X-Requested-With": "XMLHttpRequest"
+          },
+          body: formData
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.reply) {
+              addMessage(data.reply, "bot");
+            } else if (data.error) {
+              addMessage(data.error, "bot");
             }
-            
-            addMessage(response);
+          })
+          .catch(() => {
+            addMessage("Une erreur est survenue. Merci de réessayer.", "bot");
+          })
+          .finally(() => {
             sendBtn.disabled = false;
-            messageInput.focus();
-        }, 1500);
-    }
+          });
+      }
 
-    // Gestion du formulaire
-    chatForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const message = messageInput.value.trim();
-        if (message) {
-            sendMessage(message);
+      chatForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendMessage(messageInput.value);
+      });
+
+      messageInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          sendMessage(messageInput.value);
         }
-    });
-
-    // Suggestions rapides
-    suggestionBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const message = btn.getAttribute('data-message');
-            sendMessage(message);
-        });
-    });
-
-    // Raccourci clavier - Enter pour envoyer
-    messageInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            const message = messageInput.value.trim();
-            if (message) {
-                sendMessage(message);
-            }
-        }
-    });
-
-    // Activer/désactiver le bouton en fonction du contenu
-    messageInput.addEventListener('input', () => {
-        sendBtn.disabled = !messageInput.value.trim();
-    });
-
-    messageInput.focus();
-});
-    </script>
-</body>
-</html>
+      });
+    })();
+  </script>
+{% endblock %}
