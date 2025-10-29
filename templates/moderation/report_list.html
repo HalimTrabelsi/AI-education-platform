@@ -98,21 +98,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const reportBody = document.getElementById('reportBody');
   const pagination = document.getElementById('pagination');
   let chart = null;
+  let currentPage = 1; // Track current page
 
   function escapeHtml(str){ 
     if(!str) return ''; 
-    return str.replace(/[&<>"'`=\/]/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","/":"&#x2F;","`":"&#x60","=":"&#x3D"
-    }[s])); 
+    return str.replace(/[&<>"'`=\/]/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","/":"&#x2F;","`":"&#x60","=":"&#x3D"}[s])); 
   }
 
-  function loadReports(page=1){
+  function loadReports(page=currentPage){
     const q = encodeURIComponent(searchBox.value);
     const s = encodeURIComponent(sortOrder.value);
 
     fetch("{% url 'moderation:report_data' %}?q="+q+"&sort="+s+"&page="+page)
     .then(r=>r.json())
     .then(data=>{
+      currentPage = data.page_number;
+
       // TABLE BODY
       if(!data.reports.length){
         reportBody.innerHTML=`<tr><td colspan="8" class="text-center py-4 text-muted">Aucun signalement trouvé.</td></tr>`;
@@ -180,29 +181,26 @@ document.addEventListener('DOMContentLoaded', () => {
             categoryPercentage:0.5
           }]
         },
-        options:{
-          responsive:true,
-          plugins:{legend:{display:false}},
-          scales:{
-            y:{beginAtZero:true,ticks:{precision:0}},
-            x:{grid:{drawTicks:false}}
-          }
-        }
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}},x:{grid:{drawTicks:false}}}}
       });
     });
   }
 
+  // PAGINATION CLICK
   pagination.addEventListener('click', e => { 
     if(e.target.dataset.page){ 
       e.preventDefault(); 
-      loadReports(parseInt(e.target.dataset.page)); 
+      currentPage = parseInt(e.target.dataset.page); 
+      loadReports(currentPage); 
     }
   });
-  searchBox.addEventListener('input', ()=> loadReports(1));
-  sortOrder.addEventListener('change', ()=> loadReports(1));
+
+  // SEARCH & SORT
+  searchBox.addEventListener('input', ()=> { currentPage=1; loadReports(); });
+  sortOrder.addEventListener('change', ()=> { currentPage=1; loadReports(); });
 
   loadReports();
-  setInterval(()=>loadReports(),5000);
+  setInterval(()=>loadReports(currentPage),5000); 
 });
 </script>
 {% endblock %}
