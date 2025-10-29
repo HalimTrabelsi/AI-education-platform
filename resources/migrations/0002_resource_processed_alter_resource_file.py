@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='resource',
             name='file',
-            field=models.FileField(upload_to='resources/', validators=[resources.models.validate_file]),
+            field=models.FileField(upload_to='resources/'),
+
         ),
     ]

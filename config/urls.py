@@ -51,6 +51,7 @@ urlpatterns = [
 
     # Moderation (Reports CRUD)
     path("moderation/", include("moderation.urls", namespace="moderation")),
+        # Objectif 
 ]
 
 # Custom error handlers

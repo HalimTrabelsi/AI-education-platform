@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "moderation/base.html" %}
 {% block content %}
 <div class="container py-5">
 
@@ -91,6 +91,17 @@
                 <div class="text-danger small">{{ form.ai_flags.errors }}</div>
               {% endif %}
             </div>
+
+            <!-- NSFW & Anti-Plagiat Checkboxes -->
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="nsfwCheck" disabled>
+              <label class="form-check-label fw-bold" for="nsfwCheck">NSFW détecté</label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="plagiarismCheck" disabled>
+              <label class="form-check-label fw-bold" for="plagiarismCheck">Plagiat détecté</label>
+            </div>
+
           </div>
         </div>
 
@@ -124,32 +135,41 @@
 
 // === AI Dynamic Tag Logic ===
 document.addEventListener('DOMContentLoaded', () => {
-  const aiInput   = document.getElementById('{{ form.ai_confidence.id_for_label }}');
+  const aiInput    = document.getElementById('{{ form.ai_confidence.id_for_label }}');
   const titleInput = document.getElementById('{{ form.title.id_for_label }}');
   const urlInput   = document.getElementById('{{ form.resource_url.id_for_label }}');
-  const aiFlags   = document.getElementById('{{ form.ai_flags.id_for_label }}');
+  const aiFlags    = document.getElementById('{{ form.ai_flags.id_for_label }}');
+  const nsfwCheck  = document.getElementById('nsfwCheck');
+  const plagCheck  = document.getElementById('plagiarismCheck');
 
-  // === Function to Update Tags ===
   function updateTags(extraTag = null) {
-  const value = parseFloat(aiInput.value);
-  let tags = [];
+    const value = parseFloat(aiInput.value);
+    let tags = [];
 
-  if (!isNaN(value)) {
-    if (value > 0.4) tags.push("Signalements");
-    if (value > 0.55) tags.push("détection IA de triche / NSFW");
+    if (!isNaN(value)) {
+      if (value > 0.4) tags.push("Signalements");
+      if (value > 0.55) {
+        tags.push("détection IA de triche / NSFW");
+        nsfwCheck.checked = true;
+      } else {
+        nsfwCheck.checked = false;
+      }
+      if (value > 0.7) {
+        tags.push("Risque élevé");
+      }
+    } else {
+      nsfwCheck.checked = false;
+    }
+
+    if (extraTag && !tags.includes(extraTag)) tags.push(extraTag);
+    plagCheck.checked = tags.includes("anti-plagiat");
+
+    aiFlags.value = tags.length > 0 ? tags.join(", ") : "Aucun tag détecté";
   }
 
-  // Add tag if AI detected plagiarism externally
-  if (extraTag && !tags.includes(extraTag)) tags.push(extraTag);
-
-  aiFlags.value = tags.length > 0 ? tags.join(", ") : "Aucun tag détecté";
-}
-
-
-  // === AJAX Check for Duplicate (Plagiarism) ===
   async function checkDuplicates() {
     const title = titleInput.value.trim();
-    const url = urlInput.value.trim();
+    const url   = urlInput.value.trim();
     if (!title && !url) return;
 
     try {
@@ -166,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // === Event Listeners ===
   aiInput.addEventListener('input', updateTags);
   titleInput.addEventListener('input', checkDuplicates);
   urlInput.addEventListener('input', checkDuplicates);

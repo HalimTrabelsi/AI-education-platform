@@ -11,7 +11,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 
 # ------------------------------
-# EXPORT PDF
+# EXPORT PDF WITHOUT AI TAGS
 # ------------------------------
 def export_reports_pdf(request):
     reports = Report.objects.all()
@@ -21,22 +21,26 @@ def export_reports_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="reports_dashboard.pdf"'
 
     # Create document
-    doc = SimpleDocTemplate(response, pagesize=landscape(A4),
-                            rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=landscape(A4),
+        rightMargin=20, leftMargin=20, topMargin=30, bottomMargin=30
+    )
+
     elements = []
     styles = getSampleStyleSheet()
 
-    # Title
-    title = Paragraph("Tableau de bord des signalements", styles['Title'])
-    elements.append(title)
-    elements.append(Spacer(1, 12))
+    # Title and subtitle
+    elements.append(Paragraph("Tableau de bord des signalements", styles['Title']))
+    elements.append(Spacer(1, 8))
+    elements.append(Paragraph(
+        "Suivi des signalements avec détection AI, plagiat et contenu NSFW",
+        styles['Normal']
+    ))
+    elements.append(Spacer(1, 16))
 
-    subtitle = Paragraph("Suivi des signalements avec détection AI, plagiat et contenu NSFW", styles['Normal'])
-    elements.append(subtitle)
-    elements.append(Spacer(1, 24))
-
-    # Table headers
-    data = [["Titre", "Signalé par", "Plagiat", "NSFW", "Score IA", "Tags AI", "Risque"]]
+    # Table headers (AI Tags removed)
+    data = [["Titre", "Signalé par", "Plagiat", "NSFW", "Score IA", "Risque"]]
 
     for r in reports:
         data.append([
@@ -45,22 +49,25 @@ def export_reports_pdf(request):
             "Oui" if r.is_plagiarism else "Non",
             "Oui" if r.is_nsfw else "Non",
             f"{r.ai_confidence:.2f}",
-            r.ai_flags or "Aucun",
             r.risk_label
         ])
 
-    table = Table(data, repeatRows=1, colWidths=[120, 100, 50, 50, 60, 120, 60])
-    table_style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4e73df")),  # header blue
+    # Adjust column widths proportionally
+    col_widths = [200, 120, 50, 50, 60, 80]
+
+    table = Table(data, repeatRows=1, colWidths=col_widths)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4e73df")),  # header
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('BOTTOMPADDING', (0,0), (-1,0), 8),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-        ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.whitesmoke, colors.lightgrey])
-    ])
-    table.setStyle(table_style)
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey]),
+    ]))
 
     elements.append(table)
 
@@ -68,7 +75,7 @@ def export_reports_pdf(request):
     def add_page_number(canvas, doc):
         page_num = canvas.getPageNumber()
         canvas.setFont('Helvetica', 9)
-        canvas.drawRightString(landscape(A4)[0] - 30, 15, f"Page {page_num}")
+        canvas.drawRightString(landscape(A4)[0] - 20, 15, f"Page {page_num}")
 
     doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
     return response
@@ -95,7 +102,6 @@ def report_data(request):
 
     data = []
     for r in page_obj:
-        # === Auto-Generate AI Tags ===
         ai_tags = []
         if r.ai_confidence and r.ai_confidence > 0.4:
             ai_tags.append("Signalements")
@@ -124,7 +130,6 @@ def report_data(request):
         'has_previous': page_obj.has_previous(),
     })
 
-
 # ------------------------------
 # STATS ENDPOINT
 # ------------------------------
@@ -136,7 +141,6 @@ def report_stats(request):
     risky_count = reports.filter(risk_label="Risky").count()
     safe_count = reports.filter(risk_label="Safe").count()
 
-    # Unique AI tags
     all_tags = []
     for r in reports:
         if r.ai_flags:
@@ -165,15 +169,32 @@ def report_create(request):
                 description=data.get('description'),
                 resource_url=data.get('resource_url')
             )
+
+            tags = []
+            ai_conf = data.get('ai_confidence', ai_result.get('ai_confidence', 0.0)) or 0.0
+            is_plagiarism = data.get('is_plagiarism', False)
+            is_nsfw = data.get('is_nsfw', False)
+
+            if ai_conf > 0.4:
+                tags.append("Signalements")
+            if ai_conf > 0.55 or is_nsfw:
+                tags.append("détection IA de triche / NSFW")
+                is_nsfw = True
+            if ai_conf > 0.7:
+                tags.append("Risque élevé")
+            if await_check_duplicate(data.get('title'), data.get('resource_url')):
+                tags.append("anti-plagiat")
+                is_plagiarism = True
+
             report = Report(
                 title=data['title'],
                 description=data['description'],
                 resource_url=data['resource_url'],
                 flagged_by=data['flagged_by'],
-                is_plagiarism=data.get('is_plagiarism', ai_result.get('is_plagiarism', False)),
-                is_nsfw=data.get('is_nsfw', ai_result.get('is_nsfw', False)),
-                ai_confidence=data.get('ai_confidence', ai_result.get('ai_confidence', 0.0)),
-                ai_flags=ai_result.get('ai_flags', ""),
+                ai_confidence=ai_conf,
+                is_plagiarism=is_plagiarism,
+                is_nsfw=is_nsfw,
+                ai_flags=", ".join(tags) if tags else "",
                 risk_label=ai_result.get('risk_label', "Safe")
             )
             report.save()
@@ -182,43 +203,67 @@ def report_create(request):
         form = ReportForm()
     return render(request, 'moderation/report_form.html', {'form': form})
 
+
 def report_update(request, report_id):
     report = Report.objects.get(id=report_id)
     if request.method == 'POST':
         form = ReportForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            report.title = data['title']
-            report.description = data.get('description', '')
-            report.resource_url = data.get('resource_url', '')
-            report.flagged_by = data['flagged_by']
-
             ai_result = ai_analyze_report(
                 title=data.get('title'),
                 description=data.get('description'),
                 resource_url=data.get('resource_url')
             )
 
-            report.is_plagiarism = data.get('is_plagiarism', ai_result.get('is_plagiarism', False))
-            report.is_nsfw = data.get('is_nsfw', ai_result.get('is_nsfw', False))
-            report.ai_confidence = data.get('ai_confidence', ai_result.get('ai_confidence', report.ai_confidence))
-            report.ai_flags = ai_result.get('ai_flags', report.ai_flags)
+            tags = []
+            ai_conf = data.get('ai_confidence', ai_result.get('ai_confidence', report.ai_confidence)) or 0.0
+            is_plagiarism = data.get('is_plagiarism', report.is_plagiarism)
+            is_nsfw = data.get('is_nsfw', report.is_nsfw)
+
+            if ai_conf > 0.4:
+                tags.append("Signalements")
+            if ai_conf > 0.55 or is_nsfw:
+                tags.append("détection IA de triche / NSFW")
+                is_nsfw = True
+            if ai_conf > 0.7:
+                tags.append("Risque élevé")
+            if await_check_duplicate(data.get('title'), data.get('resource_url')):
+                tags.append("anti-plagiat")
+                is_plagiarism = True
+
+            report.title = data['title']
+            report.description = data['description']
+            report.resource_url = data['resource_url']
+            report.flagged_by = data['flagged_by']
+            report.ai_confidence = ai_conf
+            report.is_plagiarism = is_plagiarism
+            report.is_nsfw = is_nsfw
+            report.ai_flags = ", ".join(tags) if tags else ""
             report.risk_label = ai_result.get('risk_label', report.risk_label)
             report.save()
             return redirect('moderation:report_list')
     else:
-        initial_data = {
+        form = ReportForm(initial={
             'title': report.title,
             'description': report.description,
             'resource_url': report.resource_url,
             'flagged_by': report.flagged_by,
             'is_plagiarism': report.is_plagiarism,
             'is_nsfw': report.is_nsfw,
-            'ai_confidence': report.ai_confidence
-        }
-        form = ReportForm(initial=initial_data)
+            'ai_confidence': report.ai_confidence,
+            'ai_flags': report.ai_flags
+        })
 
     return render(request, 'moderation/report_form.html', {'form': form, 'report': report})
+
+
+def await_check_duplicate(title, url):
+    """Return True if a report exists with same title or url"""
+    if not title and not url:
+        return False
+    return Report.objects(title=title) or Report.objects(resource_url=url)
+
 
 def report_delete(request, report_id):
     Report.objects.get(id=report_id).delete()
