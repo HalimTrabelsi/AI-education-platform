@@ -1,0 +1,20 @@
+{% extends layout_path %}
+{% block title %}API Demos (Index){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-4">
+    <h4 class="mb-3">Parcours de test (cohérent)</h4>
+    <ol>
+      <li><a href="/searchx/pages/api/concepts/">1. Gérer/Créer des Concepts</a></li>
+      <li><a href="/searchx/pages/api/search/">2. Rechercher (classique)</a></li>
+      <li><a href="/searchx/pages/api/search/semantic/">3. Recherche sémantique (tokens)</a></li>
+      <li><a href="/searchx/pages/api/search/semantic-emb/">4. Recherche sémantique avancée (embeddings + IA)</a></li>
+      <li><a href="/searchx/pages/api/trends/">5. Tendances</a></li>
+      <li><a href="/searchx/pages/api/collection/1/">6. Détail de collection (ex: id=1)</a></li>
+      <li><a href="/searchx/pages/api/search/similarity/">7. Similarité TF‑IDF (comparaison)</a></li>
+    
+    </ol>
+    <p class="text-muted">Astuce: configurez <code>OPENAI_API_KEY</code> pour activer l'enrichissement IA (réponses et suggestions améliorées).</p>
+  </div>
+</div>
+{% endblock content %}

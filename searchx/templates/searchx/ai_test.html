@@ -18,10 +18,7 @@ button { margin-top: 10px; padding: 10px; }
 <button onclick="extractConcepts()">Extraire Concepts</button>
 <div class="result" id="conceptsResult"></div>
 
-<h2>2. Génération de quiz</h2>
-<textarea id="quizText" placeholder="Écris ton texte ici..."></textarea><br>
-<button onclick="generateQuiz()">Générer Quiz</button>
-<div class="result" id="quizResult"></div>
+
 
 <h2>3. Répondre à une question</h2>
 <input type="text" id="questionText" placeholder="Ta question ici..." style="width: 100%;"><br>
@@ -40,16 +37,7 @@ async function extractConcepts() {
     document.getElementById("conceptsResult").innerText = JSON.stringify(data, null, 2);
 }
 
-async function generateQuiz() {
-    const texte = document.getElementById("quizText").value;
-    const res = await fetch('/api/ai/generate-quiz/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texte })
-    });
-    const data = await res.json();
-    document.getElementById("quizResult").innerText = JSON.stringify(data, null, 2);
-}
+
 
 async function askQuestion() {
     const question = document.getElementById("questionText").value;

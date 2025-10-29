@@ -1,0 +1,63 @@
+{% extends layout_path %}
+{% block title %}Recommandations (UI){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-3 mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Contexte (q)</label>
+        <input id="q" class="form-control" placeholder="Texte de contexte (facultatif)">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Top K</label>
+        <input id="topk" type="number" class="form-control" value="10" min="1" max="50" />
+      </div>
+      <div class="col-md-3">
+        <button id="btn" class="btn btn-primary w-100">Proposer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0">Résultats</h5>
+      <small class="text-muted" id="meta"></small>
+    </div>
+    <div id="alert" class="alert alert-warning d-none"></div>
+    <ul id="results" class="list-group"></ul>
+  </div>
+</div>
+<script>
+(function(){
+  const q = document.getElementById('q');
+  const topk = document.getElementById('topk');
+  const btn = document.getElementById('btn');
+  const results = document.getElementById('results');
+  const alertBox = document.getElementById('alert');
+  const meta = document.getElementById('meta');
+  function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+  function showAlert(msg){ alertBox.textContent = msg; alertBox.classList.remove('d-none'); }
+  function hideAlert(){ alertBox.classList.add('d-none'); }
+  btn.addEventListener('click', async ()=>{
+    const payload = {};
+    const v = (q.value||'').trim(); if(v) payload.q = v;
+    payload.top_k = parseInt(topk.value||'10');
+    hideAlert(); clear(results); meta.textContent = '';
+    try{
+      const r = await fetch('/api/recommendations', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const j = await r.json();
+      if(!r.ok){ showAlert(j.error || 'Erreur'); return; }
+      meta.textContent = j.meta ? JSON.stringify(j.meta) : '';
+      (j.results||[]).forEach(item => {
+        const li=document.createElement('li'); li.className='list-group-item d-flex justify-content-between align-items-start';
+        const title = item.title || item.name || '';
+        const desc = item.description || '';
+        li.innerHTML = `<div><div class='fw-bold'>${title}</div><div class='small text-muted'>${desc.slice(0,200)}</div></div><span class='badge bg-label-primary'>${item.score||item.relevance||''}</span>`;
+        results.appendChild(li);
+      });
+      if((j.results||[]).length===0){ showAlert('Aucune recommandation'); }
+    }catch(e){ console.error(e); showAlert('Erreur de requête'); }
+  });
+})();
+</script>
+{% endblock content %}

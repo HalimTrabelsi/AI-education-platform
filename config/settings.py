@@ -188,8 +188,6 @@ HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY')
 EMBEDDING_MODEL = os.environ.get('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
 VECTOR_SIMILARITY_THRESHOLD = float(os.environ.get('VECTOR_SIMILARITY_THRESHOLD', '0.7'))
 
-# OCR Config
-TESSERACT_CMD = os.environ.get('TESSERACT_CMD', 'tesseract')  # Chemin vers l'exécutable Tesseract
 
 # Your stuff...
 # ------------------------------------------------------------------------------

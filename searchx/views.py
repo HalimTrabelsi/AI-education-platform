@@ -352,43 +352,104 @@ def api_search_semantic_emb(request):
         top_k = int(payload.get('top_k', 10) or 10)
         model = (payload.get('model') or 'sentence-transformers/all-MiniLM-L6-v2').strip()
     else:
-        text = (request.GET.get('q') or '').strip()
-        top_k = int(request.GET.get('top_k') or 10)
-        model = (request.GET.get('model') or 'sentence-transformers/all-MiniLM-L6-v2').strip()
+        # For GET requests, redirect to the HTML tester page instead of returning raw JSON
+        q = (request.GET.get('q') or '').strip()
+        params = f"?q={q}" if q else ""
+        return HttpResponseRedirect(f"/searchx/pages/api/search/semantic-emb/{params}")
 
     if not text:
         return JsonResponse({"query": text, "results": []})
 
-    # Compute query embedding
-    q_vec = ai_utils.hf_get_embedding(text, model_name=model)
-    if isinstance(q_vec, str):
-        # error string from ai_utils (e.g., transformers not installed)
-        return JsonResponse({"error": q_vec}, status=500)
-
-    # For each concept, compute embedding of name + description and cosine
+    # Try embeddings first; otherwise fall back to token overlap similarity
     results = []
-    for c in Concept.objects.all():
-        c_text = f"{c.name}. {c.description}".strip()
-        if not c_text:
-            continue
-        c_vec = ai_utils.hf_get_embedding(c_text, model_name=model)
-        if isinstance(c_vec, str):
-            return JsonResponse({"error": c_vec}, status=500)
-        # cosine similarity
-        denom = (np.linalg.norm(q_vec) * np.linalg.norm(c_vec)) or 1.0
-        sim = float(np.dot(q_vec, c_vec) / denom)
-        results.append({
-            "id": c.id,
-            "name": c.name,
-            "description": c.description,
-            "similarity": round(sim, 4)
+    q_vec = ai_utils.hf_get_embedding(text, model_name=model)
+    if not isinstance(q_vec, str):
+        for c in Concept.objects.all():
+            c_text = f"{c.name}. {c.description}".strip()
+            if not c_text:
+                continue
+            c_vec = ai_utils.hf_get_embedding(c_text, model_name=model)
+            if isinstance(c_vec, str):
+                # If a concept embedding fails, skip it (continue with others)
+                continue
+            denom = (np.linalg.norm(q_vec) * np.linalg.norm(c_vec)) or 1.0
+            sim = float(np.dot(q_vec, c_vec) / denom)
+            results.append({
+                "id": c.id,
+                "name": c.name,
+                "description": c.description,
+                "similarity": round(sim, 4)
+            })
+    else:
+        # Fallback: token-based similarity (no embeddings available)
+        tokens = set(text.lower().split())
+        for c in Concept.objects.all():
+            corpus_tokens = set(f"{c.name} {c.description} {c.level}".lower().split())
+            if not corpus_tokens:
+                continue
+            inter = len(tokens.intersection(corpus_tokens))
+            if inter == 0:
+                continue
+            union = len(tokens.union(corpus_tokens)) or 1
+            sim = inter / union
+            results.append({
+                "id": c.id,
+                "name": c.name,
+                "description": c.description,
+                "similarity": round(sim, 4)
+            })
+
+    # Sort local results by similarity
+    results.sort(key=lambda r: -r['similarity'])
+
+    # AI enrichment: get external or generated suggestions
+    try:
+        ai_suggestions = ai_utils.semantic_expand(text) or []
+    except Exception:
+        ai_suggestions = []
+
+    # Map local results to unified format and apply weighting
+    local_weight = 0.7
+    ai_weight = 0.3
+
+    local_items = []
+    for r in results:
+        base_rel = max(0.0, float(r.get('similarity') or 0.0))
+        local_items.append({
+            "id": r["id"],
+            "title": f"Concept : {r['name']}",
+            "description": r.get("description", ""),
+            "source": "local_concept",
+            "relevance": round(local_weight * base_rel, 4),
         })
 
-    results.sort(key=lambda r: -r['similarity'])
+    ai_items = []
+    for it in ai_suggestions:
+        title = str(it.get("title") or "").strip()
+        if not title:
+            continue
+        desc = str(it.get("description") or "").strip()
+        src = str(it.get("source") or it.get("source_type") or "external_ai").strip() or "external_ai"
+        rel = it.get("relevance")
+        try:
+            rel = float(rel)
+        except Exception:
+            rel = 0.6
+        rel = max(0.0, min(1.0, rel))
+        ai_items.append({
+            "title": title,
+            "description": desc,
+            "source": src,
+            "relevance": round(ai_weight * rel, 4),
+        })
+
+    combined = local_items + ai_items
+    combined.sort(key=lambda x: -x.get("relevance", 0.0))
+
     return JsonResponse({
         "query": text,
         "model": model,
-        "results": results[:top_k]
+        "results": combined[:top_k]
     })
 
 
@@ -604,69 +665,6 @@ def api_trends(request):
 # --------------------- AI Resource Endpoints ---------------------
 from . import ai_utils
 
-@csrf_exempt
-def api_resource_summarize(request, id: int):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=400)
-    try:
-        payload = json.loads(request.body.decode("utf-8")) if request.body else {}
-    except Exception:
-        payload = {}
-    
-    # Get resource text from request or database
-    text = payload.get("text", "")
-    if not text:
-        return JsonResponse({"error": "No text provided"}, status=400)
-    
-    max_sentences = int(payload.get("max_sentences", 3) or 3)
-    summary = ai_utils.summarize_text(text, max_sentences)
-    return JsonResponse({"id": id, "summary": summary})
-
-
-@csrf_exempt
-def api_resource_extract_formulas(request, id: int):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=400)
-    try:
-        payload = json.loads(request.body.decode("utf-8")) if request.body else {}
-    except Exception:
-        payload = {}
-    
-    # Get text from request or database
-    text = payload.get("text", "")
-    if not text:
-        return JsonResponse({"error": "No text provided"}, status=400)
-    
-    formulas = ai_utils.extract_formulas(text)
-    return JsonResponse({"id": id, "extracted": formulas})
-
-
-@csrf_exempt
-def api_resource_ocr(request, id: int):
-    if request.method != "POST":
-        return JsonResponse({"error": "POST required"}, status=400)
-        
-    if not request.FILES.get('image'):
-        return JsonResponse({"error": "No image file provided"}, status=400)
-    
-    try:
-        # Save uploaded file temporarily
-        image = request.FILES['image']
-        image_path = f"/tmp/ocr_{id}_{image.name}"
-        with open(image_path, 'wb+') as destination:
-            for chunk in image.chunks():
-                destination.write(chunk)
-                
-        # Process OCR
-        text = ai_utils.ocr_image(image_path)
-        
-        # Clean up
-        import os
-        os.remove(image_path)
-        
-        return JsonResponse({"id": id, "text": text})
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
@@ -964,3 +962,25 @@ def api_collections_write(request, pk: int = None):
         col.delete()
         return JsonResponse({"ok": True})
     return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+# --------------------- New AI Utility Endpoints ---------------------
+
+
+
+def api_demos_index(request):
+    context = {}
+    context = TemplateLayout().init(context)
+    return render(request, "searchx/api_index.html", context)
+
+
+def api_recommendations_page(request):
+    context = {}
+    context = TemplateLayout().init(context)
+    return render(request, "searchx/api_recommendations.html", context)
+
+
+def api_collections_write_page(request):
+    context = {}
+    context = TemplateLayout().init(context)
+    return render(request, "searchx/api_collections_write.html", context)

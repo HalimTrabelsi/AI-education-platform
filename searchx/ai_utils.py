@@ -113,63 +113,6 @@ def extract_concepts_from_text(text):
     return concepts
 
 
-def generate_quiz_from_text(context_text, max_questions=5):
-    """Génère une liste de questions/réponses à partir d'un texte de contexte.
-    Retourne une liste de dicts {question, answer}.
-    """
-    import json as _json
-    context_text = (context_text or "").strip()
-    if not context_text:
-        return []
-    if getattr(settings, 'OPENAI_API_KEY', None):
-        try:
-            prompt = (
-                "Vous êtes un assistant pédagogique qui génère un quiz court basé sur le texte fourni. "
-                "Retournez uniquement un JSON avec une clé 'quiz' contenant une liste d'objets {question, answer}. "
-                "Fournissez des questions claires et des réponses concises.\n\nTexte:\n" + context_text
-            )
-            resp = openai.ChatCompletion.create(
-                model=getattr(settings, 'OPENAI_MODEL', 'gpt-3.5-turbo'),
-                messages=[
-                    {"role": "system", "content": "Assistant pédagogique pour générer des quiz en français."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.2,
-            )
-            content = resp.choices[0].message.content.strip()
-            try:
-                data = _json.loads(content)
-                return data.get('quiz') or data
-            except Exception:
-                # try to extract question/answer pairs heuristically
-                lines = [l.strip() for l in content.splitlines() if l.strip()]
-                quiz = []
-                q = None
-                for line in lines:
-                    if line.lower().startswith('q') or line.lower().startswith('question'):
-                        q = line.split(':',1)[-1].strip()
-                    elif line.lower().startswith('a') or line.lower().startswith('réponse') or line.lower().startswith('answer'):
-                        a = line.split(':',1)[-1].strip()
-                        if q:
-                            quiz.append({'question': q, 'answer': a})
-                            q = None
-                return quiz[:max_questions]
-        except Exception:
-            pass
-    # Fallback: create simple factual questions from first sentences
-    sentences = context_text.split('.')
-    quiz = []
-    for i, s in enumerate(sentences):
-        s = s.strip()
-        if not s:
-            continue
-        if len(quiz) >= max_questions:
-            break
-        quiz.append({'question': f"Qu'est-ce que: {s[:80]}?", 'answer': s})
-
-    return quiz
-
-
 def ai_answer_question(question, context=None):
     """Répond à une question en utilisant OpenAI (ou une réponse basique si indisponible)."""
     question = (question or "").strip()
@@ -210,57 +153,8 @@ try:
 except Exception:
     TESSERACT_AVAILABLE = False
 
-def summarize_text(text, max_sentences=3):
-    """Résume un texte en utilisant GPT."""
-    try:
-        response = openai.ChatCompletion.create(
-            model=settings.OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": f"Résumez ce texte en {max_sentences} phrases maximum. Gardez les points importants."},
-                {"role": "user", "content": text}
-            ]
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"Erreur de résumé: {str(e)}"
 
-def extract_formulas(text):
-    """Extrait les formules mathématiques d'un texte."""
-    try:
-        response = openai.ChatCompletion.create(
-            model=settings.OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": "Extrayez et listez toutes les formules mathématiques dans ce texte. Retournez-les en format LaTeX."},
-                {"role": "user", "content": text}
-            ]
-        )
-        formulas = [
-            {"type": "formula", "latex": formula.strip()}
-            for formula in response.choices[0].message.content.split('\n')
-            if formula.strip()
-        ]
-        return formulas
-    except Exception as e:
-        return [{"type": "error", "message": str(e)}]
 
-def ocr_image(image_path):
-    """Effectue l'OCR sur une image."""
-    try:
-        # Configure Tesseract path si défini
-        if hasattr(settings, 'TESSERACT_CMD') and settings.TESSERACT_CMD:
-            pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD
-        
-        # Open and process image
-        image = Image.open(image_path)
-        try:
-            text = pytesseract.image_to_string(image, lang='fra+eng')
-            return text.strip()
-        except pytesseract.TesseractNotFoundError:
-            return "Erreur: Tesseract n'est pas installé. Veuillez installer Tesseract OCR depuis https://github.com/UB-Mannheim/tesseract/wiki"
-        except pytesseract.TesseractError as e:
-            return f"Erreur Tesseract: {str(e)}"
-    except Exception as e:
-        return f"Erreur OCR: {str(e)}"
 
 def transcribe_audio(audio_path, language="fr"):
     """Transcrit un fichier audio."""
@@ -290,6 +184,68 @@ def get_ai_status():
 vectorizer = None
 concept_vectors = None
 concept_ids = None
+
+def semantic_expand(query):
+    """Retourne des suggestions liées au texte de la requête.
+    Format: liste de dicts {title, description, source, relevance}.
+    Utilise OpenAI si disponible, sinon un fallback heuristique simple.
+    """
+    import json as _json
+    q = (query or '').strip()
+    if not q:
+        return []
+    if getattr(settings, 'OPENAI_API_KEY', None):
+        try:
+            prompt = (
+                "Donne 5 ressources ou idées étroitement liées au concept suivant en français: \n"
+                f"\"{q}\".\n"
+                "Réponds UNIQUEMENT en JSON (liste) où chaque élément a les clés exactes: \n"
+                "title, description, source, relevance (entre 0 et 1)."
+            )
+            resp = openai.ChatCompletion.create(
+                model=getattr(settings, 'OPENAI_MODEL', 'gpt-3.5-turbo'),
+                messages=[
+                    {"role": "system", "content": "Tu es un assistant qui propose des ressources éducatives concises au format JSON uniquement."},
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.2,
+            )
+            content = (resp.choices[0].message.content or '').strip()
+            try:
+                data = _json.loads(content)
+                items = []
+                for it in data if isinstance(data, list) else []:
+                    title = str(it.get('title') or '').strip()
+                    if not title:
+                        continue
+                    desc = str(it.get('description') or '').strip()
+                    source = str(it.get('source') or it.get('source_type') or 'external_ai').strip() or 'external_ai'
+                    rel = it.get('relevance')
+                    try:
+                        rel = float(rel)
+                    except Exception:
+                        rel = 0.6
+                    rel = max(0.0, min(1.0, rel))
+                    items.append({
+                        'title': title,
+                        'description': desc,
+                        'source': source,
+                        'relevance': rel,
+                    })
+                return items[:5]
+            except Exception:
+                return []
+        except Exception:
+            return []
+    # Fallback simple: générer quelques pistes basées sur des patrons connus
+    seeds = [
+        {'title': f"Introduction à {q}", 'description': f"Vue d'ensemble des bases de {q}.", 'source': 'ai_generated', 'relevance': 0.7},
+        {'title': f"Applications pratiques de {q}", 'description': f"Exemples d'utilisation de {q} dans le monde réel.", 'source': 'ai_generated', 'relevance': 0.65},
+        {'title': f"Outils et frameworks pour {q}", 'description': f"Présentation d'outils utiles autour de {q}.", 'source': 'ai_generated', 'relevance': 0.6},
+        {'title': f"Comparatif: {q} vs alternatives", 'description': f"Points forts et limites de {q}.", 'source': 'ai_generated', 'relevance': 0.55},
+        {'title': f"Ressources avancées sur {q}", 'description': f"Lectures et cours pour aller plus loin sur {q}.", 'source': 'ai_generated', 'relevance': 0.5},
+    ]
+    return seeds
 
 def compute_similarity(text1, text2):
     """Calcule la similarité entre deux textes."""

@@ -28,12 +28,7 @@ urlpatterns = [
     path("api/collections/write/<int:pk>", views.api_collections_write, name="api_collections_write_detail"),
 
     # AI Resource endpoints
-    path("api/resources/<int:id>/summarize", views.api_resource_summarize, name="api_resource_summarize"),
-    path("api/resources/<int:id>/summarize/", views.api_resource_summarize),
-    path("api/resources/<int:id>/extract-formulas", views.api_resource_extract_formulas, name="api_resource_extract_formulas"),
-    path("api/resources/<int:id>/extract-formulas/", views.api_resource_extract_formulas),
-    path("api/resources/<int:id>/ocr", views.api_resource_ocr, name="api_resource_ocr"),
-    path("api/resources/<int:id>/ocr/", views.api_resource_ocr),
+    
     path("api/resources/<int:id>/transcribe", views.api_resource_transcribe, name="api_resource_transcribe"),
     path("api/resources/<int:id>/transcribe/", views.api_resource_transcribe),
 
@@ -43,6 +38,7 @@ urlpatterns = [
     path("api/ai/classify/", views.api_classify_text, name="api_classify_text"),
     path("api/ai/extract-concepts/", views.api_extract_concepts, name="api_extract_concepts"),
     path("api/ai/ask/", views.api_ai_ask, name="api_ai_ask"),
+   
     # Lightweight AI test endpoint (developer convenience)
     path("ai/test/", views.ai_test, name="ai_test"),
     path("ai/test", views.ai_test),

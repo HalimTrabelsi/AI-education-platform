@@ -32,4 +32,7 @@ urlpatterns = [
     path("pages/api/search/semantic-emb/", views.api_search_semantic_emb_page, name="api_search_semantic_emb_page"),
     path("pages/api/search/similarity/", views.api_search_similarity_page, name="api_search_similarity_page"),
     path("pages/api/trends/", views.api_trends_page, name="api_trends_page"),
+    path("pages/api/", views.api_demos_index, name="api_demos_index"),
+    path("pages/api/recommendations/", views.api_recommendations_page, name="api_recommendations_page"),
+    path("pages/api/collections/write/", views.api_collections_write_page, name="api_collections_write_page"),
 ]

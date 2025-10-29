@@ -56,7 +56,7 @@
     hideAlert(); clear(results); meta.textContent = '';
     try{
       const payload = { query: text, top_k: parseInt(topk.value||'10'), model: model.value };
-      const r = await fetch('/searchx/api/search/semantic-emb', {
+      const r = await fetch('/api/search/semantic-emb', {
         method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
       });
       const j = await r.json();
@@ -67,10 +67,11 @@
         li.className = 'list-group-item d-flex justify-content-between align-items-start';
         li.innerHTML = `
           <div>
-            <div class='fw-bold'>${item.name}</div>
-            <div class='small text-muted'>${(item.description||'').slice(0, 220)}</div>
+            <div class='fw-bold'>${item.title || item.name || ''}</div>
+            <div class='small text-muted mb-1'>${(item.description||'').slice(0, 220)}</div>
+            <span class='badge bg-secondary'>${item.source||''}</span>
           </div>
-          <span class='badge bg-label-primary'>${item.similarity}</span>
+          <span class='badge bg-label-primary'>${typeof item.relevance !== 'undefined' ? item.relevance : (item.similarity||'')}</span>
         `;
         results.appendChild(li);
       });

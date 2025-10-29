@@ -8,6 +8,8 @@
     <div class="d-flex gap-2">
       <a class="btn btn-outline-secondary" href="{% url 'searchx:concept_list' %}">Gérer Concepts</a>
       <a class="btn btn-outline-secondary" href="{% url 'searchx:collection_list' %}">Gérer Collections</a>
+      <a class="btn btn-outline-primary" href="/searchx/pages/api/concepts/">API Concepts</a>
+      <a class="btn btn-outline-primary" href="/searchx/pages/api/collections/write/">API Collections (write)</a>
     </div>
   </div>
 
@@ -27,6 +29,7 @@
       <div class="col-md-3 d-flex gap-2">
         <button class="btn btn-primary" type="submit">Rechercher</button>
         <button class="btn btn-outline-secondary" type="button" id="btn-semantic">Sémantique</button>
+        <button class="btn btn-outline-info" type="button" id="btn-semantic-api" title="Ouvrir l'API avancée avec la requête">API</button>
       </div>
     </form>
   </div>
@@ -154,7 +157,8 @@
     items.forEach(c => {
       const li = document.createElement('li');
       li.className = 'list-group-item d-flex justify-content-between align-items-center';
-      li.innerHTML = `<div><strong>${c.name}</strong><div class="text-muted small">${c.description || ''}</div></div>`;
+      const title = c.id ? `<a href="/searchx/pages/api/collection/${c.id}/" class="fw-semibold">${c.name}</a>` : `<strong>${c.name}</strong>`;
+      li.innerHTML = `<div>${title}<div class="text-muted small">${c.description || ''}</div></div>`;
       collectionsList.appendChild(li);
     });
   }
@@ -191,7 +195,13 @@
   async function runSearch(){
     const q = qInput.value.trim();
     if (!q) { renderConcepts([]); renderCollections([]); renderResources([]); return; }
-    const data = await fetchJSON(`/api/search/?q=${encodeURIComponent(q)}`);
+    const filiere = filiereSelect.value.trim();
+    const body = filiere ? { text: q, filiere } : { text: q };
+    const data = await fetchJSON('/api/search/semantic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
     renderConcepts(data.concepts || []);
     renderCollections(data.collections || []);
     renderResources(data.resources || []);
@@ -199,13 +209,21 @@
 
   async function runSemantic(){
     const q = qInput.value.trim();
-    if (!q) return;
-    const data = await fetchJSON('/api/search/semantic', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: q })
-    });
-    renderConcepts((data.results || []).map(r => ({ name: r.name, description: r.description, level: r.level })));
+    if (!q) { renderConcepts([]); renderCollections([]); renderResources([]); return; }
+    try{
+      const data = await fetchJSON('/api/search/semantic-emb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, top_k: 20 })
+      });
+      const items = (data.results || []).map(r => ({ title: r.title || '', type: r.source || '' }));
+      renderConcepts([]);
+      renderCollections([]);
+      renderResources(items);
+    }catch(e){
+      renderConcepts([]); renderCollections([]); renderResources([]);
+      resourcesEmpty.textContent = 'Erreur lors de la recherche sémantique avancée';
+    }
   }
 
   async function runTrends(){
@@ -221,6 +239,11 @@
   });
   document.getElementById('btn-semantic').addEventListener('click', function(){
     runSemantic().catch(console.error);
+  });
+  document.getElementById('btn-semantic-api').addEventListener('click', function(){
+    const q = qInput.value.trim();
+    const url = q ? `/api/search/semantic-emb?q=${encodeURIComponent(q)}` : '/api/search/semantic-emb/';
+    window.open(url, '_blank');
   });
   document.getElementById('btn-trends').addEventListener('click', function(){
     runTrends().catch(console.error);
@@ -271,7 +294,17 @@
     try{
       const resp = await fetch('/api/ai/ask/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question:q}) });
       const data = await resp.json();
-      aiAnswer.innerHTML = `<div class="fw-semibold">Réponse</div><div class="mt-2">${data.answer || ''}</div>`;
+      let ans = (data && data.answer) ? String(data.answer) : '';
+      if(!ans || ans.toLowerCase().startsWith('désolé')){
+        // Fallback: proposer des suggestions via la recherche sémantique avancée
+        try{
+          const r2 = await fetch('/api/search/semantic-emb', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({query:q, top_k: 5}) });
+          const j2 = await r2.json();
+          const suggestions = (j2.results||[]).slice(0,5).map(it => `• ${it.title || it.name || ''} <span class="text-muted small">(${it.source||''})</span>`).join('<br>');
+          ans = (ans||'') + (suggestions ? `<div class="mt-2"><div class="fw-semibold">Suggestions liées</div><div class="mt-1">${suggestions}</div></div>` : '');
+        }catch(_){ /* ignore */ }
+      }
+      aiAnswer.innerHTML = `<div class="fw-semibold">Réponse</div><div class="mt-2">${ans}</div>`;
     }catch(e){ aiAnswer.innerHTML = '<div class="text-danger">Erreur lors de la requête</div>'; }
   });
 

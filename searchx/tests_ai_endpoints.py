@@ -30,22 +30,7 @@ class AIEndpointsTest(TestCase):
         data = resp.json()
         self.assertIn('concepts', data)
         self.assertEqual(data['concepts'][0], 'Pile')
-
-    @patch('searchx.ai_utils.openai.ChatCompletion.create')
-    def test_generate_quiz(self, mock_create):
-        mock_resp = MagicMock()
-        mock_choice = MagicMock()
-        # Return a JSON string with quiz
-        mock_choice.message.content = '{"quiz": [{"question":"Quelle est la différence entre une pile et une file ?","answer":"Pile=LIFO, File=FIFO"}]}'
-        mock_resp.choices = [mock_choice]
-        mock_create.return_value = mock_resp
-
-        body = {"collection_id": "col001"}
-        resp = self.client.post('/api/ai/generate-quiz/', data=json.dumps(body), content_type='application/json')
-        self.assertEqual(resp.status_code, 200)
-        data = resp.json()
-        self.assertIn('quiz', data)
-        self.assertTrue(len(data['quiz']) >= 1)
+    
 
     @patch('searchx.ai_utils.openai.ChatCompletion.create')
     def test_ask(self, mock_create):
