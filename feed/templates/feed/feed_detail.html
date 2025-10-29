@@ -9,11 +9,479 @@
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'vendor/fonts/boxicons.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
     <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Sidebar */
+        .layout-menu {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+        }
+
+        .app-brand-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Navbar moderne */
+        .layout-navbar {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Cards avec effet glassmorphism et animations */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            border: none;
+            padding: 1.5rem 2rem;
+            background: transparent;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+        }
+
+        /* Badge IA avec animation pulsante */
+        .badge.bg-label-info {
+            background: var(--info-gradient) !important;
+            color: white !important;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Badge type de contenu */
+        .badge.bg-label-secondary {
+            background: linear-gradient(135deg, #e0e7ff 0%, #cffafe 100%);
+            color: #4338ca;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 12px;
+        }
+
+        /* Alertes stylées */
+        .alert {
+            border: none;
+            border-radius: 16px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.5s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(251, 113, 133, 0.1) 100%);
+            border-left: 5px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%);
+            border-left: 5px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 191, 36, 0.1) 100%);
+            border-left: 5px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.1) 100%);
+            border-left: 5px solid #10b981;
+            color: #065f46;
+        }
+
+        /* Boutons modernes avec gradients */
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border: none;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-label-secondary {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+        }
+
+        .btn-label-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        }
+
+        .btn-warning {
+            background: var(--warning-gradient);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-label-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-label-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Score qualité avec animation circulaire */
+        .quality-score {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+        }
+
+        .quality-score svg {
+            transform: rotate(-90deg);
+        }
+
+        .quality-score-bg {
+            fill: none;
+            stroke: #e5e7eb;
+            stroke-width: 10;
+        }
+
+        .quality-score-fill {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .quality-score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Card header colorés */
+        .card-header.bg-success {
+            background: var(--success-gradient) !important;
+        }
+
+        .card-header.bg-info {
+            background: var(--info-gradient) !important;
+        }
+
+        .card-header.bg-warning {
+            background: var(--warning-gradient) !important;
+        }
+
+        .card-header.bg-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        }
+
+        /* Progress bar stylée */
+        .progress {
+            border-radius: 10px;
+            background: #f3f4f6;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            transition: width 1s ease;
+        }
+
+        .progress-bar.bg-success {
+            background: var(--success-gradient);
+        }
+
+        .progress-bar.bg-info {
+            background: var(--info-gradient);
+        }
+
+        .progress-bar.bg-warning {
+            background: var(--warning-gradient);
+        }
+
+        .progress-bar.bg-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        /* Emoji grand format avec animation */
+        .emoji-large {
+            font-size: 4rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Badge personnalisé pour l'engagement */
+        .engagement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            background: var(--glass-bg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Vidéo moderne */
+        video {
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+        }
+
+        video:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Actions items avec style moderne */
+        .action-item {
+            background: var(--glass-bg);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid transparent;
+            transition: var(--transition);
+        }
+
+        .action-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .action-item.priority-high {
+            border-left-color: #ef4444;
+        }
+
+        .action-item.priority-medium {
+            border-left-color: #f59e0b;
+        }
+
+        .action-item.priority-low {
+            border-left-color: #3b82f6;
+        }
+
+        /* Tags stylés */
+        .tag-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+            color: #4338ca;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 4px;
+            transition: var(--transition);
+        }
+
+        .tag-chip:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);
+        }
+
+        /* Breadcrumb moderne */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            font-size: 1.3rem;
+            color: #667eea;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            font-weight: 500;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #764ba2;
+        }
+
+        /* Info list stylée */
+        .info-list li {
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.02);
+            transition: var(--transition);
+        }
+
+        .info-list li:hover {
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateX(5px);
+        }
+
+        /* Footer */
+        .content-footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            margin-top: 3rem;
+        }
+
+        /* Animation d'entrée pour les cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .animate-in:nth-child(1) { animation-delay: 0.1s; }
+        .animate-in:nth-child(2) { animation-delay: 0.2s; }
+        .animate-in:nth-child(3) { animation-delay: 0.3s; }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Urgent badge animé */
+        .badge.bg-danger {
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        /* Description avec meilleure lisibilité */
+        .description-text {
+            line-height: 1.8;
+            color: #374151;
+            font-size: 1.05rem;
+        }
+
+        /* Card body avec padding amélioré */
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Resource card stylée */
+        .bg-light {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%) !important;
+            border: 2px solid rgba(102, 126, 234, 0.1);
+        }
+    </style>
 </head>
 
 <body>
@@ -23,7 +491,7 @@
             <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
                 <div class="app-brand demo">
                     <a href="/" class="app-brand-link">
-                        <span class="app-brand-text demo menu-text fw-bolder ms-2">EduSocial</span>
+                        <span class="app-brand-text demo menu-text fw-bolder ms-2">🤖 EduSocial</span>
                     </a>
                 </div>
                 <div class="menu-inner-shadow"></div>
@@ -52,7 +520,8 @@
                     </div>
                     <div class="navbar-nav-right d-flex align-items-center">
                         <div class="navbar-nav align-items-center">
-                            <div class="nav-item d-flex align-items-center">
+                            <div class="nav-item d-flex align-items-center gap-2">
+                                <i class="bx bx-detail text-primary fs-4"></i>
                                 <span class="fw-semibold">Détail du contenu</span>
                             </div>
                         </div>
@@ -71,50 +540,64 @@
                             {% endfor %}
                         {% endif %}
 
-                        <nav aria-label="breadcrumb" class="mb-3">
+                        <nav aria-label="breadcrumb" class="mb-4">
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item">
-                                    <a href="{% url 'feed:list' %}">Feed</a>
+                                    <a href="{% url 'feed:list' %}"><i class="bx bx-home-alt"></i> Feed</a>
                                 </li>
-                                <li class="breadcrumb-item active">{{ feed_item.title }}</li>
+                                <li class="breadcrumb-item active">{{ feed_item.title|truncatewords:5 }}</li>
                             </ol>
                         </nav>
 
                         <div class="row">
                             <div class="col-lg-8">
-                                <div class="card mb-4">
-                                    <div class="card-header d-flex justify-content-between align-items-center">
-                                        <h4 class="mb-0">
-                                            {{ feed_item.title }}
-                                            {% if feed_item.is_ai_generated %}
-                                            <span class="badge bg-label-info ms-2">🤖 Généré par IA</span>
-                                            {% endif %}
-                                        </h4>
-                                        <span class="badge bg-label-secondary">
-                                            {{ feed_item.get_content_type_display }}
-                                        </span>
+                                <!-- Contenu principal -->
+                                <div class="card mb-4 animate-in">
+                                    <div class="card-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                        <div class="flex-grow-1">
+                                            <h3 class="mb-2 fw-bold">{{ feed_item.title }}</h3>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <span class="badge bg-label-secondary">
+                                                    <i class="bx bx-category-alt me-1"></i>
+                                                    {{ feed_item.get_content_type_display }}
+                                                </span>
+                                                {% if feed_item.is_ai_generated %}
+                                                <span class="badge bg-label-info">
+                                                    <i class="bx bx-brain me-1"></i>
+                                                    Généré par IA
+                                                </span>
+                                                {% endif %}
+                                                {% if feed_item.is_urgent %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bx bx-error-circle me-1"></i>
+                                                    URGENT
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text mb-3" style="white-space: pre-line;">{{ feed_item.description }}</p>
+                                        <p class="description-text mb-4" style="white-space: pre-line;">{{ feed_item.description }}</p>
 
                                         {% if feed_item.deadline %}
                                         <div class="alert {% if feed_item.is_urgent %}alert-danger{% else %}alert-info{% endif %} d-flex align-items-center">
-                                            <i class="bx bx-calendar-event me-2"></i>
+                                            <i class="bx bx-calendar-event me-3 fs-4"></i>
                                             <div>
                                                 <strong>Date limite:</strong> 
                                                 {{ feed_item.deadline|date:"d/m/Y à H:i" }}
                                                 {% if feed_item.is_urgent %}
-                                                <span class="badge bg-danger ms-2">URGENT</span>
+                                                <span class="badge bg-danger ms-2">⚠ URGENT</span>
                                                 {% endif %}
                                             </div>
                                         </div>
                                         {% endif %}
 
-                                        <!-- NOUVEAU: Suggestions IA stockées -->
+                                        <!-- Suggestions IA -->
                                         {% if feed_item.ai_suggestions %}
                                         <div class="alert alert-warning">
-                                            <h6 class="alert-heading">
-                                                <i class="bx bx-bulb"></i> Suggestions IA lors de la création:
+                                            <h6 class="alert-heading d-flex align-items-center gap-2 mb-3">
+                                                <i class="bx bx-bulb fs-5"></i>
+                                                <strong>Suggestions IA lors de la création</strong>
                                             </h6>
                                             <ul class="mb-0">
                                                 {% for suggestion in feed_item.ai_suggestions %}
@@ -124,19 +607,27 @@
                                         </div>
                                         {% endif %}
 
-                                        <!-- NOUVEAU: Dates extraites -->
+                                        <!-- Dates extraites -->
                                         {% if feed_item.ai_extracted_dates %}
                                         <div class="alert alert-success">
-                                            <strong><i class="bx bx-calendar"></i> Dates détectées par l'IA:</strong>
-                                            {{ feed_item.ai_extracted_dates|join:", " }}
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bx bx-calendar-check fs-4"></i>
+                                                <div>
+                                                    <strong>Dates détectées par l'IA:</strong>
+                                                    <div class="mt-1">{{ feed_item.ai_extracted_dates|join:", " }}</div>
+                                                </div>
+                                            </div>
                                         </div>
                                         {% endif %}
 
-                                        <!-- NOUVEAU: Ressources suggérées -->
+                                        <!-- Ressources suggérées -->
                                         {% if feed_item.suggested_resources %}
                                         <div class="card bg-light mb-3">
                                             <div class="card-body">
-                                                <h6><i class="bx bx-book"></i> Ressources suggérées:</h6>
+                                                <h6 class="d-flex align-items-center gap-2 mb-3">
+                                                    <i class="bx bx-book-open text-primary fs-5"></i>
+                                                    <strong>Ressources suggérées</strong>
+                                                </h6>
                                                 <ul class="mb-0">
                                                     {% for resource in feed_item.suggested_resources %}
                                                     <li>{{ resource }}</li>
@@ -146,36 +637,45 @@
                                         </div>
                                         {% endif %}
 
-                                        <div class="border-top pt-3 mt-4">
+                                        <!-- Métadonnées -->
+                                        <div class="border-top pt-4 mt-4">
                                             <div class="row">
-                                                <div class="col-md-6">
-                                                    <small class="text-muted">
-                                                        <i class="bx bx-user-circle"></i>
-                                                        <strong>Auteur:</strong> {{ feed_item.get_author_username }}
-                                                    </small>
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="bx bx-user-circle text-primary fs-5"></i>
+                                                        <div>
+                                                            <small class="text-muted d-block">Auteur</small>
+                                                            <strong>{{ feed_item.get_author_username }}</strong>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-6 text-md-end">
-                                                    <small class="text-muted">
-                                                        <i class="bx bx-time"></i>
-                                                        <strong>Publié:</strong> {{ feed_item.created_at|date:"d/m/Y à H:i" }}
-                                                    </small>
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="bx bx-time-five text-primary fs-5"></i>
+                                                        <div>
+                                                            <small class="text-muted d-block">Publié</small>
+                                                            <strong>{{ feed_item.created_at|date:"d/m/Y à H:i" }}</strong>
+                                                        </div>
+                                                    </div>
                                                 </div>
+                                                {% if feed_item.updated_at != feed_item.created_at %}
+                                                <div class="col-12 mt-2">
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <i class="bx bx-edit text-primary fs-5"></i>
+                                                        <div>
+                                                            <small class="text-muted d-block">Dernière modification</small>
+                                                            <strong>{{ feed_item.updated_at|date:"d/m/Y à H:i" }}</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
                                             </div>
-                                            {% if feed_item.updated_at != feed_item.created_at %}
-                                            <div class="row mt-2">
-                                                <div class="col-12 text-md-end">
-                                                    <small class="text-muted">
-                                                        <i class="bx bx-edit"></i>
-                                                        <strong>Modifié:</strong> {{ feed_item.updated_at|date:"d/m/Y à H:i" }}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                            {% endif %}
                                         </div>
 
-                                        <div class="d-flex gap-2 mt-4">
+                                        <!-- Actions -->
+                                        <div class="d-flex flex-wrap gap-2 mt-4">
                                             <a href="{% url 'feed:list' %}" class="btn btn-label-secondary">
-                                                <i class="bx bx-arrow-back me-1"></i> Retour à la liste
+                                                <i class="bx bx-arrow-back me-1"></i> Retour
                                             </a>
                                             
                                             {% if current_user_id and feed_item.author_id == current_user_id %}
@@ -185,26 +685,72 @@
                                             <a href="{% url 'feed:delete' feed_item.pk %}" class="btn btn-danger">
                                                 <i class="bx bx-trash me-1"></i> Supprimer
                                             </a>
+                                            
+                                            <!-- Bouton génération vidéo -->
+                                            <a href="{% url 'feed:generate_tiktok' feed_item.pk %}" 
+                                               class="btn btn-label-primary {% if feed_item.tiktok_video_status == 'processing' %}disabled{% endif %}">
+                                                <i class="bx bx-video me-1"></i>
+                                                {% if feed_item.tiktok_video_status == 'processing' %}
+                                                    ⏳ Génération...
+                                                {% elif feed_item.tiktok_video_url %}
+                                                    🔄 Régénérer Vidéo
+                                                {% else %}
+                                                    🎬 Générer Vidéo
+                                                {% endif %}
+                                            </a>
                                             {% endif %}
                                         </div>
+
+                                        <!-- Vidéo générée -->
+                                        {% if feed_item.tiktok_video_url and feed_item.tiktok_video_status == 'completed' %}
+                                        <div class="mt-4 p-4 border rounded-3" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);">
+                                            <h6 class="d-flex align-items-center gap-2 mb-3">
+                                                <i class="bx bx-video-recording text-primary fs-5"></i>
+                                                <strong>Vidéo Générée</strong>
+                                            </h6>
+                                            <video controls style="width: 100%; max-width: 400px; border-radius: 16px;">
+                                                <source src="{{ feed_item.tiktok_video_url }}" type="video/mp4">
+                                                Votre navigateur ne supporte pas la vidéo.
+                                            </video>
+                                            {% if feed_item.tiktok_metadata %}
+                                            <div class="mt-3">
+                                                <small class="text-muted d-flex align-items-center gap-2">
+                                                    <i class="bx bx-time"></i>
+                                                    Durée: {{ feed_item.tiktok_metadata.duration|floatformat:0 }}s
+                                                </small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% elif feed_item.tiktok_video_status == 'failed' %}
+                                        <div class="alert alert-danger mt-3">
+                                            <i class="bx bx-error-circle me-2"></i>
+                                            <strong>La génération de la vidéo a échoué.</strong> Veuillez réessayer.
+                                        </div>
+                                        {% endif %}
                                     </div>
                                 </div>
 
-                                <!-- NOUVEAU: Actions détectées par IA -->
+                                <!-- Actions détectées -->
                                 {% if action_items %}
-                                <div class="card mb-4">
-                                    <div class="card-header bg-label-warning">
-                                        <h5 class="mb-0">
-                                            <i class="bx bx-task"></i> Actions détectées
+                                <div class="card mb-4 animate-in">
+                                    <div class="card-header" style="background: var(--warning-gradient); color: white;">
+                                        <h5 class="mb-0 d-flex align-items-center gap-2">
+                                            <i class="bx bx-task"></i>
+                                            Actions détectées par l'IA
                                         </h5>
                                     </div>
                                     <div class="card-body">
                                         {% for action in action_items %}
-                                        <div class="d-flex align-items-start mb-2">
-                                            <span class="badge {% if action.priority == 'high' %}bg-danger{% else %}bg-secondary{% endif %} me-2">
-                                                {{ action.priority }}
-                                            </span>
-                                            <span>{{ action.action }}</span>
+                                        <div class="action-item priority-{{ action.priority }}">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <span class="badge {% if action.priority == 'high' %}bg-danger{% elif action.priority == 'medium' %}bg-warning{% else %}bg-info{% endif %}">
+                                                    {{ action.priority|upper }}
+                                                </span>
+                                                <div>
+                                                    <i class="bx bx-check-circle text-muted me-1"></i>
+                                                    {{ action.action }}
+                                                </div>
+                                            </div>
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -212,122 +758,273 @@
                                 {% endif %}
                             </div>
 
+                            <!-- Sidebar droite -->
                             <div class="col-lg-4">
-                                <!-- NOUVEAU: Score qualité IA -->
+                                <!-- Score qualité IA -->
                                 {% if feed_item.ai_quality_score %}
-                                <div class="card mb-3">
+                                <div class="card mb-3 animate-in">
                                     <div class="card-header {% if feed_item.ai_quality_score >= 8 %}bg-success{% elif feed_item.ai_quality_score >= 6 %}bg-info{% elif feed_item.ai_quality_score >= 4 %}bg-warning{% else %}bg-danger{% endif %} text-white">
-                                        <h6 class="mb-0">
-                                            <i class="bx bx-star"></i> Score Qualité IA
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            <i class="bx bx-star"></i>
+                                            Score Qualité IA
                                         </h6>
                                     </div>
                                     <div class="card-body text-center">
-                                        <h1 class="display-3">{{ feed_item.ai_quality_score|floatformat:1 }}/10</h1>
-                                        <div class="progress" style="height: 10px;">
+                                        <div class="quality-score mb-3">
+                                            <svg width="150" height="150">
+                                                <circle class="quality-score-bg" cx="75" cy="75" r="60"></circle>
+                                                <circle class="quality-score-fill {% if feed_item.ai_quality_score >= 8 %}text-success{% elif feed_item.ai_quality_score >= 6 %}text-info{% elif feed_item.ai_quality_score >= 4 %}text-warning{% else %}text-danger{% endif %}"
+                                                        cx="75" cy="75" r="60"
+                                                        stroke="{% if feed_item.ai_quality_score >= 8 %}#38ef7d{% elif feed_item.ai_quality_score >= 6 %}#4facfe{% elif feed_item.ai_quality_score >= 4 %}#f5576c{% else %}#ef4444{% endif %}"
+                                                        stroke-dasharray="376.99"
+                                                        stroke-dashoffset="{{ 376.99|add:0|floatformat:2|add:'-'|add:feed_item.ai_quality_score|add:'*37.699'|floatformat:2 }}">
+                                                </circle>
+                                            </svg>
+                                            <div class="quality-score-text">{{ feed_item.ai_quality_score|floatformat:1 }}</div>
+                                        </div>
+                                        <div class="text-muted mb-2">sur 10</div>
+                                        <div class="progress" style="height: 12px;">
                                             <div class="progress-bar {% if feed_item.ai_quality_score >= 8 %}bg-success{% elif feed_item.ai_quality_score >= 6 %}bg-info{% elif feed_item.ai_quality_score >= 4 %}bg-warning{% else %}bg-danger{% endif %}" 
                                                  style="width: {{ feed_item.ai_quality_score }}0%">
                                             </div>
                                         </div>
                                         {% if feed_item.ai_tone %}
-                                        <p class="text-muted mt-2 mb-0">
-                                            <small>Ton: {{ feed_item.ai_tone|title }}</small>
-                                        </p>
+                                        <div class="mt-3">
+                                            <span class="badge bg-label-secondary">
+                                                <i class="bx bx-message-detail me-1"></i>
+                                                Ton: {{ feed_item.ai_tone|title }}
+                                            </span>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
                                 {% endif %}
 
-                                <!-- NOUVEAU: Analyses IA avancées -->
+                                <!-- Sentiment -->
                                 {% if sentiment %}
-                                <div class="card mb-3">
-                                    <div class="card-header bg-label-primary">
-                                        <h6 class="mb-0">
-                                            <i class="bx bx-smile"></i> Sentiment
+                                <div class="card mb-3 animate-in">
+                                    <div class="card-header" style="background: var(--primary-gradient); color: white;">
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            <i class="bx bx-smile"></i>
+                                            Analyse de Sentiment
                                         </h6>
                                     </div>
                                     <div class="card-body text-center">
-                                        <div style="font-size: 3rem;">{{ sentiment.emoji }}</div>
-                                        <h5>{{ sentiment.sentiment|title }}</h5>
+                                        <div class="emoji-large mb-2">{{ sentiment.emoji }}</div>
+                                        <h5 class="fw-bold text-primary">{{ sentiment.sentiment|title }}</h5>
                                         {% if sentiment.confidence > 0 %}
-                                        <small class="text-muted">Confiance: {{ sentiment.confidence|floatformat:0 }}%</small>
+                                        <div class="mt-3">
+                                            <small class="text-muted">Confiance</small>
+                                            <div class="progress mt-1" style="height: 8px;">
+                                                <div class="progress-bar" 
+                                                     style="width: {{ sentiment.confidence|floatformat:0 }}%; background: var(--primary-gradient);">
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">{{ sentiment.confidence|floatformat:0 }}%</small>
+                                        </div>
                                         {% endif %}
                                     </div>
                                 </div>
                                 {% endif %}
 
+                                <!-- Engagement -->
                                 {% if engagement %}
-                                <div class="card mb-3">
-                                    <div class="card-header bg-label-{{ engagement.color }}">
-                                        <h6 class="mb-0">
-                                            {{ engagement.emoji }} Engagement prédit
+                                <div class="card mb-3 animate-in">
+                                    <div class="card-header" style="background: var(--info-gradient); color: white;">
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            {{ engagement.emoji }}
+                                            Prédiction d'Engagement
                                         </h6>
                                     </div>
                                     <div class="card-body">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <strong>Niveau:</strong>
-                                            <span class="badge bg-label-{{ engagement.color }}">{{ engagement.level }}</span>
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <strong>Niveau d'engagement</strong>
+                                            <span class="engagement-badge bg-label-{{ engagement.color }}">
+                                                {{ engagement.level }}
+                                            </span>
                                         </div>
-                                        <div class="progress mb-2" style="height: 8px;">
+                                        <div class="progress mb-2" style="height: 12px;">
                                             <div class="progress-bar bg-{{ engagement.color }}" 
                                                  style="width: {{ engagement.percentage }}%">
                                             </div>
                                         </div>
-                                        <small class="text-muted">{{ engagement.percentage }}%</small>
+                                        <div class="text-center">
+                                            <span class="fs-4 fw-bold" style="background: var(--info-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                                                {{ engagement.percentage }}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Émotion détectée -->
+                                {% if emotion %}
+                                <div class="card mb-3 animate-in">
+                                    <div class="card-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            <i class="bx bx-heart"></i>
+                                            Émotion Détectée
+                                        </h6>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <div class="emoji-large mb-2">{{ emotion.emoji }}</div>
+                                        <h5 class="fw-bold">{{ emotion.emotion|title }}</h5>
+                                        {% if emotion.secondary_emotions %}
+                                        <div class="mt-3">
+                                            <small class="text-muted d-block mb-2">Émotions secondaires</small>
+                                            {% for sec_emotion in emotion.secondary_emotions %}
+                                            <span class="badge bg-label-secondary mx-1">{{ sec_emotion }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Urgence -->
+                                {% if urgency %}
+                                <div class="card mb-3 animate-in">
+                                    <div class="card-header bg-label-{{ urgency.color }}">
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            {{ urgency.emoji }}
+                                            Niveau d'Urgence
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="text-center mb-3">
+                                            <h4 class="fw-bold text-{{ urgency.color }}">{{ urgency.level }}</h4>
+                                            <div class="progress mt-2" style="height: 10px;">
+                                                <div class="progress-bar bg-{{ urgency.color }}" 
+                                                     style="width: {{ urgency.percentage }}%">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% if urgency.reasons %}
+                                        <div class="mt-3">
+                                            <small class="text-muted d-block mb-2"><strong>Raisons:</strong></small>
+                                            {% for reason in urgency.reasons %}
+                                            <small class="d-block text-muted mb-1">• {{ reason }}</small>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Détection spam -->
+                                {% if spam_check %}
+                                <div class="card mb-3 animate-in">
+                                    <div class="card-header bg-label-{{ spam_check.color }}">
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            <i class="bx bx-shield"></i>
+                                            Détection Spam
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong>Probabilité</strong>
+                                            <span class="badge bg-label-{{ spam_check.color }}">{{ spam_check.likelihood }}</span>
+                                        </div>
+                                        {% if spam_check.reasons %}
+                                        <small class="text-muted">
+                                            {% for reason in spam_check.reasons %}
+                                            <div>• {{ reason }}</div>
+                                            {% endfor %}
+                                        </small>
+                                        {% else %}
+                                        <small class="text-success"><i class="bx bx-check-circle me-1"></i> Aucun indicateur de spam détecté</small>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endif %}
 
                                 <!-- Informations de base -->
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="mb-0">
-                                            <i class="bx bx-info-circle me-1"></i> Informations
-                                        </h5>
+                                <div class="card mb-3 animate-in">
+                                    <div class="card-header" style="background: var(--glass-bg);">
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            <i class="bx bx-info-circle text-primary"></i>
+                                            <strong>Informations</strong>
+                                        </h6>
                                     </div>
                                     <div class="card-body">
-                                        <ul class="list-unstyled mb-0">
+                                        <ul class="list-unstyled mb-0 info-list">
                                             <li class="mb-3">
-                                                <strong><i class="bx bx-tag me-1"></i> Type:</strong><br>
-                                                <span class="badge bg-label-secondary mt-1">{{ feed_item.get_content_type_display }}</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bx bx-tag text-primary"></i>
+                                                    <div>
+                                                        <small class="text-muted d-block">Type</small>
+                                                        <span class="badge bg-label-secondary mt-1">{{ feed_item.get_content_type_display }}</span>
+                                                    </div>
+                                                </div>
                                             </li>
                                             <li class="mb-3">
-                                                <strong><i class="bx bx-user me-1"></i> Auteur:</strong><br>
-                                                <span class="text-muted">{{ feed_item.get_author_username }}</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bx bx-user text-primary"></i>
+                                                    <div>
+                                                        <small class="text-muted d-block">Auteur</small>
+                                                        <strong>{{ feed_item.get_author_username }}</strong>
+                                                    </div>
+                                                </div>
                                             </li>
                                             <li class="mb-3">
-                                                <strong><i class="bx bx-calendar-plus me-1"></i> Créé le:</strong><br>
-                                                <span class="text-muted">{{ feed_item.created_at|date:"d/m/Y à H:i" }}</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bx bx-calendar-plus text-primary"></i>
+                                                    <div>
+                                                        <small class="text-muted d-block">Créé le</small>
+                                                        <strong>{{ feed_item.created_at|date:"d/m/Y à H:i" }}</strong>
+                                                    </div>
+                                                </div>
                                             </li>
                                             {% if feed_item.deadline %}
                                             <li class="mb-3">
-                                                <strong><i class="bx bx-alarm me-1"></i> Échéance:</strong><br>
-                                                <span class="text-muted">{{ feed_item.deadline|date:"d/m/Y à H:i" }}</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bx bx-alarm text-primary"></i>
+                                                    <div>
+                                                        <small class="text-muted d-block">Échéance</small>
+                                                        <strong>{{ feed_item.deadline|date:"d/m/Y à H:i" }}</strong>
+                                                    </div>
+                                                </div>
                                             </li>
                                             {% endif %}
                                             <li>
-                                                <strong><i class="bx bx-show me-1"></i> Statut:</strong><br>
-                                                {% if feed_item.is_active %}
-                                                <span class="badge bg-label-success mt-1">Actif</span>
-                                                {% else %}
-                                                <span class="badge bg-label-secondary mt-1">Inactif</span>
-                                                {% endif %}
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bx bx-show text-primary"></i>
+                                                    <div>
+                                                        <small class="text-muted d-block">Statut</small>
+                                                        {% if feed_item.is_active %}
+                                                        <span class="badge bg-label-success mt-1">
+                                                            <i class="bx bx-check-circle"></i> Actif
+                                                        </span>
+                                                        {% else %}
+                                                        <span class="badge bg-label-secondary mt-1">
+                                                            <i class="bx bx-x-circle"></i> Inactif
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
                                             </li>
                                         </ul>
                                     </div>
                                 </div>
 
-                                <!-- NOUVEAU: Tags suggérés -->
+                                <!-- Tags suggérés -->
                                 {% if suggested_tags %}
-                                <div class="card mt-3">
-                                    <div class="card-header bg-label-secondary">
-                                        <h6 class="mb-0">
-                                            <i class="bx bx-purchase-tag"></i> Tags
+                                <div class="card animate-in">
+                                    <div class="card-header" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);">
+                                        <h6 class="mb-0 d-flex align-items-center gap-2">
+                                            <i class="bx bx-purchase-tag text-primary"></i>
+                                            <strong>Tags Suggérés</strong>
                                         </h6>
                                     </div>
                                     <div class="card-body">
-                                        {% for tag in suggested_tags %}
-                                        <span class="badge bg-label-secondary me-1 mb-1">#{{ tag }}</span>
-                                        {% endfor %}
+                                        <div class="d-flex flex-wrap">
+                                            {% for tag in suggested_tags %}
+                                            <span class="tag-chip">
+                                                <i class="bx bx-hash"></i>
+                                                {{ tag }}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
                                     </div>
                                 </div>
                                 {% endif %}
@@ -337,8 +1034,11 @@
                     </div>
 
                     <footer class="content-footer footer bg-footer-theme">
-                        <div class="container-xxl py-2">
-                            © 2025 EduSocial - Plateforme éducative IA 🤖
+                        <div class="container-xxl py-3 text-center">
+                            <span class="text-muted">
+                                © 2025 <strong style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EduSocial</strong> 
+                                — Plateforme éducative augmentée par l'IA 🤖
+                            </span>
                         </div>
                     </footer>
                     <div class="content-backdrop fade"></div>
@@ -354,5 +1054,45 @@
     <script src="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
     <script src="{% static 'vendor/js/menu.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+
+    <script>
+        // Animation du score qualité au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            const scoreCircle = document.querySelector('.quality-score-fill');
+            if (scoreCircle) {
+                const score = {{ feed_item.ai_quality_score|default:0 }};
+                const circumference = 376.99;
+                const offset = circumference - (score / 10) * circumference;
+                
+                setTimeout(() => {
+                    scoreCircle.style.strokeDashoffset = offset;
+                }, 200);
+            }
+
+            // Effet de défilement smooth pour les ancres
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Animation des progress bars
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300);
+            });
+        });
+    </script>
 </body>
 </html>

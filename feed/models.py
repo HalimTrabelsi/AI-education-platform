@@ -1,4 +1,4 @@
-from mongoengine import Document, StringField, DateTimeField, BooleanField, ListField, FloatField
+from mongoengine import Document, StringField, DateTimeField, BooleanField, ListField, FloatField, DictField
 from datetime import datetime, timedelta
 from django.utils import timezone
 
@@ -35,6 +35,21 @@ class FeedItem(Document):
     ai_tone = StringField(max_length=50, verbose_name="Ton détecté")
     suggested_resources = ListField(StringField(), verbose_name="Ressources suggérées")
     is_ai_generated = BooleanField(default=False, verbose_name="Généré par IA")
+
+    tiktok_video_url = StringField(null=True, verbose_name="URL Vidéo TikTok")
+    tiktok_video_status = StringField(
+        max_length=20,
+        choices=[
+            ('pending', 'En attente'),
+            ('processing', 'En cours'),
+            ('completed', 'Terminé'),
+            ('failed', 'Échec')
+        ],
+        default='pending',
+        verbose_name="Statut Vidéo"
+    )
+    tiktok_generation_date = DateTimeField(null=True, verbose_name="Date génération vidéo")
+    tiktok_metadata = DictField(verbose_name="Métadonnées vidéo")
     
     meta = {
         'collection': 'feed_feeditem',

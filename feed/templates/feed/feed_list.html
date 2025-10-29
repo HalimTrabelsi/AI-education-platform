@@ -9,29 +9,540 @@
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{% static 'vendor/fonts/boxicons.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
     <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
     <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
 
     <style>
-        .feed-item { 
-            transition: all 0.3s ease; 
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .feed-item:hover { 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-            transform: translateY(-2px); 
+
+        * {
+            font-family: 'Inter', sans-serif;
         }
-        .card.border-danger { 
-            border-width: 2px !important; 
+
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
         }
-        .ai-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4px 8px;
+
+        /* Glassmorphism Sidebar */
+        .layout-menu {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+        }
+
+        .app-brand-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        /* Navbar moderne */
+        .layout-navbar {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Dropdown menu stylé */
+        .dropdown-menu {
+            border: none;
             border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 0.5rem;
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dropdown-item:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            transform: translateX(5px);
+        }
+
+        /* Cards avec effet glassmorphism */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Stats cards avec gradients */
+        .stats-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .stats-card.border-primary::before {
+            background: var(--primary-gradient);
+        }
+
+        .stats-card.border-info::before {
+            background: var(--info-gradient);
+        }
+
+        .stats-card.border-warning::before {
+            background: var(--warning-gradient);
+        }
+
+        .stats-card h3 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-card.border-info h3 {
+            background: var(--info-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-card.border-warning h3 {
+            background: var(--warning-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Badge IA moderne */
+        .ai-badge {
+            background: var(--info-gradient);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Badges personnalisés */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .badge.bg-label-secondary {
+            background: linear-gradient(135deg, #e0e7ff 0%, #cffafe 100%);
+            color: #4338ca;
+        }
+
+        .badge.bg-label-danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(251, 113, 133, 0.2) 100%);
+            color: #dc2626;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .badge.bg-label-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(52, 211, 153, 0.2) 100%);
+            color: #059669;
+        }
+
+        .badge.bg-label-info {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+            color: #0284c7;
+        }
+
+        .badge.bg-label-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%);
+            color: #d97706;
+        }
+
+        /* Boutons modernes */
+        .btn {
+            border-radius: 12px;
+            padding: 0.625rem 1.25rem;
+            font-weight: 600;
+            border: none;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.4);
+            color: white;
+        }
+
+        .btn-outline-primary {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid #667eea;
+            color: #5a67d8;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-outline-warning {
+            background: linear-gradient(135deg, rgba(240, 147, 251, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
+            border: 2px solid #f093fb;
+            color: #e91e63;
+        }
+
+        .btn-outline-warning:hover {
+            background: var(--warning-gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+        }
+
+        .btn-outline-danger {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+            border: 2px solid #ef4444;
+            color: #dc2626;
+        }
+
+        .btn-outline-danger:hover {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-group-vertical .btn {
+            margin-bottom: 0.5rem;
+        }
+
+        .btn-group-vertical .btn:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Form controls stylés */
+        .form-control, .form-select {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
+
+        /* Feed items animation */
+        .feed-item {
+            animation: fadeInUp 0.6s ease both;
+            position: relative;
+        }
+
+        .feed-item.border-danger {
+            border-left: 5px solid #ef4444 !important;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feed-item:nth-child(1) { animation-delay: 0.1s; }
+        .feed-item:nth-child(2) { animation-delay: 0.2s; }
+        .feed-item:nth-child(3) { animation-delay: 0.3s; }
+        .feed-item:nth-child(4) { animation-delay: 0.4s; }
+        .feed-item:nth-child(5) { animation-delay: 0.5s; }
+
+        /* Card title links */
+        .card-title a {
+            color: #1e293b;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .card-title a:hover {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Alertes stylées */
+        .alert {
+            border: none;
+            border-radius: 16px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+            animation: slideInDown 0.5s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Pagination moderne */
+        .pagination {
+            gap: 0.5rem;
+        }
+
+        .pagination .page-link {
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .pagination .page-link:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Empty state */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Header section */
+        .page-header {
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .page-header h4 {
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+        }
+
+        /* Search form card */
+        .search-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.1);
+        }
+
+        /* Footer */
+        .content-footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            margin-top: 3rem;
+        }
+
+        .content-footer strong {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Small text improvements */
+        .small {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .small i {
+            color: #667eea;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .btn-group-vertical {
+                flex-direction: row !important;
+                gap: 0.5rem;
+            }
+
+            .btn-group-vertical .btn {
+                margin-bottom: 0;
+                flex: 1;
+            }
+        }
+
+        /* Card body improvements */
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Stats animation on load */
+        .stats-card {
+            animation: scaleIn 0.5s ease both;
+        }
+
+        .stats-card:nth-child(1) { animation-delay: 0.1s; }
+        .stats-card:nth-child(2) { animation-delay: 0.2s; }
+        .stats-card:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Navbar title animation */
+        .navbar-title {
+            animation: slideInRight 0.6s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
     </style>
 </head>
@@ -39,15 +550,14 @@
 <body>
     <div class="layout-wrapper layout-content-navbar">
         <div class="layout-container">
-            
+
+            <!-- Sidebar -->
             <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-                <div class="app-brand demo">
-                    <a href="/" class="app-brand-link">
-                        <span class="app-brand-text demo menu-text fw-bolder ms-2">EduSocial</span>
+                <div class="app-brand demo py-3 px-3">
+                    <a href="/" class="app-brand-link text-decoration-none">
+                        <span class="app-brand-text fw-bold">🤖 EduSocial</span>
                     </a>
                 </div>
-
-                <div class="menu-inner-shadow"></div>
 
                 <ul class="menu-inner py-1">
                     <li class="menu-item">
@@ -56,7 +566,6 @@
                             <div>Accueil</div>
                         </a>
                     </li>
-                    
                     <li class="menu-item active">
                         <a href="{% url 'feed:list' %}" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-news"></i>
@@ -66,49 +575,48 @@
                 </ul>
             </aside>
 
+            <!-- Contenu principal -->
             <div class="layout-page">
                 
                 <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme">
-                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
-                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
-                            <i class="bx bx-menu bx-sm"></i>
-                        </a>
-                    </div>
-
-                    <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+                    <div class="navbar-nav-right d-flex align-items-center w-100" id="navbar-collapse">
                         <div class="navbar-nav align-items-center">
-                            <div class="nav-item d-flex align-items-center">
-                                <span class="fw-semibold">Feed - Fil d'actualité</span>
-                            </div>
+                            <span class="fw-semibold fs-5 navbar-title">
+                                <i class="bx bx-brain text-primary me-2"></i>
+                                Tableau de bord IA - Feed
+                            </span>
                         </div>
-
                         <ul class="navbar-nav flex-row align-items-center ms-auto">
-                            <!-- NOUVEAU: Menu Actions IA -->
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                    <i class="bx bx-brain me-1"></i> Actions IA
+                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                                    <i class="bx bx-brain"></i> 
+                                    <span class="d-none d-md-inline">Actions IA</span>
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
                                         <a class="dropdown-item" href="{% url 'feed:generate_weekly_summary' %}">
-                                            <i class="bx bx-chart me-2"></i> Générer résumé hebdomadaire
+                                            <i class="bx bx-chart"></i>
+                                            <span>Résumé hebdomadaire</span>
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{% url 'feed:check_missing_content' %}">
-                                            <i class="bx bx-search me-2"></i> Vérifier contenus manquants
+                                            <i class="bx bx-search"></i>
+                                            <span>Vérifier contenus</span>
                                         </a>
                                     </li>
                                     <li>
                                         <a class="dropdown-item" href="{% url 'feed:generate_deadline_reminders' %}">
-                                            <i class="bx bx-bell me-2"></i> Créer rappels d'échéances
+                                            <i class="bx bx-bell"></i>
+                                            <span>Rappels échéances</span>
                                         </a>
                                     </li>
                                 </ul>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'feed:create' %}">
-                                    <i class="bx bx-plus-circle me-1"></i> Nouveau
+                                <a href="{% url 'feed:create' %}" class="btn btn-sm btn-primary ms-3">
+                                    <i class="bx bx-plus-circle"></i> 
+                                    <span class="d-none d-md-inline">Nouveau</span>
                                 </a>
                             </li>
                         </ul>
@@ -117,77 +625,99 @@
 
                 <div class="content-wrapper">
                     <div class="container-xxl flex-grow-1 container-p-y">
-                        
+
+                        <!-- Messages flash -->
                         {% if messages %}
                             {% for message in messages %}
-                                <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    <i class="bx bx-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'danger' %}error-circle{% elif message.tags == 'warning' %}error{% else %}info-circle{% endif %} me-2"></i>
                                     {{ message }}
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 </div>
                             {% endfor %}
                         {% endif %}
 
-                        <div class="row mb-4">
-                            <div class="col-md-8">
-                                <h4 class="mb-1">📰 Fil d'actualité</h4>
-                                <p class="text-muted">
-                                    Gérez vos contenus avec l'assistance IA
-                                </p>
+                        <!-- En-tête -->
+                        <div class="row mb-4 align-items-center page-header">
+                            <div class="col-lg-7">
+                                <h4 class="fw-bold mb-2">📰 Gestion du Fil d'actualité</h4>
+                                <p class="text-muted mb-0">Créez, analysez et améliorez vos contenus avec l'intelligence artificielle.</p>
                             </div>
-                            <div class="col-md-4 text-end">
-                                <a href="{% url 'feed:create' %}" class="btn btn-primary">
-                                    <i class="bx bx-plus-circle me-1"></i> Nouveau contenu
+                            <div class="col-lg-5 text-lg-end mt-3 mt-lg-0">
+                                <a href="{% url 'feed:create' %}" class="btn btn-primary me-2">
+                                    <i class="bx bx-plus-circle"></i> Nouveau contenu
                                 </a>
-                                <a href="{% url 'feed:export_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-success ms-2">
-                                    <i class="bx bx-file me-1"></i> Exporter PDF
+                                <a href="{% url 'feed:export_pdf' %}?{{ request.GET.urlencode }}" class="btn btn-success">
+                                    <i class="bx bx-file"></i> Exporter PDF
                                 </a>
                             </div>
                         </div>
 
                         <!-- Statistiques -->
                         <div class="row mb-4">
-                            <div class="col-md-4">
-                                <div class="card border-primary">
-                                    <div class="card-body text-center">
-                                        <h3 class="text-primary mb-1">{{ stats.total_items }}</h3>
-                                        <p class="mb-0 text-muted">Contenus actifs</p>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <div class="card stats-card text-center border-primary">
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <i class="bx bx-news fs-1" style="color: #667eea;"></i>
+                                        </div>
+                                        <h3 class="mb-1">{{ stats.total_items }}</h3>
+                                        <p class="text-muted mb-0 fw-semibold">Contenus actifs</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3 mb-md-0">
+                                <div class="card stats-card text-center border-info">
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <i class="bx bx-category fs-1" style="color: #4facfe;"></i>
+                                        </div>
+                                        <h3 class="mb-1">{{ stats.content_types }}</h3>
+                                        <p class="text-muted mb-0 fw-semibold">Types de contenu</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <div class="card border-info">
-                                    <div class="card-body text-center">
-                                        <h3 class="text-info mb-1">{{ stats.content_types }}</h3>
-                                        <p class="mb-0 text-muted">Types de contenu</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card border-warning">
-                                    <div class="card-body text-center">
-                                        <h3 class="text-warning mb-1">{{ stats.urgent_items|default:0 }}</h3>
-                                        <p class="mb-0 text-muted">Échéances urgentes</p>
+                                <div class="card stats-card text-center border-warning">
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <i class="bx bx-error-circle fs-1" style="color: #f093fb;"></i>
+                                        </div>
+                                        <h3 class="mb-1">{{ stats.urgent_items|default:0 }}</h3>
+                                        <p class="text-muted mb-0 fw-semibold">Échéances urgentes</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Formulaire de recherche -->
-                        <div class="card mb-4">
+                        <!-- Recherche -->
+                        <div class="card search-card mb-4">
                             <div class="card-body">
-                                <form method="get" class="row g-3">
+                                <form method="get" class="row g-3 align-items-end">
                                     <div class="col-md-5">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bx bx-search text-primary me-1"></i>
+                                            Rechercher
+                                        </label>
                                         {{ search_form.search_query }}
                                     </div>
                                     <div class="col-md-3">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bx bx-filter text-primary me-1"></i>
+                                            Type
+                                        </label>
                                         {{ search_form.content_type }}
                                     </div>
                                     <div class="col-md-2">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bx bx-sort text-primary me-1"></i>
+                                            Trier
+                                        </label>
                                         {{ search_form.ordering }}
                                     </div>
                                     <div class="col-md-2">
                                         <button type="submit" class="btn btn-primary w-100">
-                                            <i class="bx bx-search me-1"></i> Filtrer
+                                            <i class="bx bx-search"></i> Filtrer
                                         </button>
                                     </div>
                                 </form>
@@ -200,64 +730,68 @@
                             <div class="col-12 mb-3">
                                 <div class="card feed-item {% if item.is_urgent %}border-danger{% endif %}">
                                     <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-10">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <span class="badge bg-label-secondary me-2">
+                                        <div class="row align-items-start">
+                                            <div class="col-lg-10">
+                                                <div class="d-flex align-items-center mb-3 flex-wrap gap-2">
+                                                    <span class="badge bg-label-secondary">
+                                                        <i class="bx bx-category-alt me-1"></i>
                                                         {{ item.get_content_type_display }}
                                                     </span>
                                                     {% if item.is_ai_generated %}
-                                                    <span class="ai-badge me-2">
-                                                        🤖 IA
-                                                    </span>
+                                                        <span class="ai-badge">🤖 IA</span>
                                                     {% endif %}
                                                     {% if item.is_urgent %}
-                                                    <span class="badge bg-label-danger">
-                                                        <i class="bx bx-error-circle"></i> URGENT
-                                                    </span>
+                                                        <span class="badge bg-label-danger">
+                                                            <i class="bx bx-error-circle"></i> URGENT
+                                                        </span>
                                                     {% endif %}
                                                     {% if item.ai_quality_score %}
-                                                    <span class="badge {% if item.ai_quality_score >= 8 %}bg-label-success{% elif item.ai_quality_score >= 6 %}bg-label-info{% else %}bg-label-warning{% endif %} ms-2">
-                                                        ⭐ {{ item.ai_quality_score|floatformat:1 }}/10
-                                                    </span>
+                                                        <span class="badge {% if item.ai_quality_score >= 8 %}bg-label-success{% elif item.ai_quality_score >= 6 %}bg-label-info{% else %}bg-label-warning{% endif %}">
+                                                            ⭐ {{ item.ai_quality_score|floatformat:1 }}/10
+                                                        </span>
                                                     {% endif %}
                                                 </div>
 
                                                 <h5 class="card-title mb-2">
-                                                    <a href="{% url 'feed:detail' item.pk %}" class="text-body">
-                                                        {{ item.title }}
-                                                    </a>
+                                                    <a href="{% url 'feed:detail' item.pk %}">{{ item.title }}</a>
                                                 </h5>
+                                                <p class="card-text text-muted mb-3">{{ item.description|truncatewords:30 }}</p>
 
-                                                <p class="card-text text-muted mb-2">
-                                                    {{ item.description|truncatewords:30 }}
-                                                </p>
-
-                                                <div class="text-muted small">
-                                                    <i class="bx bx-user-circle"></i> {{ item.get_author_username }}
-                                                    <span class="mx-2">•</span>
-                                                    <i class="bx bx-calendar"></i> {{ item.created_at|date:"d/m/Y H:i" }}
+                                                <div class="small text-muted">
+                                                    <i class="bx bx-user-circle"></i>
+                                                    <span>{{ item.get_author_username }}</span>
+                                                    
+                                                    <span class="mx-1">•</span>
+                                                    
+                                                    <i class="bx bx-calendar"></i>
+                                                    <span>{{ item.created_at|date:"d/m/Y H:i" }}</span>
+                                                    
                                                     {% if item.deadline %}
-                                                    <span class="mx-2">•</span>
-                                                    <i class="bx bx-time"></i> Échéance: {{ item.deadline|date:"d/m/Y H:i" }}
+                                                        <span class="mx-1">•</span>
+                                                        <i class="bx bx-time"></i>
+                                                        <span>{{ item.deadline|date:"d/m/Y H:i" }}</span>
                                                     {% endif %}
+                                                    
                                                     {% if item.ai_tone %}
-                                                    <span class="mx-2">•</span>
-                                                    <i class="bx bx-message-detail"></i> Ton: {{ item.ai_tone }}
+                                                        <span class="mx-1">•</span>
+                                                        <i class="bx bx-message-detail"></i>
+                                                        <span>{{ item.ai_tone }}</span>
                                                     {% endif %}
                                                 </div>
                                             </div>
-
-                                            <div class="col-md-2 text-end">
+                                            <div class="col-lg-2 mt-3 mt-lg-0">
                                                 <div class="btn-group-vertical w-100">
-                                                    <a href="{% url 'feed:detail' item.pk %}" class="btn btn-sm btn-outline-primary">
-                                                        <i class="bx bx-show me-1"></i> Voir
+                                                    <a href="{% url 'feed:detail' item.pk %}" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bx bx-show"></i> 
+                                                        <span class="d-none d-xl-inline">Voir</span>
                                                     </a>
-                                                    <a href="{% url 'feed:update' item.pk %}" class="btn btn-sm btn-outline-warning">
-                                                        <i class="bx bx-edit me-1"></i> Modifier
+                                                    <a href="{% url 'feed:update' item.pk %}" class="btn btn-outline-warning btn-sm">
+                                                        <i class="bx bx-edit"></i> 
+                                                        <span class="d-none d-xl-inline">Modifier</span>
                                                     </a>
-                                                    <a href="{% url 'feed:delete' item.pk %}" class="btn btn-sm btn-outline-danger">
-                                                        <i class="bx bx-trash me-1"></i> Supprimer
+                                                    <a href="{% url 'feed:delete' item.pk %}" class="btn btn-outline-danger btn-sm">
+                                                        <i class="bx bx-trash"></i> 
+                                                        <span class="d-none d-xl-inline">Supprimer</span>
                                                     </a>
                                                 </div>
                                             </div>
@@ -268,12 +802,12 @@
                             {% empty %}
                             <div class="col-12">
                                 <div class="card">
-                                    <div class="card-body text-center py-5">
-                                        <i class="bx bx-info-circle display-1 text-primary mb-3"></i>
-                                        <h4>Aucun contenu trouvé</h4>
-                                        <p class="text-muted">Créez votre premier contenu avec l'assistance IA !</p>
-                                        <a href="{% url 'feed:create' %}" class="btn btn-primary mt-2">
-                                            <i class="bx bx-plus-circle me-1"></i> Créer un contenu
+                                    <div class="card-body empty-state">
+                                        <i class="bx bx-info-circle mb-4"></i>
+                                        <h4 class="fw-bold mb-3">Aucun contenu trouvé</h4>
+                                        <p class="text-muted mb-4">Créez votre premier contenu avec l'assistance IA !</p>
+                                        <a href="{% url 'feed:create' %}" class="btn btn-primary">
+                                            <i class="bx bx-plus-circle"></i> Créer un contenu
                                         </a>
                                     </div>
                                 </div>
@@ -283,7 +817,7 @@
 
                         <!-- Pagination -->
                         {% if page_obj.has_other_pages %}
-                        <nav aria-label="Page navigation" class="mt-4">
+                        <nav aria-label="Page navigation" class="mt-5">
                             <ul class="pagination justify-content-center">
                                 {% if page_obj.has_previous %}
                                 <li class="page-item">
@@ -297,11 +831,13 @@
                                     </a>
                                 </li>
                                 {% endif %}
-
+                                
                                 <li class="page-item active">
-                                    <span class="page-link">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                                    <span class="page-link">
+                                        Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                                    </span>
                                 </li>
-
+                                
                                 {% if page_obj.has_next %}
                                 <li class="page-item">
                                     <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.content_type %}&content_type={{ request.GET.content_type }}{% endif %}{% if request.GET.ordering %}&ordering={{ request.GET.ordering }}{% endif %}">
@@ -317,23 +853,19 @@
                             </ul>
                         </nav>
                         {% endif %}
-                        
                     </div>
 
-                    <footer class="content-footer footer bg-footer-theme">
-                        <div class="container-xxl d-flex flex-wrap justify-content-between py-2 flex-md-row flex-column">
-                            <div class="mb-2 mb-md-0">
-                                © 2025 EduSocial - Plateforme éducative IA 🤖
-                            </div>
+                    <!-- Footer -->
+                    <footer class="content-footer footer bg-footer-theme py-3 text-center">
+                        <div class="container-xxl">
+                            <span class="text-muted">
+                                © 2025 <strong>EduSocial</strong> — Plateforme éducative augmentée par l'IA 🤖
+                            </span>
                         </div>
                     </footer>
-
-                    <div class="content-backdrop fade"></div>
                 </div>
             </div>
         </div>
-
-        <div class="layout-overlay layout-menu-toggle"></div>
     </div>
 
     <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
@@ -342,5 +874,222 @@
     <script src="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
     <script src="{% static 'vendor/js/menu.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation smooth pour les cartes au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observer tous les feed items
+        document.querySelectorAll('.feed-item').forEach(item => {
+            observer.observe(item);
+        });
+
+        // Animation au hover sur les stats cards
+        document.querySelectorAll('.stats-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+
+        // Confirmation avant suppression
+        document.querySelectorAll('a[href*="delete"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir supprimer cet élément ?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Auto-submit du formulaire de recherche après sélection
+        const contentTypeSelect = document.querySelector('select[name="content_type"]');
+        const orderingSelect = document.querySelector('select[name="ordering"]');
+        
+        if (contentTypeSelect) {
+            contentTypeSelect.addEventListener('change', function() {
+                // Auto-submit optionnel
+                // this.form.submit();
+            });
+        }
+
+        if (orderingSelect) {
+            orderingSelect.addEventListener('change', function() {
+                // Auto-submit optionnel
+                // this.form.submit();
+            });
+        }
+
+        // Effet de compteur animé pour les statistiques
+        function animateCounter(element, target) {
+            let current = 0;
+            const increment = target / 50;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.ceil(current);
+                }
+            }, 20);
+        }
+
+        // Animer les compteurs au chargement
+        document.querySelectorAll('.stats-card h3').forEach(counter => {
+            const target = parseInt(counter.textContent);
+            if (!isNaN(target)) {
+                counter.textContent = '0';
+                setTimeout(() => {
+                    animateCounter(counter, target);
+                }, 300);
+            }
+        });
+
+        // Effet de recherche en temps réel (optionnel)
+        const searchInput = document.querySelector('input[name="search_query"]');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                // Décommenter pour activer la recherche en temps réel
+                // searchTimeout = setTimeout(() => {
+                //     this.form.submit();
+                // }, 500);
+            });
+        }
+
+        // Ajouter des tooltips sur les badges
+        const badges = document.querySelectorAll('.badge, .ai-badge');
+        badges.forEach(badge => {
+            badge.setAttribute('title', badge.textContent.trim());
+        });
+
+        // Smooth scroll pour les liens internes
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Effet parallax subtil sur le background
+        let ticking = false;
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    const scrolled = window.pageYOffset;
+                    document.body.style.backgroundPosition = `center ${scrolled * 0.5}px`;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        // Highlight du texte recherché
+        const searchQuery = new URLSearchParams(window.location.search).get('search_query');
+        if (searchQuery && searchQuery.trim() !== '') {
+            const regex = new RegExp(`(${searchQuery})`, 'gi');
+            document.querySelectorAll('.card-title a, .card-text').forEach(element => {
+                const text = element.innerHTML;
+                element.innerHTML = text.replace(regex, '<mark style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3)); padding: 2px 4px; border-radius: 4px;">$1</mark>');
+            });
+        }
+
+        // Animation des alertes
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach((alert, index) => {
+            alert.style.animationDelay = `${index * 0.1}s`;
+            
+            // Auto-dismiss après 5 secondes
+            setTimeout(() => {
+                const closeBtn = alert.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.click();
+                }
+            }, 5000);
+        });
+
+        // Effet de shake sur les éléments urgents
+        const urgentItems = document.querySelectorAll('.border-danger');
+        urgentItems.forEach(item => {
+            setInterval(() => {
+                item.style.animation = 'none';
+                setTimeout(() => {
+                    item.style.animation = '';
+                }, 10);
+            }, 3000);
+        });
+
+        // Loading state pour les boutons
+        document.querySelectorAll('.btn[href]').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (!this.href.includes('delete') && !this.href.includes('#')) {
+                    const icon = this.querySelector('i');
+                    if (icon && !icon.classList.contains('bx-spin')) {
+                        icon.classList.add('bx-loader-alt', 'bx-spin');
+                    }
+                }
+            });
+        });
+
+        // Masquer/afficher le bouton "retour en haut"
+        const scrollToTopBtn = document.createElement('button');
+        scrollToTopBtn.innerHTML = '<i class="bx bx-up-arrow-alt"></i>';
+        scrollToTopBtn.className = 'btn btn-primary';
+        scrollToTopBtn.style.cssText = `
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        `;
+        document.body.appendChild(scrollToTopBtn);
+
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.style.display = 'flex';
+                scrollToTopBtn.style.justifyContent = 'center';
+                scrollToTopBtn.style.alignItems = 'center';
+            } else {
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', function() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        console.log('🚀 EduSocial Feed List - Interface moderne chargée avec succès !');
+    });
+    </script>
 </body>
 </html>

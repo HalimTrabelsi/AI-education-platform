@@ -1,3 +1,4 @@
+# views.py updated to remove subtitles
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -9,10 +10,14 @@ from bson.errors import InvalidId
 from datetime import datetime, timedelta
 from xhtml2pdf import pisa
 import json
+from pathlib import Path
 
 from .models import FeedItem
 from .forms import FeedItemForm, FeedItemSearchForm
 from .ai_services import AIWritingAssistant, AIContentEnricher, AIRecurringContentGenerator
+
+from .ai_video_services import AIVideoGenerator
+from .video_generator import TikTokVideoGenerator
 
 
 # ========== VUES PRINCIPALES ==========
@@ -688,3 +693,109 @@ def ai_dashboard(request):
     except Exception as e:
         messages.error(request, f'❌ Erreur: {str(e)}')
         return redirect('feed:list')
+
+
+def generate_tiktok_video(request, pk):
+    """Génère une vidéo TikTok à partir d'un post"""
+    try:
+        feed_item = FeedItem.objects.get(id=pk)
+    except (FeedItem.DoesNotExist, InvalidId):
+        messages.error(request, '❌ Élément introuvable.')
+        return redirect('feed:list')
+    
+    if request.method == 'POST':
+        try:
+            print(f"\n{'='*50}")
+            print(f"🎬 GÉNÉRATION VIDÉO TIKTOK - {feed_item.title}")
+            print(f"{'='*50}\n")
+            
+            # Statut processing
+            feed_item.tiktok_video_status = 'processing'
+            feed_item.save()
+            
+            # Créer dossier temp
+            from django.conf import settings
+            temp_dir = Path(settings.MEDIA_ROOT) / 'temp_video'
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            
+            # 1. Script
+            print("1️⃣ Génération du script...")
+            video_gen = AIVideoGenerator()
+            script_result = video_gen.generate_tiktok_script(feed_item)
+            
+            if not script_result['success']:
+                raise Exception(f"Erreur script: {script_result['error']}")
+            
+            script = script_result['script']
+            print(f"✅ Script ({script_result['word_count']} mots):\n{script[:100]}...\n")
+            
+            # 2. Audio
+            print("2️⃣ Génération audio...")
+            audio_path = temp_dir / f"audio_{pk}.mp3"
+            audio_result = video_gen.generate_audio(script, str(audio_path))
+            
+            if not audio_result['success']:
+                raise Exception(f"Erreur audio: {audio_result['error']}")
+            print(f"✅ Audio généré: {audio_path}\n")
+            
+            # Skip subtitles as per request
+            
+            # 4. Vidéo
+            print("3️⃣ Assemblage vidéo (sans sous-titres)...")
+            video_generator = TikTokVideoGenerator()
+            video_result = video_generator.generate_video(
+                feed_item,
+                script,
+                str(audio_path),
+                None  # No subtitles
+            )
+            
+            if not video_result['success']:
+                raise Exception(f"Erreur vidéo: {video_result['error']}")
+            
+            # 5. Mise à jour modèle
+            video_path = video_result['video_path']
+            video_filename = Path(video_path).name
+            video_url = f"/media/feed_videos/{video_filename}"
+            
+            feed_item.tiktok_video_url = video_url
+            feed_item.tiktok_video_status = 'completed'
+            feed_item.tiktok_generation_date = datetime.utcnow()
+            feed_item.tiktok_metadata = {
+                'script': script,
+                'duration': video_result['duration'],
+                'word_count': script_result['word_count'],
+                'model': script_result['model']
+            }
+            feed_item.save()
+            
+            # Nettoyage
+            try:
+                os.remove(audio_path)
+            except:
+                pass
+            
+            print(f"\n✅ VIDÉO GÉNÉRÉE AVEC SUCCÈS!")
+            print(f"📹 URL: {video_url}")
+            print(f"⏱️ Durée: {video_result['duration']:.1f}s\n")
+            
+            messages.success(request, f'🎉 Vidéo TikTok générée avec succès ! (Durée: {video_result["duration"]:.0f}s)')
+            return redirect('feed:detail', pk=str(feed_item.id))
+            
+        except Exception as e:
+            feed_item.tiktok_video_status = 'failed'
+            feed_item.save()
+            
+            print(f"\n❌ ERREUR: {str(e)}\n")
+            import traceback
+            traceback.print_exc()
+            
+            messages.error(request, f'❌ Erreur: {str(e)}')
+            return redirect('feed:detail', pk=str(feed_item.id))
+    
+    # GET: Afficher confirmation
+    context = {
+        'feed_item': feed_item,
+        'page_title': 'Générer Vidéo TikTok'
+    }
+    return render(request, 'feed/generate_tiktok_confirm.html', context)

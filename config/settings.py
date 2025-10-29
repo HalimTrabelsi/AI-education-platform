@@ -104,6 +104,9 @@ LOGIN_REDIRECT_URL = "index"
 WSGI_APPLICATION = "config.wsgi.application"
 
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+Path(MEDIA_ROOT).mkdir(exist_ok=True)
 
 
 DATABASES = {

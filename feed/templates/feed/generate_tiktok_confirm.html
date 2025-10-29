@@ -1,0 +1,707 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Génération Vidéo - EduSocial</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'vendor/fonts/boxicons.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Sidebar */
+        .layout-menu {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+        }
+
+        .app-brand-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        /* Navbar moderne */
+        .layout-navbar {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Cards avec effet glassmorphism */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            border: none;
+            padding: 2rem;
+            background: transparent;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+        }
+
+        .card-header.bg-primary {
+            background: var(--primary-gradient) !important;
+            color: white;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Alertes stylées avec animations */
+        .alert {
+            border: none;
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.5s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.15) 0%, rgba(0, 242, 254, 0.15) 100%);
+            border-left: 5px solid #4facfe;
+            color: #1e40af;
+        }
+
+        .alert-info h6 {
+            color: #1e40af;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .alert-info ul {
+            padding-left: 1.5rem;
+        }
+
+        .alert-info li {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+        .alert-info strong {
+            color: #0369a1;
+            font-weight: 700;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.15) 100%);
+            border-left: 5px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-warning strong {
+            color: #78350f;
+            font-weight: 700;
+        }
+
+        /* Boutons modernes avec gradients */
+        .btn {
+            border-radius: 12px;
+            padding: 0.875rem 2rem;
+            font-weight: 600;
+            border: none;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(107, 114, 128, 0.4);
+            color: white;
+        }
+
+        .btn-lg {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* Spinner overlay amélioré */
+        .spinner-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+
+        .spinner-content {
+            text-align: center;
+            animation: floatAnimation 3s ease-in-out infinite;
+        }
+
+        @keyframes floatAnimation {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .spinner-border {
+            width: 5rem;
+            height: 5rem;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner-text {
+            margin-top: 2rem;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .spinner-subtext {
+            margin-top: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+
+        /* Icônes animées */
+        .animated-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Emoji avec animation */
+        .emoji-large {
+            font-size: 3rem;
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Liste avec icônes */
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-list li {
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.02);
+            margin-bottom: 0.75rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .info-list li:hover {
+            background: rgba(102, 126, 234, 0.08);
+            transform: translateX(5px);
+        }
+
+        .info-list li i {
+            font-size: 1.5rem;
+            background: var(--info-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Actions buttons container */
+        .actions-container {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        /* Breadcrumb moderne */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #764ba2;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            font-size: 1.3rem;
+            color: #667eea;
+        }
+
+        /* Footer */
+        .content-footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            margin-top: 3rem;
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Effet de loading sur les éléments */
+        .loading-shimmer {
+            animation: shimmer 2s infinite;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.5) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            background-size: 200% 100%;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Video processing indicator */
+        .processing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        .processing-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .processing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4facfe;
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+
+        .processing-dot:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .processing-dot:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+        }
+
+        /* Titre principal stylé */
+        h4.page-title {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 1.8rem;
+        }
+
+        h5.content-title {
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+        }
+
+        .text-muted {
+            color: #64748b !important;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+<div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+
+        <!-- Sidebar -->
+        <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+            <div class="app-brand demo">
+                <a href="/" class="app-brand-link">
+                    <span class="app-brand-text demo menu-text fw-bolder ms-2">🤖 EduSocial</span>
+                </a>
+            </div>
+            <ul class="menu-inner py-1">
+                <li class="menu-item">
+                    <a href="/" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                        <div>Accueil</div>
+                    </a>
+                </li>
+                <li class="menu-item active">
+                    <a href="{% url 'feed:list' %}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-news"></i>
+                        <div>Gérer Feed</div>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <div class="layout-page">
+            <!-- Navbar -->
+            <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached bg-navbar-theme">
+                <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                    <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                        <i class="bx bx-menu bx-sm"></i>
+                    </a>
+                </div>
+                <div class="navbar-nav-right d-flex align-items-center w-100">
+                    <div class="nav-item d-flex align-items-center gap-2">
+                        <i class="bx bx-video text-primary fs-3 animated-icon"></i>
+                        <span class="fw-semibold fs-5">Génération Vidéo </span>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="content-wrapper">
+                <div class="container-xxl flex-grow-1 container-p-y">
+
+                    <!-- Breadcrumb -->
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'feed:list' %}"><i class="bx bx-home-alt"></i> Feed</a>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="{% url 'feed:detail' feed_item.pk %}">{{ feed_item.title|truncatewords:3 }}</a>
+                            </li>
+                            <li class="breadcrumb-item active">Génération Vidéo</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Page principale -->
+                    <div class="row justify-content-center">
+                        <div class="col-lg-10 col-xl-8">
+                            <div class="card shadow-lg">
+                                <div class="card-header bg-primary text-white">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="emoji-large">🎬</div>
+                                        <h4 class="mb-0 text-white">Génération Automatique de Vidéo </h4>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Titre et description -->
+                                    <div class="mb-4">
+                                        <h5 class="content-title">{{ feed_item.title }}</h5>
+                                        <p class="text-muted">{{ feed_item.description|truncatewords:30 }}</p>
+                                    </div>
+
+                                    <!-- Informations -->
+                                    <div class="alert alert-info">
+                                        <h6><strong><i class="bx bx-info-circle me-2"></i>Informations de génération</strong></h6>
+                                        <ul class="info-list mb-0">
+                                            <li>
+                                                <i class="bx bx-time-five"></i>
+                                                <div>
+                                                    <strong>Temps estimé :</strong>
+                                                    <span class="ms-2">2-5 minutes</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <i class="bx bx-mobile"></i>
+                                                <div>
+                                                    <strong>Format :</strong>
+                                                    <span class="ms-2">9:16 (TikTok / Reels)</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <i class="bx bx-captions"></i>
+                                                <div>
+                                                    <strong>Sous-titres automatiques :</strong>
+                                                    <span class="ms-2">✓ Activés</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <i class="bx bx-file"></i>
+                                                <div>
+                                                    <strong>Format de sortie :</strong>
+                                                    <span class="ms-2">MP4 (Haute qualité)</span>
+                                                </div>
+                                            </li>
+                                            <li>
+                                                <i class="bx bx-brain"></i>
+                                                <div>
+                                                    <strong>Technologie :</strong>
+                                                    <span class="ms-2">IA générative avancée</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Avertissement -->
+                                    <div class="alert alert-warning">
+                                        <div class="d-flex align-items-start gap-3">
+                                            <i class="bx bx-error-circle fs-3"></i>
+                                            <div>
+                                                <strong>⚠️ Important :</strong>
+                                                <p class="mb-0 mt-2">
+                                                    Ne fermez pas cette page pendant la génération de la vidéo. 
+                                                    Le processus se fera automatiquement et vous serez redirigé une fois terminé.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Formulaire -->
+                                    <form id="generateForm" method="POST">
+                                        {% csrf_token %}
+                                        <div class="actions-container">
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="bx bx-check-circle"></i>
+                                                Lancer la génération
+                                            </button>
+                                            <a href="{% url 'feed:detail' feed_item.pk %}" class="btn btn-secondary btn-lg">
+                                                <i class="bx bx-x-circle"></i>
+                                                Annuler
+                                            </a>
+                                        </div>
+                                    </form>
+
+                                    <!-- Info supplémentaire -->
+                                    <div class="mt-4 p-3" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%); border-radius: 12px; border-left: 4px solid #667eea;">
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <i class="bx bx-bulb text-primary fs-5"></i>
+                                            <strong style="color: #667eea;">Astuce</strong>
+                                        </div>
+                                        <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                                            La vidéo générée inclura automatiquement des effets visuels, 
+                                            des transitions fluides et des sous-titres synchronisés pour maximiser l'engagement.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer class="content-footer footer bg-footer-theme mt-5">
+                    <div class="container-xxl py-3 text-center">
+                        <span class="text-muted">
+                            © 2025 <strong style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EduSocial</strong> 
+                            — Plateforme éducative augmentée par l'IA 🤖
+                        </span>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout-overlay layout-menu-toggle"></div>
+</div>
+
+<!-- Spinner amélioré -->
+<div id="spinnerOverlay" class="spinner-overlay">
+    <div class="spinner-content">
+        <div class="spinner-border" role="status"></div>
+        <div class="spinner-text">
+            <div class="emoji-large mb-2">🎥</div>
+            Génération de la vidéo en cours...
+        </div>
+        <div class="spinner-subtext">
+            <div class="processing-dots">
+                <div class="processing-dot"></div>
+                <div class="processing-dot"></div>
+                <div class="processing-dot"></div>
+            </div>
+            <div class="mt-2">Merci de patienter, cela peut prendre quelques minutes</div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+<script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+<script src="{% static 'vendor/js/menu.js' %}"></script>
+<script src="{% static 'js/main.js' %}"></script>
+
+<!-- Script pour le spinner -->
+<script>
+document.getElementById('generateForm').addEventListener('submit', function(e) {
+    // Afficher le spinner
+    document.getElementById('spinnerOverlay').style.display = 'flex';
+    
+    // Animation d'entrée
+    setTimeout(() => {
+        document.getElementById('spinnerOverlay').style.opacity = '1';
+    }, 10);
+});
+
+// Animation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scroll pour les ancres
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Animation des éléments au scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observer tous les éléments de liste
+    document.querySelectorAll('.info-list li').forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        item.style.transition = 'all 0.5s ease';
+        observer.observe(item);
+    });
+});
+</script>
+
+</body>
+</html>

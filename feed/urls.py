@@ -21,4 +21,6 @@ urlpatterns = [
     path('<str:pk>/', views.feed_detail, name='detail'),
     path('<str:pk>/update/', views.feed_update, name='update'),
     path('<str:pk>/delete/', views.feed_delete, name='delete'),
+    path('<str:pk>/generate-tiktok/', views.generate_tiktok_video, name='generate_tiktok'),
 ]
+
