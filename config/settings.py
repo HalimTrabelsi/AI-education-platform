@@ -8,9 +8,6 @@ from dotenv import load_dotenv
 
 from .template import  THEME_LAYOUT_DIR, THEME_VARIABLES
 
-MONGO_DB = os.getenv("MONGO_DB", "edusocial")
-MONGO_URI = os.getenv("MONGO_URI")
-
 load_dotenv()  # take environment variables from .env.
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -61,7 +58,7 @@ INSTALLED_APPS = [
     "apps.form_layouts",
     "apps.tables",
     "chat",
-
+    "rest_framework",
 ]
 
 MIDDLEWARE = [
@@ -155,7 +152,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

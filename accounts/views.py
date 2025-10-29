@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 from secrets import token_urlsafe
 
 from django.conf import settings
@@ -103,24 +103,26 @@ def _send_onboarding_email(user):
 
     return True, None
 
+@login_required
 def register_view(request):
+    if request.user.role != 'admin':
+        messages.error(request, "Acces reserve a l'administrateur.")
+        return redirect(_redirect_for_role(request.user))
+
     if request.method == "POST":
         form = RegisterForm(request.POST, request.FILES)
         if form.is_valid():
-            role = form.cleaned_data.get("role")
-            if role == 'admin':
-                messages.error(request, 'Le rôle administrateur n\'est pas autorisé à l\'inscription.')
-            else:
-                created_user = form.save()
-                messages.success(request, 'Compte créé avec succès. Vous pouvez vous connecter.')
-                return redirect('accounts:login')
-        else:
-            messages.error(request, 'Veuillez corriger les erreurs ci-dessous.')
+            created_user = form.save()
+            _log_admin_action(request.user, [str(created_user.id)], "create_user", {"role": created_user.role})
+            messages.success(request, "Compte cree avec succes.")
+            return redirect('dashboards:admin')
+        messages.error(request, "Veuillez corriger les erreurs ci-dessous.")
     else:
         form = RegisterForm()
 
-    context = _auth_context({'form': form})
-    return render(request, 'accounts/register.html', context)
+    context = _auth_context({"form": form})
+    return render(request, "accounts/register.html", context)
+
 
 def login_view(request):
     if request.method == "POST":
@@ -368,7 +370,7 @@ def admin_bulk_user_action(request):
             )
             messages.success(
                 request,
-                f"Message d'onboarding envoyÃ© pour {sent} utilisateur(s).",
+                f"Message d'onboarding envoyé pour {sent} utilisateur(s).",
             )
         if failures:
             messages.warning(
@@ -378,7 +380,7 @@ def admin_bulk_user_action(request):
         if not sent and not failures:
             messages.info(
                 request,
-                "Aucun e-mail d'onboarding n'a Ã©tÃ© envoyÃ©.",
+                "Aucun e-mail d'onboarding n'a été envoyé.",
             )
 
     else:
@@ -454,5 +456,4 @@ def admin_stop_impersonation(request):
     _log_admin_action(admin_user, [], "impersonate_stop")
     messages.info(request, "Impersonation terminee.")
     return redirect("dashboards:admin")
-
 
