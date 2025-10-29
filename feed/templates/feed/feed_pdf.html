@@ -2,98 +2,474 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8" />
-    <title>Rapport - Liste des Contenus</title>
+    <title>Rapport - Liste des Contenus EduSocial</title>
     <style>
+        @page {
+            size: A4;
+            margin: 2cm 1.5cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Helvetica', Arial, sans-serif;
-            margin: 30px;
-            color: #333;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            color: #1e293b;
+            line-height: 1.6;
+            background: #ffffff;
         }
-        h1 {
+        
+        /* Header avec gradient */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            margin: -20px -15px 30px -15px;
+            border-radius: 0 0 20px 20px;
             text-align: center;
-            color: #003366;
-            border-bottom: 2px solid #003366;
-            padding-bottom: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
-        .stats {
-            margin-bottom: 25px;
-            background: #f9f9f9;
-            padding: 10px 15px;
-            border-left: 4px solid #003366;
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
         }
-        .stats p {
-            margin: 5px 0;
+        
+        .header .subtitle {
             font-size: 14px;
+            opacity: 0.9;
+            font-weight: 400;
         }
+        
+        .header .emoji {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        /* Stats cards */
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0 30px 0;
+            gap: 15px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .stat-card.info {
+            border-left-color: #4facfe;
+        }
+        
+        .stat-card.success {
+            border-left-color: #11998e;
+        }
+        
+        .stat-card-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .stat-card-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #667eea;
+        }
+        
+        .stat-card.info .stat-card-value {
+            color: #4facfe;
+        }
+        
+        .stat-card.success .stat-card-value {
+            color: #11998e;
+        }
+        
+        /* Export info banner */
+        .export-info {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+            border-left: 4px solid #4facfe;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            border-radius: 8px;
+        }
+        
+        .export-info p {
+            font-size: 12px;
+            color: #0369a1;
+            margin: 3px 0;
+        }
+        
+        .export-info strong {
+            color: #0c4a6e;
+        }
+        
+        /* Table moderne */
+        .table-container {
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 12px;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-        }
-        th {
-            background-color: #e6f0ff;
-            color: #003366;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .urgent {
-            background-color: #ffe6e6 !important;
-        }
-        .footer {
-            text-align: center;
             font-size: 11px;
-            color: #888;
-            margin-top: 20px;
-            border-top: 1px solid #ccc;
-            padding-top: 5px;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        th {
+            color: white;
+            font-weight: 700;
+            text-align: left;
+            padding: 12px 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        
+        tbody tr {
+            background-color: #ffffff;
+            transition: background-color 0.2s;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        
+        tbody tr.urgent {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(251, 113, 133, 0.08) 100%);
+            border-left: 4px solid #ef4444;
+        }
+        
+        /* Badges dans le tableau */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .badge-programme {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            color: #5b21b6;
+        }
+        
+        .badge-deadline {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(251, 191, 36, 0.2) 100%);
+            color: #92400e;
+        }
+        
+        .badge-difficulty {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+            color: #991b1b;
+        }
+        
+        .badge-resource {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(52, 211, 153, 0.2) 100%);
+            color: #065f46;
+        }
+        
+        .badge-announcement {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+            color: #0c4a6e;
+        }
+        
+        .badge-urgent {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            margin-left: 5px;
+        }
+        
+        /* AI badge */
+        .badge-ai {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            margin-left: 5px;
+        }
+        
+        /* Author styling */
+        .author {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10px;
+            color: #64748b;
+        }
+        
+        .author-icon {
+            font-size: 14px;
+        }
+        
+        /* Date styling */
+        .date {
+            font-size: 10px;
+            color: #64748b;
+        }
+        
+        .date-icon {
+            font-size: 12px;
+            margin-right: 3px;
+        }
+        
+        /* Description */
+        .description {
+            font-size: 10px;
+            color: #475569;
+            line-height: 1.5;
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            font-style: italic;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+        
+        /* Footer moderne */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e2e8f0;
+            text-align: center;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #64748b;
+        }
+        
+        .footer-logo {
+            font-weight: 800;
+            font-size: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .footer-info {
+            text-align: right;
+        }
+        
+        .footer-info p {
+            margin: 2px 0;
+        }
+        
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            bottom: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(102, 126, 234, 0.03);
+            font-weight: 900;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        /* Page break */
+        .page-break {
+            page-break-after: always;
+        }
+        
+        /* Title column styling */
+        .title-cell {
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        /* Quality indicator */
+        .quality-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+        
+        .quality-high {
+            background: #10b981;
+        }
+        
+        .quality-medium {
+            background: #f59e0b;
+        }
+        
+        .quality-low {
+            background: #ef4444;
         }
     </style>
 </head>
 <body>
-    <h1>Liste des Contenus du Feed</h1>
+    <!-- Watermark -->
+    <div class="watermark">EduSocial</div>
     
-    <div class="stats">
-        <p><strong>Total des contenus actifs :</strong> {{ stats.total_items }}</p>
-        <p><strong>Types de contenu distincts :</strong> {{ stats.content_types }}</p>
+    <!-- Header -->
+    <div class="header">
+        <div class="emoji">🤖</div>
+        <h1>Rapport de Contenus EduSocial</h1>
+        <div class="subtitle">Plateforme éducative augmentée par l'IA</div>
     </div>
     
-    <table>
-        <thead>
-            <tr>
-                <th>Titre</th>
-                <th>Type</th>
-                <th>Auteur</th>
-                <th>Créé le</th>
-                <th>Échéance</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in feed_items %}
-            <tr {% if item.is_urgent %}class="urgent"{% endif %}>
-                <td>{{ item.title }}</td>
-                <td>{{ item.get_content_type_display }}</td>
-                <td>{{ item.author.username }}</td>
-                <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
-                <td>{% if item.deadline %}{{ item.deadline|date:"d/m/Y H:i" }}{% else %}-{% endif %}</td>
-                <td>{{ item.description|truncatewords:50 }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="6">Aucun contenu trouvé.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
+    <!-- Export info -->
+    <div class="export-info">
+        <p><strong>📅 Date d'export :</strong> {{ stats.export_date }}</p>
+        <p><strong>📊 Période analysée :</strong> Tous les contenus actifs</p>
+        <p><strong>🔍 Statut :</strong> Contenus actifs uniquement</p>
+    </div>
+    
+    <!-- Statistics cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-card-label">📰 Total Contenus</div>
+            <div class="stat-card-value">{{ stats.total_items }}</div>
+        </div>
+        
+        <div class="stat-card info">
+            <div class="stat-card-label">📋 Types Distincts</div>
+            <div class="stat-card-value">{{ stats.content_types }}</div>
+        </div>
+        
+        <div class="stat-card success">
+            <div class="stat-card-label">✅ Taux d'Activité</div>
+            <div class="stat-card-value">100%</div>
+        </div>
+    </div>
+    
+    <!-- Table -->
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Titre</th>
+                    <th style="width: 12%;">Type</th>
+                    <th style="width: 12%;">Auteur</th>
+                    <th style="width: 12%;">Créé le</th>
+                    <th style="width: 12%;">Échéance</th>
+                    <th style="width: 27%;">Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in feed_items %}
+                <tr {% if item.is_urgent %}class="urgent"{% endif %}>
+                    <td class="title-cell">
+                        {{ item.title }}
+                        {% if item.is_urgent %}
+                        <span class="badge badge-urgent">⚠ URGENT</span>
+                        {% endif %}
+                        {% if item.is_ai_generated %}
+                        <span class="badge badge-ai">🤖 IA</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ item.content_type }}">
+                            {{ item.get_content_type_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="author">
+                            <span class="author-icon">👤</span>
+                            <span>{{ item.get_author_username }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="date">
+                            <span class="date-icon">📅</span>
+                            {{ item.created_at|date:"d/m/Y" }}
+                            <br>
+                            <span class="date-icon">🕐</span>
+                            {{ item.created_at|date:"H:i" }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if item.deadline %}
+                        <div class="date">
+                            <span class="date-icon">⏰</span>
+                            {{ item.deadline|date:"d/m/Y" }}
+                            <br>
+                            <span class="date-icon">🕐</span>
+                            {{ item.deadline|date:"H:i" }}
+                        </div>
+                        {% else %}
+                        <span style="color: #94a3b8; font-size: 10px;">Aucune échéance</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="description">
+                            {{ item.description|truncatewords:40 }}
+                            {% if item.ai_quality_score %}
+                            <span class="quality-indicator {% if item.ai_quality_score >= 8 %}quality-high{% elif item.ai_quality_score >= 6 %}quality-medium{% else %}quality-low{% endif %}" 
+                                  title="Qualité: {{ item.ai_quality_score }}/10"></span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <p>Aucun contenu trouvé correspondant aux critères.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Footer -->
     <div class="footer">
-        © 2025 EduSocial - Plateforme éducative IA
+        <div class="footer-content">
+            <div>
+                <div class="footer-logo">🤖 EduSocial</div>
+                <p>© 2025 - Tous droits réservés</p>
+            </div>
+            <div class="footer-info">
+                <p><strong>Document confidentiel</strong></p>
+                <p>Généré automatiquement par l'IA</p>
+                <p>{{ stats.export_date }}</p>
+            </div>
+        </div>
     </div>
 </body>
 </html>
