@@ -1,5 +1,6 @@
 from django.conf import settings
 import openai
+import requests
 from PIL import Image
 import pytesseract
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -134,6 +135,40 @@ def ai_answer_question(question, context=None):
             return resp.choices[0].message.content.strip()
         except Exception as e:
             return f"Erreur AI: {str(e)}"
+    # OpenRouter fallback when OpenAI is not configured
+    if getattr(settings, 'OPENROUTER_API_KEY', None):
+        try:
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {
+                "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                # Optional but recommended headers for OpenRouter routing/limits context
+                "HTTP-Referer": getattr(settings, 'BASE_URL', ''),
+                "X-Title": "AI Education Platform",
+            }
+            messages = [
+                {"role": "system", "content": "Vous êtes un assistant de recherche précis et concis, répondez en français si la question est en français."}
+            ]
+            if context:
+                messages.append({"role": "user", "content": f"Contexte:\n{context}"})
+            messages.append({"role": "user", "content": f"Question: {question}. Répondez de manière concise."})
+            payload = {
+                "model": getattr(settings, 'OPENROUTER_MODEL', 'openrouter/auto'),
+                "messages": messages,
+                "temperature": 0,
+            }
+            r = requests.post(url, headers=headers, json=payload, timeout=30)
+            if r.status_code >= 400:
+                return f"Erreur OpenRouter: {r.status_code} {r.text[:200]}"
+            data = r.json()
+            content = (
+                data.get('choices', [{}])[0]
+                    .get('message', {})
+                    .get('content', '')
+            )
+            return (content or '').strip()
+        except Exception as e:
+            return f"Erreur OpenRouter: {str(e)}"
     # fallback simple canned answers for a few known questions
     q = question.lower()
     if 'tri rapide' in q or 'quick sort' in q:

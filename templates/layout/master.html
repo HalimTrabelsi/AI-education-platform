@@ -33,6 +33,9 @@
 
   {% block vendor_css %}{% endblock vendor_css %}
 
+  <!-- AOS (animations) -->
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+
   <!--Page CSS-->
   {% block page_css %}{% endblock page_css %}
 
@@ -44,6 +47,33 @@
 
 <body>
   <!-- beautify ignore:end -->
+
+  <!-- Global Navbar -->
+  <nav class="navbar navbar-expand-lg bg-body-tertiary mb-2">
+    <div class="container-xxl">
+      <a class="navbar-brand fw-semibold" href="{% url 'index' %}">AI Education</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainNavbar">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link {% if request.path == '/searchx/search/' %}active{% endif %}" href="/searchx/search/">Recherche</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'concept_list' %}active{% endif %}" href="{% url 'searchx:concept_list' %}">Concepts</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match and request.resolver_match.url_name == 'collection_list' %}active{% endif %}" href="{% url 'searchx:collection_list' %}">Collections</a>
+          </li>
+         
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Breadcrumbs (override per page) -->
+  {% block breadcrumbs %}{% endblock breadcrumbs %}
 
   {% if messages %}
     <div class="container-xxl mt-4">
@@ -60,6 +90,12 @@
   {% endblock layout %}
 
   {% include is_front|yesno:"./partials/scripts_front.html,./partials/scripts.html" %}
+
+  <!-- AOS (animations) -->
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script>
+    if (window.AOS) { AOS.init(); }
+  </script>
 
   <!--Vendors Javascript-->
   {% block vendor_js %} {% endblock vendor_js %}

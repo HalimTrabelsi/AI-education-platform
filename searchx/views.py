@@ -789,6 +789,82 @@ def api_extract_concepts(request):
     return JsonResponse({'concepts': concepts})
 
 
+@csrf_exempt
+def api_ai_describe(request):
+    """POST JSON {name, type?} -> {description}
+    Generates a short French description (2-3 sentences) for a concept or collection name.
+    Uses OpenAI via ai_utils.ai_answer_question when available; otherwise uses a simple fallback.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+    try:
+        payload = json.loads(request.body.decode('utf-8')) if request.body else {}
+    except Exception:
+        payload = {}
+    name = (payload.get('name') or payload.get('title') or '').strip()
+    obj_type = (payload.get('type') or 'concept').strip().lower()
+    if not name:
+        return JsonResponse({'description': ''})
+    # Try AI answer first
+    prompt = f"Rédige une courte description (2-3 phrases) en français pour le {obj_type}: '{name}'. Sois clair et pédagogique."
+    desc = ai_utils.ai_answer_question(prompt)
+
+    def synthesize_local_description() -> str:
+        # Local, no-key synthesis from existing data
+        # 1) collect top similar concepts
+        sims = []
+        try:
+            for c in Concept.objects.all():
+                base = f"{c.name} {c.description}".strip()
+                s = float(ai_utils.compute_similarity(name, base) or 0.0)
+                if s > 0:
+                    sims.append((s, c))
+        except Exception:
+            sims = []
+        sims.sort(key=lambda x: -x[0])
+        top = [c for _, c in sims[:3]]
+        # 2) build 2-3 sentences using available fields
+        parts = []
+        if obj_type == 'collection':
+            # Try infer filiere/level from closest collection names
+            try:
+                col_sims = []
+                for col in Collection.objects.all():
+                    base = f"{col.name} {col.description} {col.filiere} {col.level}".strip()
+                    s = float(ai_utils.compute_similarity(name, base) or 0.0)
+                    if s > 0:
+                        col_sims.append((s, col))
+                col_sims.sort(key=lambda x: -x[0])
+                if col_sims:
+                    best_col = col_sims[0][1]
+                    if best_col.filiere:
+                        parts.append(f"Cette collection s'inscrit dans la filière {best_col.filiere} et vise le niveau {best_col.level or 'débutant'}.")
+            except Exception:
+                pass
+        # Describe the concept/collection itself
+        parts.append(f"{name} couvre les notions essentielles avec des explications progressives et des exemples concrets.")
+        if top:
+            # Add related notions synthesized from similar concepts
+            related = ", ".join([t.name for t in top if t and t.name][:3])
+            parts.append(f"Sujets liés: {related}.")
+        # Include a distilled snippet from the closest description if any
+        snippet = None
+        for c in top:
+            if c and c.description:
+                snippet = c.description.strip().replace('\n', ' ')
+                if len(snippet) > 180:
+                    snippet = snippet[:177].rsplit(' ', 1)[0] + '...'
+                break
+        if snippet:
+            parts.append(f"Résumé: {snippet}")
+        return " ".join(parts[:3]) if parts else f"{name}: description synthétique indisponible."
+
+    # If AI is unavailable or generic, use local synthesis
+    if not desc or desc.lower().startswith('désolé'):
+        desc = synthesize_local_description()
+
+    return JsonResponse({'description': desc})
+
 
 @csrf_exempt
 def api_ai_ask(request):
@@ -812,6 +888,105 @@ def api_ai_ask(request):
         return JsonResponse({'answer': ''})
 
     answer = ai_utils.ai_answer_question(question, context=context)
+
+    # OpenAI-only mode: do not synthesize locally
+    openai_only = getattr(settings, 'AI_OPENAI_ONLY', True)
+    openai_key_set = bool(getattr(settings, 'OPENAI_API_KEY', None))
+    openrouter_key_set = bool(getattr(settings, 'OPENROUTER_API_KEY', None))
+    external_llm_available = openai_key_set or openrouter_key_set
+    if openai_only:
+        if not external_llm_available:
+            guidance = (
+               ""
+            )
+            return JsonResponse({'answer': guidance})
+        if not answer or answer.lower().startswith('erreur ai') or answer.lower().startswith('erreur openrouter'):
+            guidance = (
+                "Erreur lors de l'appel du fournisseur IA (OpenAI/OpenRouter). Vérifiez:\n"
+                "- La clé (OPENAI_API_KEY ou OPENROUTER_API_KEY) est valide et active\n"
+                "- Le modèle (OPENAI_MODEL ou OPENROUTER_MODEL) est correct\n"
+                "- La connexion réseau sortante est autorisée\n"
+                "Puis réessayez."
+            )
+            return JsonResponse({'answer': guidance})
+
+    def synthesize_local_answer(q: str) -> str:
+        q_clean = (q or '').strip()
+        # Try TF-IDF similarity for better ranking
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+            # Build small corpus from Concepts and Collections
+            concept_items = list(Concept.objects.all().only('name', 'description', 'level'))
+            collection_items = list(Collection.objects.all().only('name', 'description', 'filiere', 'level'))
+            docs = []
+            meta = []
+            for c in concept_items:
+                docs.append(f"{c.name or ''}. {c.description or ''}. Niveau: {c.level or ''}")
+                meta.append(('concept', c))
+            for col in collection_items:
+                docs.append(f"{col.name or ''}. {col.description or ''}. Filiere: {col.filiere or ''}. Niveau: {col.level or ''}")
+                meta.append(('collection', col))
+            if not docs:
+                raise RuntimeError('empty-corpus')
+            vectorizer = TfidfVectorizer(max_features=5000, ngram_range=(1,2))
+            X = vectorizer.fit_transform(docs + [q_clean])
+            q_vec = X[-1]
+            sims = cosine_similarity(X[:-1], q_vec)
+            ranked = sorted([(float(sims[i][0]), meta[i]) for i in range(len(meta))], key=lambda x: -x[0])
+            topk = ranked[:5]
+            # Compose concise answer
+            lines = [f"Réponse synthétique sur \"{q_clean}\" (mode local):"]
+            # Top concept hint
+            top_concepts = [m[1] for score, m in topk if m[0] == 'concept'][:3]
+            if top_concepts:
+                names = ', '.join([c.name for c in top_concepts if getattr(c, 'name', None)])
+                if names:
+                    lines.append(f"Notions proches: {names}.")
+            # Collections bullets
+            top_cols = [m[1] for score, m in topk if m[0] == 'collection'][:3]
+            if top_cols:
+                lines.append("Collections pertinentes:")
+                for col in top_cols:
+                    frag = (col.description or '').strip()
+                    if len(frag) > 140:
+                        frag = frag[:137].rsplit(' ', 1)[0] + '...'
+                    lines.append(f"- {col.name} ({col.filiere or 'général'}): {frag}")
+            if len(lines) == 1:
+                lines.append("Je n'ai pas trouvé de correspondance directe. Essaie de préciser le sujet.")
+            return "\n".join(lines)
+        except Exception:
+            # Fallback to simple token overlap if sklearn not available
+            ql = (q or '').lower()
+            tokens = set(ql.split())
+            scored = []
+            for c in Concept.objects.all():
+                corpus = f"{c.name} {c.description} {c.level}".lower().split()
+                score = len(tokens.intersection(corpus))
+                if score:
+                    scored.append((score, c))
+            scored.sort(key=lambda x: -x[0])
+            top = [c for _, c in scored[:5]]
+            col_qs = Collection.objects.filter(concepts__in=top).distinct()[:5]
+            related = ', '.join([c.name for c in top]) if top else ''
+            lines = [f"Réponse synthétique sur \"{q_clean}\" (mode local):"]
+            if related:
+                lines.append(f"Notions proches: {related}.")
+            if col_qs:
+                lines.append("Collections pertinentes:")
+                for col in col_qs:
+                    frag = (col.description or '').strip()
+                    if len(frag) > 140:
+                        frag = frag[:137].rsplit(' ', 1)[0] + '...'
+                    lines.append(f"- {col.name} ({col.filiere or 'général'}): {frag}")
+            if not top and not col_qs:
+                lines.append("Je n'ai pas trouvé de correspondance directe. Essaie de préciser le sujet.")
+            return "\n".join(lines)
+
+    # If AI is unavailable or generic, produce a local synthesis
+    if not answer or answer.lower().startswith('désolé') or answer.lower().startswith('erreur ai'):
+        answer = synthesize_local_answer(question)
+
     return JsonResponse({'answer': answer})
 
 
@@ -984,3 +1159,15 @@ def api_collections_write_page(request):
     context = {}
     context = TemplateLayout().init(context)
     return render(request, "searchx/api_collections_write.html", context)
+
+
+def ui_navbar_page(request):
+    context = {}
+    context = TemplateLayout().init(context)
+    return render(request, "searchx/ui_navbar.html", context)
+
+
+def ui_footer_page(request):
+    context = {}
+    context = TemplateLayout().init(context)
+    return render(request, "searchx/ui_footer.html", context)

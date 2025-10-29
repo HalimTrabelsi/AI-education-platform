@@ -38,6 +38,7 @@ urlpatterns = [
     path("api/ai/classify/", views.api_classify_text, name="api_classify_text"),
     path("api/ai/extract-concepts/", views.api_extract_concepts, name="api_extract_concepts"),
     path("api/ai/ask/", views.api_ai_ask, name="api_ai_ask"),
+    path("api/ai/describe/", views.api_ai_describe, name="api_ai_describe"),
    
     # Lightweight AI test endpoint (developer convenience)
     path("ai/test/", views.ai_test, name="ai_test"),

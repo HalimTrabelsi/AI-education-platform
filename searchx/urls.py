@@ -35,4 +35,6 @@ urlpatterns = [
     path("pages/api/", views.api_demos_index, name="api_demos_index"),
     path("pages/api/recommendations/", views.api_recommendations_page, name="api_recommendations_page"),
     path("pages/api/collections/write/", views.api_collections_write_page, name="api_collections_write_page"),
+    path("pages/ui/navbar/", views.ui_navbar_page, name="ui_navbar_page"),
+    path("pages/ui/footer/", views.ui_footer_page, name="ui_footer_page"),
 ]

@@ -1,37 +1,112 @@
 {% extends layout_path %}
-{% block title %}API Collection (UI){% endblock title %}
+{% load resources_extras %}
+{% block title %}Détail Collection{% endblock title %}
 {% block content %}
+<link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
 <div class="container-xxl py-4">
   <div class="card p-3 mb-3">
-    <div class="row g-2">
-      <div class="col-md-8"><input id="pk" class="form-control" value="{{ pk }}" readonly></div>
-      <div class="col-md-2"><button id="btn-load" class="btn btn-primary">Charger</button></div>
-      <div class="col-md-2"><button id="btn-reset" class="btn btn-outline-secondary">Effacer</button></div>
+    <div class="row g-2 align-items-end">
+      <div class="col-md-8">
+        <label class="form-label">ID Collection</label>
+        <input id="pk" class="form-control" value="{{ pk }}" readonly>
+      </div>
+      <div class="col-md-2"><button id="btn-load" class="btn btn-primary w-100">Charger</button></div>
+      <div class="col-md-2"><button id="btn-reset" class="btn btn-outline-secondary w-100">Effacer</button></div>
     </div>
   </div>
-  <div id="result"></div>
+
+  <div id="header"></div>
+
+  <div class="card p-3 mt-3">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <h5 class="mb-0">Ressources</h5>
+      <small class="text-muted" id="meta"></small>
+    </div>
+    <div class="row g-4" id="grid"></div>
+    <div id="empty" class="text-center text-muted py-4 d-none">Aucune ressource disponible pour le moment.</div>
+  </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 <script>
-(async function(){
+(function(){
   const pkEl = document.getElementById('pk');
   const btn = document.getElementById('btn-load');
   const btnReset = document.getElementById('btn-reset');
-  const out = document.getElementById('result');
-  function render(d){ out.innerHTML = `<h4>${d.name}</h4><p class='text-muted'>${d.description||''}</p><p><strong>Filière:</strong> ${d.filiere||''} <strong>Niveau:</strong> ${d.level||''}</p><h5>Concepts</h5><ul>${(d.concepts||[]).map(c=>`<li>${c.name} (${c.level||''})</li>`).join('')}</ul><h5>Resources</h5><pre>${JSON.stringify(d.resources||[], null, 2)}</pre>`; }
-  btn.addEventListener('click', async ()=>{
+  const header = document.getElementById('header');
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  const meta = document.getElementById('meta');
+
+  function esc(x){ return (x||'').toString().replace(/[&<>"]/g, s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[s])); }
+  function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+  function cardFor(res){
+    const title = esc(res.title || res.name || 'Ressource');
+    const desc = esc((res.description||'').toString().slice(0,180));
+    const type = (res.resource_type || res.type || '').toUpperCase();
+    const file = res.file || res.url || '';
+    const tags = (res.tags || '').split(',').map(t=>t.trim()).filter(Boolean);
+    const col = document.createElement('div');
+    col.className = 'col-md-4';
+    col.setAttribute('data-aos','fade-up');
+    col.setAttribute('data-aos-duration','800');
+    const media = (()=>{
+      if(file){
+        const low = String(file).toLowerCase();
+        if(type === 'IMAGE' || low.match(/\.(png|jpg|jpeg|gif|webp)$/)){
+          return `<img src="${esc((window.MEDIA_URL||'/media/')+file)}" class="card-img-top" alt="${title}" loading="lazy">`;
+        }
+        if(type === 'PDF' || low.endsWith('.pdf')){
+          return `<img src="/media/resources/PDFLogo.jpeg" class="card-img-top" alt="PDF" loading="lazy">`;
+        }
+        if(type === 'VIDEO' || low.match(/\.(mp4|mov|avi|webm|mkv)$/)){
+          return `<video controls class="card-img-top"><source src="${esc((window.MEDIA_URL||'/media/')+file)}" type="video/mp4">Votre navigateur ne supporte pas la vidéo.</video>`;
+        }
+      }
+      return `<img src="https://via.placeholder.com/400x200/cccccc/FFFFFF?text=Pas+d'image" class="card-img-top" alt="No Image" loading="lazy">`;
+    })();
+    const tagsHtml = tags.map(t=>`<span class="badge bg-secondary me-1">${esc(t)}</span>`).join('');
+    col.innerHTML = `
+      <div class="card h-100">
+        ${media}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${title}</h5>
+          <p class="card-text">${desc}</p>
+          ${type ? `<p class="card-text"><strong>Type:</strong> ${esc(type)}</p>` : ''}
+          <div class="mt-2">${tagsHtml}</div>
+          <div class="mt-auto"><span class="text-muted small">${esc(res.source||'')}</span></div>
+        </div>
+        ${res.uploaded_at ? `<div class="card-footer text-muted">Ajouté le ${esc(res.uploaded_at)}</div>` : ''}
+      </div>`;
+    return col;
+  }
+
+  async function load(){
     const pk = pkEl.value||'';
-    if(!pk) return alert('Renseignez un id');
+    if(!pk) return;
+    clear(grid); empty.classList.add('d-none'); header.innerHTML = ''; meta.textContent = '';
     try{
       const r = await fetch(`/api/collections/${encodeURIComponent(pk)}`);
-      if(!r.ok) return alert('Non trouvé');
-      const j = await r.json();
-      render(j);
-    }catch(e){ console.error(e); alert('Erreur'); }
-  });
-  btnReset.addEventListener('click', ()=>{ pkEl.value=''; out.innerHTML=''; });
-  // Auto-load if pk provided
-  if(pkEl.value) btn.click();
+      if(!r.ok){ empty.classList.remove('d-none'); return; }
+      const d = await r.json();
+      header.innerHTML = `
+        <div class="card p-3">
+          <h4 class="mb-1">${esc(d.name)}</h4>
+          <p class="text-muted mb-2">${esc(d.description||'')}</p>
+          <div class="small"><strong>Filière:</strong> ${esc(d.filiere||'')} &nbsp; <strong>Niveau:</strong> ${esc(d.level||'')}</div>
+        </div>`;
+      const items = Array.isArray(d.resources) ? d.resources : [];
+      meta.textContent = `${items.length} élément(s)`;
+      if(items.length === 0){ empty.classList.remove('d-none'); }
+      items.forEach(res => grid.appendChild(cardFor(res)));
+      if(window.AOS){ AOS.init(); }
+    }catch(e){ console.error(e); empty.classList.remove('d-none'); }
+  }
+
+  btn.addEventListener('click', load);
+  btnReset.addEventListener('click', ()=>{ pkEl.value=''; clear(grid); header.innerHTML=''; empty.classList.add('d-none'); meta.textContent=''; });
+  if(pkEl.value){ load(); }
 })();
 </script>
 {% endblock content %}
