@@ -39,8 +39,8 @@ def export_reports_pdf(request):
     ))
     elements.append(Spacer(1, 16))
 
-    # Table headers (AI Tags removed)
-    data = [["Titre", "Signalé par", "Plagiat", "NSFW", "Score IA", "Risque"]]
+    # Table headers (Risque column removed)
+    data = [["Titre", "Signalé par", "Plagiat", "NSFW", "Score IA"]]
 
     for r in reports:
         data.append([
@@ -48,18 +48,18 @@ def export_reports_pdf(request):
             r.flagged_by,
             "Oui" if r.is_plagiarism else "Non",
             "Oui" if r.is_nsfw else "Non",
-            f"{r.ai_confidence:.2f}",
-            r.risk_label
+            f"{r.ai_confidence:.2f}"
         ])
 
     # Adjust column widths proportionally
-    col_widths = [200, 120, 50, 50, 60, 80]
+    col_widths = [300, 150, 60, 60, 80]
 
     table = Table(data, repeatRows=1, colWidths=col_widths)
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4e73df")),  # header
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#4e73df")),  # header background
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),  # header text
+        ('ALIGN', (1, 1), (-1, -1), 'CENTER'),  # center all except first column
+        ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # left-align "Titre"
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, 0), 12),
@@ -70,6 +70,8 @@ def export_reports_pdf(request):
     ]))
 
     elements.append(table)
+
+
 
     # Footer with page numbers
     def add_page_number(canvas, doc):
