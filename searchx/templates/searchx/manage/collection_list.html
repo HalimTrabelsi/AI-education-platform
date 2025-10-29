@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+{% extends "layout/master.html" %}
+{% block title %}Collections{% endblock title %}
+{% block layout %}
+<div class="container-xxl py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Collections</h3>
+    <div>
+      <a class="btn btn-primary" href="{% url 'searchx:collection_create' %}">Nouvelle Collection</a>
+      <a class="btn btn-outline-secondary" href="{% url 'searchx:concept_list' %}">Concepts</a>
+    </div>
+  </div>
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table table-striped mb-0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Filière</th>
+            <th>Niveau</th>
+            <th>Concepts</th>
+            <th>Ressources</th>
+            <th style="width: 160px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in items %}
+          <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.name }}</td>
+            <td>{{ c.filiere }}</td>
+            <td>{{ c.level }}</td>
+            <td>{{ c.concepts.count }}</td>
+            <td>{{ c.resources|length }}</td>
+            <td>
+              <a class="btn btn-sm btn-secondary" href="{% url 'searchx:collection_edit' c.id %}">Edit</a>
+              <a class="btn btn-sm btn-danger" href="{% url 'searchx:collection_delete' c.id %}">Delete</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center">Aucune collection.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock layout %}

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+{% extends "layout/master.html" %}
+{% block title %}Recherche & Découverte{% endblock title %}
+{% block layout %}
+<div class="container-xxl py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Recherche & Découverte</h3>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'searchx:concept_list' %}">Gérer Concepts</a>
+      <a class="btn btn-outline-secondary" href="{% url 'searchx:collection_list' %}">Gérer Collections</a>
+    </div>
+  </div>
+
+  <div class="card p-4 mb-4">
+    <form method="get" class="row g-2" id="search-form">
+      <div class="col-md-6">
+        <input type="text" name="q" id="q" value="{{ q }}" class="form-control" placeholder="Ex: VLSM, sous-réseaux…">
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" id="filiere">
+          <option value="">Toutes filières</option>
+          <option value="Informatique">Informatique</option>
+          <option value="Maths">Maths</option>
+          <option value="Physique">Physique</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Rechercher</button>
+        <button class="btn btn-outline-secondary" type="button" id="btn-semantic">Sémantique</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Concepts</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group" id="concepts-list"></ul>
+          <div id="concepts-empty" class="text-muted">Aucun résultat.</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Collections</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group" id="collections-list"></ul>
+          <div id="collections-empty" class="text-muted">Aucun résultat.</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Assistant AI</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-2">
+            <input id="ai-question" class="form-control" placeholder="Posez une question, ex: Quelle est la complexité du tri rapide ?">
+          </div>
+          <div class="mb-2">
+            <small id="ai-status" class="text-muted">Statut AI: vérification...</small>
+          </div>
+          <div class="d-flex gap-2 mb-3">
+            <button id="btn-ai-ask" class="btn btn-primary btn-sm">Poser</button>
+            <button id="btn-extract-concepts" class="btn btn-outline-secondary btn-sm">Extraire concepts</button>
+          </div>
+          <div id="ai-answer" class="border rounded p-3 bg-light" style="min-height:80px;">
+            <em class="text-muted">Les réponses AI apparaîtront ici.</em>
+          </div>
+          <div class="mt-3">
+            <h6>Concepts détectés</h6>
+            <div id="concept-chips" class="d-flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Ressources</h5>
+        </div>
+        <div class="card-body">
+          <div id="resources-grid" class="row g-3"></div>
+          <div id="resources-empty" class="text-muted">Aucune ressource.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Tendances par filière</h5>
+          <button class="btn btn-sm btn-outline-primary" id="btn-trends">Actualiser</button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Collection</th>
+                  <th>Filière</th>
+                  <th>Niveau</th>
+                  <th>#Concepts</th>
+                  <th>#Ressources</th>
+                </tr>
+              </thead>
+              <tbody id="trends-body"></tbody>
+            </table>
+          </div>
+          <div id="trends-empty" class="text-muted">Aucune donnée.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const qInput = document.getElementById('q');
+  const filiereSelect = document.getElementById('filiere');
+  const conceptsList = document.getElementById('concepts-list');
+  const collectionsList = document.getElementById('collections-list');
+  const resourcesGrid = document.getElementById('resources-grid');
+  const conceptsEmpty = document.getElementById('concepts-empty');
+  const collectionsEmpty = document.getElementById('collections-empty');
+  const resourcesEmpty = document.getElementById('resources-empty');
+  const trendsBody = document.getElementById('trends-body');
+  const trendsEmpty = document.getElementById('trends-empty');
+
+  function clearList(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+  function renderConcepts(items){
+    clearList(conceptsList);
+    conceptsEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.innerHTML = `<div><strong>${c.name}</strong><div class="text-muted small">${c.description || ''}</div></div><span class="badge bg-label-primary">${c.level || ''}</span>`;
+      conceptsList.appendChild(li);
+    });
+  }
+
+  function renderCollections(items){
+    clearList(collectionsList);
+    collectionsEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.innerHTML = `<div><strong>${c.name}</strong><div class="text-muted small">${c.description || ''}</div></div>`;
+      collectionsList.appendChild(li);
+    });
+  }
+
+  function renderResources(items){
+    clearList(resourcesGrid);
+    resourcesEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(r => {
+      const col = document.createElement('div');
+      col.className = 'col-md-4';
+      const title = (r && r.title) ? r.title : (typeof r === 'string' ? r : 'Ressource');
+      const type = (r && r.type) ? r.type.toUpperCase() : '';
+      col.innerHTML = `<div class="card h-100"><div class="card-body"><div class="text-muted small mb-1">${type}</div><div class="fw-semibold">${title}</div></div></div>`;
+      resourcesGrid.appendChild(col);
+    });
+  }
+
+  function renderTrends(items){
+    while (trendsBody.firstChild) trendsBody.removeChild(trendsBody.firstChild);
+    trendsEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(t => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${t.collection}</td><td>${t.filiere || ''}</td><td>${t.level || ''}</td><td>${t.concept_count}</td><td>${t.resource_count}</td>`;
+      trendsBody.appendChild(tr);
+    });
+  }
+
+  async function fetchJSON(url, opts){
+    const res = await fetch(url, opts || {});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  async function runSearch(){
+    const q = qInput.value.trim();
+    if (!q) { renderConcepts([]); renderCollections([]); renderResources([]); return; }
+    const data = await fetchJSON(`/api/search/?q=${encodeURIComponent(q)}`);
+    renderConcepts(data.concepts || []);
+    renderCollections(data.collections || []);
+    renderResources(data.resources || []);
+  }
+
+  async function runSemantic(){
+    const q = qInput.value.trim();
+    if (!q) return;
+    const data = await fetchJSON('/api/search/semantic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: q })
+    });
+    renderConcepts((data.results || []).map(r => ({ name: r.name, description: r.description, level: r.level })));
+  }
+
+  async function runTrends(){
+    const f = filiereSelect.value.trim();
+    const url = f ? `/api/trends/?filiere=${encodeURIComponent(f)}` : '/api/trends/';
+    const data = await fetchJSON(url);
+    renderTrends(data.trends || []);
+  }
+
+  document.getElementById('search-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    runSearch().catch(console.error);
+  });
+  document.getElementById('btn-semantic').addEventListener('click', function(){
+    runSemantic().catch(console.error);
+  });
+  document.getElementById('btn-trends').addEventListener('click', function(){
+    runTrends().catch(console.error);
+  });
+
+  // Initial load
+  if (qInput.value.trim()) {
+    runSearch().catch(console.error);
+  }
+  runTrends().catch(console.error);
+
+  // Fetch AI status and display
+  (async function(){
+    try{
+      const r = await fetch('/ai/test/');
+      if(!r.ok) throw new Error('no');
+      const j = await r.json();
+      const s = document.getElementById('ai-status');
+      if(j.ai_status){
+        const st = j.ai_status;
+        const ok = st.openai_key_set && st.openai_available;
+        s.textContent = ok ? 'Statut AI: disponible' : 'Statut AI: indisponible (voir détails)';
+        s.title = JSON.stringify(st);
+        if(ok) s.className = 'text-success'; else s.className='text-danger';
+      } else {
+        document.getElementById('ai-status').textContent = 'Statut AI: inconnu';
+      }
+    }catch(e){
+      const s = document.getElementById('ai-status'); s.textContent = 'Statut AI: erreur'; s.className='text-danger';
+    }
+  })();
+
+  // AI interactions
+  const aiQuestion = document.getElementById('ai-question');
+  const btnAsk = document.getElementById('btn-ai-ask');
+  const aiAnswer = document.getElementById('ai-answer');
+  const btnExtract = document.getElementById('btn-extract-concepts');
+  const chips = document.getElementById('concept-chips');
+  const btnQuiz = document.getElementById('btn-generate-quiz');
+
+  function clearChips(){ while(chips.firstChild) chips.removeChild(chips.firstChild); }
+  function addChip(text){ const s = document.createElement('span'); s.className='badge bg-primary text-white p-2'; s.textContent = text; chips.appendChild(s); }
+
+  btnAsk.addEventListener('click', async function(){
+    const q = aiQuestion.value.trim();
+    if(!q) return;
+    aiAnswer.innerHTML = '<div class="text-muted">En cours...</div>';
+    try{
+      const resp = await fetch('/api/ai/ask/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question:q}) });
+      const data = await resp.json();
+      aiAnswer.innerHTML = `<div class="fw-semibold">Réponse</div><div class="mt-2">${data.answer || ''}</div>`;
+    }catch(e){ aiAnswer.innerHTML = '<div class="text-danger">Erreur lors de la requête</div>'; }
+  });
+
+  btnExtract.addEventListener('click', async function(){
+    const q = aiQuestion.value.trim();
+    if(!q) return;
+    clearChips();
+    try{
+      const resp = await fetch('/api/ai/extract-concepts/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({texte:q}) });
+      const data = await resp.json();
+      (data.concepts || []).forEach(c => addChip(c));
+    }catch(e){ addChip('Erreur'); }
+  });
+
+  
+})();
+</script>
+
+
+{% endblock layout %}

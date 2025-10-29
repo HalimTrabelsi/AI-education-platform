@@ -17,11 +17,16 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
+from django.http import HttpResponse
 from web_project.views import SystemView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls")),
+    # Searchx HTML CRUD
+    path("searchx/", include("searchx.urls")),
+    # Searchx APIs mounted at root (/api/...)
+    path("", include("searchx.urls_api")),
     # Dashboard urls
     path("", include("apps.dashboards.urls")),
 
@@ -54,6 +59,9 @@ urlpatterns = [
 
     # Tables urls
     path("", include("apps.tables.urls")),
+
+    # Silence Chrome DevTools well-known probe
+    path(".well-known/appspecific/com.chrome.devtools.json", lambda request: HttpResponse(status=204)),
 ]
 
 handler404 = SystemView.as_view(template_name="pages_misc_error.html", status=404)

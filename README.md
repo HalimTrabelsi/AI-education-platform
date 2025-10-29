@@ -186,6 +186,39 @@ For free products, enjoy community support via GitHub issues. Upgrade to Premium
 
 If you want to [Free Admin Templates](https://themeselection.com/item/category/free-admin-templates/) like Sneat Django then do visit [ThemeSelection](https://themeselection.com/).
 
+## AI Endpoints — Examples & Quick Tests
+
+This project exposes a few AI endpoints under `/api/ai/` for quick experimentation.
+
+1) Extract concepts
+
+POST /api/ai/extract-concepts/
+
+JSON body: { "texte": "Les piles et files sont des structures de données linéaires utilisées pour stocker des éléments." }
+
+Example (PowerShell):
+
+```powershell
+Invoke-RestMethod -Uri http://127.0.0.1:8000/api/ai/extract-concepts/ -Method Post -Body (ConvertTo-Json @{ texte = "Les piles et files sont des structures de données linéaires utilisées pour stocker des éléments." }) -ContentType 'application/json'
+```
+
+2) Ask assistant
+
+POST /api/ai/ask/
+
+JSON body: { "question": "Quelle est la complexité du tri rapide ?" }
+
+Example:
+
+```powershell
+Invoke-RestMethod -Uri http://127.0.0.1:8000/api/ai/ask/ -Method Post -Body (ConvertTo-Json @{ question = "Quelle est la complexité du tri rapide ?" }) -ContentType 'application/json'
+```
+
+Notes:
+- Ensure you configured `.env` with `OPENAI_API_KEY` and `OPENAI_MODEL` to enable OpenAI-backed responses.
+- For OCR endpoints, install Tesseract and set `TESSERACT_CMD` in `.env`.
+
+
 ## Useful Links 🎁
 
 - [Vue CheatSheet](https://vue-cheatsheet.themeselection.com/)

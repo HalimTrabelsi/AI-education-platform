@@ -1,0 +1,37 @@
+{% extends layout_path %}
+{% block title %}API Collection (UI){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-3 mb-3">
+    <div class="row g-2">
+      <div class="col-md-8"><input id="pk" class="form-control" value="{{ pk }}" readonly></div>
+      <div class="col-md-2"><button id="btn-load" class="btn btn-primary">Charger</button></div>
+      <div class="col-md-2"><button id="btn-reset" class="btn btn-outline-secondary">Effacer</button></div>
+    </div>
+  </div>
+  <div id="result"></div>
+</div>
+
+<script>
+(async function(){
+  const pkEl = document.getElementById('pk');
+  const btn = document.getElementById('btn-load');
+  const btnReset = document.getElementById('btn-reset');
+  const out = document.getElementById('result');
+  function render(d){ out.innerHTML = `<h4>${d.name}</h4><p class='text-muted'>${d.description||''}</p><p><strong>Filière:</strong> ${d.filiere||''} <strong>Niveau:</strong> ${d.level||''}</p><h5>Concepts</h5><ul>${(d.concepts||[]).map(c=>`<li>${c.name} (${c.level||''})</li>`).join('')}</ul><h5>Resources</h5><pre>${JSON.stringify(d.resources||[], null, 2)}</pre>`; }
+  btn.addEventListener('click', async ()=>{
+    const pk = pkEl.value||'';
+    if(!pk) return alert('Renseignez un id');
+    try{
+      const r = await fetch(`/api/collections/${encodeURIComponent(pk)}`);
+      if(!r.ok) return alert('Non trouvé');
+      const j = await r.json();
+      render(j);
+    }catch(e){ console.error(e); alert('Erreur'); }
+  });
+  btnReset.addEventListener('click', ()=>{ pkEl.value=''; out.innerHTML=''; });
+  // Auto-load if pk provided
+  if(pkEl.value) btn.click();
+})();
+</script>
+{% endblock content %}

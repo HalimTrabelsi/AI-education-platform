@@ -1,0 +1,37 @@
+{% extends layout_path %}
+{% block title %}API Similarity (UI){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-3 mb-3">
+    <div class="row g-2">
+      <div class="col-md-4"><input id="concept_id" class="form-control" placeholder="Concept id (optionnel)"></div>
+      <div class="col-md-6"><input id="resource_text" class="form-control" placeholder="Texte de ressource (optionnel)"></div>
+      <div class="col-md-2"><button id="btn" class="btn btn-primary">Comparer</button></div>
+    </div>
+  </div>
+  <h5>Similarités</h5>
+  <ul id="list" class="list-group"></ul>
+</div>
+
+<script>
+(async function(){
+  const cid = document.getElementById('concept_id');
+  const rt = document.getElementById('resource_text');
+  const btn = document.getElementById('btn');
+  const list = document.getElementById('list');
+  function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+  btn.addEventListener('click', async ()=>{
+    const payload = {};
+    if((cid.value||'').trim()) payload.concept_id = cid.value.trim();
+    if((rt.value||'').trim()) payload.resource_text = rt.value.trim();
+    if(!payload.concept_id && !payload.resource_text) return alert('Fournir concept_id ou resource_text');
+    try{
+      const r = await fetch('/api/search/similarity', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const j = await r.json();
+      clear(list);
+      (j.results||[]).forEach(it=>{ const li=document.createElement('li'); li.className='list-group-item'; li.innerHTML = `<strong>${it.name}</strong> <span class='text-muted small'>sim: ${it.similarity}</span>`; list.appendChild(li); });
+    }catch(e){ console.error(e); alert('Erreur'); }
+  });
+})();
+</script>
+{% endblock content %}

@@ -1,0 +1,82 @@
+{% extends layout_path %}
+{% block title %}Recherche Sémantique (Embeddings locaux){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-3 mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-6">
+        <label class="form-label">Requête</label>
+        <input id="q" class="form-control" placeholder="Ex: structure linéaire, VLSM, pile..." />
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">Modèle</label>
+        <select id="model" class="form-select">
+          <option value="sentence-transformers/all-MiniLM-L6-v2" selected>all-MiniLM-L6-v2 (rapide)</option>
+          <option value="sentence-transformers/all-MiniLM-L12-v2">all-MiniLM-L12-v2</option>
+          <option value="sentence-transformers/paraphrase-MiniLM-L6-v2">paraphrase-MiniLM-L6-v2</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">Top K</label>
+        <input id="topk" type="number" class="form-control" value="10" min="1" max="50" />
+      </div>
+      <div class="col-md-1">
+        <button id="btn" class="btn btn-primary w-100">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0">Résultats</h5>
+      <small class="text-muted" id="meta"></small>
+    </div>
+    <div id="alert" class="alert alert-warning d-none"></div>
+    <ul id="results" class="list-group"></ul>
+  </div>
+</div>
+
+<script>
+(function(){
+  const q = document.getElementById('q');
+  const model = document.getElementById('model');
+  const topk = document.getElementById('topk');
+  const btn = document.getElementById('btn');
+  const results = document.getElementById('results');
+  const alertBox = document.getElementById('alert');
+  const meta = document.getElementById('meta');
+
+  function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+  function showAlert(msg){ alertBox.textContent = msg; alertBox.classList.remove('d-none'); }
+  function hideAlert(){ alertBox.classList.add('d-none'); }
+
+  btn.addEventListener('click', async () => {
+    const text = (q.value||'').trim();
+    if(!text){ return; }
+    hideAlert(); clear(results); meta.textContent = '';
+    try{
+      const payload = { query: text, top_k: parseInt(topk.value||'10'), model: model.value };
+      const r = await fetch('/searchx/api/search/semantic-emb', {
+        method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+      });
+      const j = await r.json();
+      if(!r.ok){ showAlert(j.error || 'Erreur de recherche'); return; }
+      meta.textContent = `Modèle: ${j.model} | requête: "${j.query}"`;
+      (j.results||[]).forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-start';
+        li.innerHTML = `
+          <div>
+            <div class='fw-bold'>${item.name}</div>
+            <div class='small text-muted'>${(item.description||'').slice(0, 220)}</div>
+          </div>
+          <span class='badge bg-label-primary'>${item.similarity}</span>
+        `;
+        results.appendChild(li);
+      });
+      if((j.results||[]).length === 0){ showAlert('Aucun résultat. Ajoute des concepts ou change la requête.'); }
+    }catch(e){ console.error(e); showAlert('Erreur de requête (voir console).'); }
+  });
+})();
+</script>
+{% endblock content %}

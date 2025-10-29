@@ -176,5 +176,20 @@ THEME_VARIABLES = THEME_VARIABLES
 
 
 
+# AI Configuration
+# ------------------------------------------------------------------------------
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo')
+HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY')
+# Do NOT hardcode API keys here. Set `OPENAI_API_KEY` in your environment or in a .env file.
+# TESSERACT_CMD can be overridden by env; default to 'tesseract' which works if tesseract is on PATH.
+
+# Semantic Search Config
+EMBEDDING_MODEL = os.environ.get('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
+VECTOR_SIMILARITY_THRESHOLD = float(os.environ.get('VECTOR_SIMILARITY_THRESHOLD', '0.7'))
+
+# OCR Config
+TESSERACT_CMD = os.environ.get('TESSERACT_CMD', 'tesseract')  # Chemin vers l'exécutable Tesseract
+
 # Your stuff...
 # ------------------------------------------------------------------------------
