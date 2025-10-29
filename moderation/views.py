@@ -4,12 +4,19 @@ from django.core.paginator import Paginator
 from .models import Report
 from .forms import ReportForm
 from .ai_tools import ai_analyze_report
+from django.views.decorators.csrf import csrf_exempt
 
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Report
+from .forms import ReportForm
+from .ai_tools import ai_analyze_report
+import json
 # ------------------------------
 # EXPORT PDF WITHOUT AI TAGS
 # ------------------------------
@@ -82,6 +89,46 @@ def export_reports_pdf(request):
     doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
     return response
 
+@csrf_exempt
+def verify_ai(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+    try:
+        data = json.loads(request.body)
+        title = data.get("title", "")
+        description = data.get("description", "")
+        resource_url = data.get("url", "")
+
+        # Example AI detection logic for testing
+        if any(word in description.lower() for word in ["artificial intelligence", "ai systems", "machine learning"]):
+            ai_conf = 0.85
+        else:
+            ai_conf = 0.2
+
+        is_nsfw = ai_conf > 0.55
+        is_plagiarism = bool(
+            Report.objects(title=title).count() > 0 or
+            Report.objects(resource_url=resource_url).count() > 0
+        )
+
+        ai_flags = []
+        if ai_conf > 0.4:
+            ai_flags.append("Signalement")
+        if ai_conf > 0.55 or is_nsfw:
+            ai_flags.append("IA / NSFW")
+        if ai_conf > 0.7:
+            ai_flags.append("Risque élevé")
+        if is_plagiarism:
+            ai_flags.append("Anti-plagiat")
+
+        return JsonResponse({
+            "ai_confidence": ai_conf,
+            "ai_flags": ai_flags,
+            "is_nsfw": is_nsfw,
+            "is_plagiarism": is_plagiarism
+        })
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 # ------------------------------
 # DASHBOARD
 # ------------------------------

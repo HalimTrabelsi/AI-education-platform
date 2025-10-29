@@ -25,74 +25,40 @@
 
           <!-- LEFT COLUMN -->
           <div class="col-md-6">
-            <!-- Title -->
             <div class="mb-3">
               <label class="form-label fw-bold">Titre</label>
-              {{ form.title }}
-              {% if form.title.errors %}
-                <div class="text-danger small">{{ form.title.errors }}</div>
-              {% endif %}
+              <input type="text" name="{{ form.title.name }}" id="titleInput" value="{{ form.title.value }}" class="form-control form-control-sm">
             </div>
 
-            <!-- Resource URL -->
             <div class="mb-3">
               <label class="form-label fw-bold">URL de la ressource</label>
-              {{ form.resource_url }}
-              {% if form.resource_url.errors %}
-                <div class="text-danger small">{{ form.resource_url.errors }}</div>
-              {% endif %}
+              <input type="text" name="{{ form.resource_url.name }}" id="urlInput" value="{{ form.resource_url.value }}" class="form-control form-control-sm">
             </div>
 
-            <!-- Flagged By -->
             <div class="mb-3">
               <label class="form-label fw-bold">Signalé par</label>
-              {{ form.flagged_by }}
-              {% if form.flagged_by.errors %}
-                <div class="text-danger small">{{ form.flagged_by.errors }}</div>
-              {% endif %}
+              <input type="text" name="{{ form.flagged_by.name }}" id="flaggedByInput" value="{{ form.flagged_by.value }}" class="form-control form-control-sm">
             </div>
 
-            <!-- AI Confidence -->
             <div class="mb-3">
               <label class="form-label fw-bold">Score IA (0.0 – 1.0)</label>
-              {{ form.ai_confidence }}
-              {% if form.ai_confidence.errors %}
-                <div class="text-danger small">{{ form.ai_confidence.errors }}</div>
-              {% endif %}
+              <input type="text" name="{{ form.ai_confidence.name }}" id="aiConfInput" value="{{ form.ai_confidence.value }}" class="form-control form-control-sm" readonly>
               <small class="text-muted">Les tags IA se mettront à jour automatiquement selon ce score, le plagiat ou la détection NSFW.</small>
             </div>
           </div>
 
           <!-- RIGHT COLUMN -->
           <div class="col-md-6">
-            <!-- Description -->
             <div class="mb-3">
               <label class="form-label fw-bold">Description</label>
-              <input type="text"
-                     name="{{ form.description.name }}"
-                     value="{{ form.description.value }}"
-                     class="form-control form-control-sm">
-              {% if form.description.errors %}
-                <div class="text-danger small">{{ form.description.errors }}</div>
-              {% endif %}
+              <textarea name="{{ form.description.name }}" id="descInput" class="form-control form-control-sm" rows="5">{{ form.description.value }}</textarea>
             </div>
 
-            <!-- AI Tags (Read-Only) -->
             <div class="mb-3">
               <label class="form-label fw-bold">Tags IA</label>
-              <input type="text"
-                     id="{{ form.ai_flags.id_for_label }}"
-                     name="{{ form.ai_flags.name }}"
-                     value="{{ form.ai_flags.value }}"
-                     class="form-control form-control-sm bg-light"
-                     readonly>
-              <small class="text-muted">Ce champ est automatiquement rempli selon le score IA et la détection de plagiat/NSFW.</small>
-              {% if form.ai_flags.errors %}
-                <div class="text-danger small">{{ form.ai_flags.errors }}</div>
-              {% endif %}
+              <input type="text" name="{{ form.ai_flags.name }}" id="aiFlagsInput" value="{{ form.ai_flags.value }}" class="form-control form-control-sm bg-light" readonly>
             </div>
 
-            <!-- NSFW & Anti-Plagiat Checkboxes -->
             <div class="form-check mb-2">
               <input class="form-check-input" type="checkbox" id="nsfwCheck" disabled>
               <label class="form-check-label fw-bold" for="nsfwCheck">NSFW détecté</label>
@@ -101,96 +67,88 @@
               <input class="form-check-input" type="checkbox" id="plagiarismCheck" disabled>
               <label class="form-check-label fw-bold" for="plagiarismCheck">Plagiat détecté</label>
             </div>
-
           </div>
         </div>
 
         <!-- Buttons -->
         <div class="d-flex justify-content-end gap-3 mt-4">
           <a href="{% url 'moderation:report_list' %}" class="btn btn-outline-secondary">Annuler</a>
-          <button type="submit" class="btn btn-primary fw-bold">
-            {% if report %}Mettre à jour{% else %}Créer{% endif %}
-          </button>
+          <button type="button" id="verifyAIButton" class="btn btn-info fw-bold">Vérifier AI</button>
+          <button type="submit" class="btn btn-primary fw-bold">{% if report %}Mettre à jour{% else %}Créer{% endif %}</button>
         </div>
+
+        <!-- Big AI Result Message -->
+        <div id="aiResultMessage" class="mt-4 p-3 text-center fw-bold rounded" style="font-size:1.3rem;"></div>
+
       </form>
     </div>
   </div>
 </div>
 
-<!-- === JS: Validation + AI Logic === -->
 <script>
-(function () {
-  'use strict';
-  const forms = document.querySelectorAll('.needs-validation');
-  Array.from(forms).forEach(form => {
-    form.addEventListener('submit', event => {
-      if (!form.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-    }, false);
-  });
-})();
-
-// === AI Dynamic Tag Logic ===
 document.addEventListener('DOMContentLoaded', () => {
-  const aiInput    = document.getElementById('{{ form.ai_confidence.id_for_label }}');
-  const titleInput = document.getElementById('{{ form.title.id_for_label }}');
-  const urlInput   = document.getElementById('{{ form.resource_url.id_for_label }}');
-  const aiFlags    = document.getElementById('{{ form.ai_flags.id_for_label }}');
-  const nsfwCheck  = document.getElementById('nsfwCheck');
-  const plagCheck  = document.getElementById('plagiarismCheck');
+    const titleInput = document.getElementById('titleInput');
+    const urlInput = document.getElementById('urlInput');
+    const descInput = document.getElementById('descInput');
+    const aiConfInput = document.getElementById('aiConfInput');
+    const aiFlagsInput = document.getElementById('aiFlagsInput');
+    const nsfwCheck = document.getElementById('nsfwCheck');
+    const plagCheck = document.getElementById('plagiarismCheck');
+    const aiResultMessage = document.getElementById('aiResultMessage');
 
-  function updateTags(extraTag = null) {
-    const value = parseFloat(aiInput.value);
-    let tags = [];
+    let debounceTimer;
 
-    if (!isNaN(value)) {
-      if (value > 0.4) tags.push("Signalements");
-      if (value > 0.55) {
-        tags.push("détection IA de triche / NSFW");
-        nsfwCheck.checked = true;
-      } else {
-        nsfwCheck.checked = false;
-      }
-      if (value > 0.7) {
-        tags.push("Risque élevé");
-      }
-    } else {
-      nsfwCheck.checked = false;
+    async function verifyAI() {
+        const title = titleInput.value.trim();
+        const url = urlInput.value.trim();
+        const description = descInput.value.trim();
+        if (!title) return;
+
+        try {
+            const response = await fetch("{% url 'moderation:verify_ai' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ title, url, description })
+            });
+
+            const data = await response.json();
+
+            aiConfInput.value = data.ai_confidence.toFixed(2);
+            aiFlagsInput.value = data.ai_flags.join(", ") || "Aucun tag détecté";
+            nsfwCheck.checked = data.is_nsfw;
+            plagCheck.checked = data.is_plagiarism;
+
+            if(data.ai_confidence >= 0.65){
+                aiResultMessage.textContent = "⚠️ Texte probablement écrit par une IA !";
+                aiResultMessage.style.backgroundColor = "#f8d7da";
+                aiResultMessage.style.color = "#721c24";
+            } else if (data.ai_confidence >= 0.45){
+                aiResultMessage.textContent = "⚠️ Texte incertain : pourrait être écrit par une IA ou un humain.";
+                aiResultMessage.style.backgroundColor = "#fff3cd";
+                aiResultMessage.style.color = "#856404";
+            } else {
+                aiResultMessage.textContent = "✅ Texte probablement écrit par un humain.";
+                aiResultMessage.style.backgroundColor = "#d4edda";
+                aiResultMessage.style.color = "#155724";
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors de la vérification AI");
+        }
     }
 
-    if (extraTag && !tags.includes(extraTag)) tags.push(extraTag);
-    plagCheck.checked = tags.includes("anti-plagiat");
+    // Live detection as you type (debounced)
+    descInput.addEventListener('keyup', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(verifyAI, 500);
+    });
 
-    aiFlags.value = tags.length > 0 ? tags.join(", ") : "Aucun tag détecté";
-  }
-
-  async function checkDuplicates() {
-    const title = titleInput.value.trim();
-    const url   = urlInput.value.trim();
-    if (!title && !url) return;
-
-    try {
-      const response = await fetch(`/moderation/api/check-duplicate/?title=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`);
-      const data = await response.json();
-      if (data.exists) {
-        updateTags("anti-plagiat");
-      } else {
-        updateTags();
-      }
-    } catch (e) {
-      console.warn("Erreur lors de la vérification des doublons :", e);
-      updateTags();
-    }
-  }
-
-  aiInput.addEventListener('input', updateTags);
-  titleInput.addEventListener('input', checkDuplicates);
-  urlInput.addEventListener('input', checkDuplicates);
-
-  updateTags();
+    // Manual verify button
+    document.getElementById('verifyAIButton').addEventListener('click', verifyAI);
 });
 </script>
 {% endblock %}

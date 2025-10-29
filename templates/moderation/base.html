@@ -1,24 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Moderation Dashboard</title>
+    <title>{% block title %}Moderation Dashboard{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <!-- Inline Styles -->
     <style>
-        body { padding: 20px; background-color: #f8f9fa; }
-        .btn-blue { background-color: #0d6efd; color: white; }
-        .btn-blue:hover { background-color: #0b5ed7; }
-        .badge-plagiarism { background-color: #dc3545; }
-        .badge-nsfw { background-color: #ffc107; color: #212529; }
-        .ai-low { color: green; }
-        .ai-medium { color: orange; }
-        .ai-high { color: red; }
+        body {
+            background-color: #f8f9fa;
+            margin: 0;
+        }
+
+        /* Vertical Menu */
+        .vertical-menu {
+            width: 220px;
+            min-height: 100vh;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 20px;
+            min-height: 100vh;
+            background-color: #ffffff;
+        }
     </style>
+
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-<div class="container">
-    {% block content %}{% endblock %}
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- NAVBAR -->
+    {% include "layout/partials/navbar/navbar.html" %}
+
+    <!-- MAIN LAYOUT -->
+    <div class="d-flex">
+        <!-- VERTICAL MENU -->
+        {% include "layout/partials/menu/vertical/vertical_menu.html" %}
+
+        <!-- MAIN CONTENT AREA -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>
