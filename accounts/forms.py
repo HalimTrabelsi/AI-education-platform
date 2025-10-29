@@ -1,18 +1,12 @@
+from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
 from django import forms
 from django.core.files.storage import default_storage
 
+from .constants import ROLE_CHOICES
 from .models import User
-
-
-ROLE_CHOICES = [
-    ("student", "Etudiant"),
-    ("teacher", "Enseignant"),
-    ("moderator", "Moderateur"),
-    ("admin", "Administrateur"),
-]
 
 
 class StyledFormMixin:
@@ -112,6 +106,7 @@ class RegisterForm(StyledFormMixin, forms.Form):
             role=self.cleaned_data["role"],
         )
         user.set_password(self.cleaned_data["password1"])
+        user.last_password_change_at = datetime.utcnow()
 
         image = self.files.get("profile_image")
         if image:
@@ -151,14 +146,10 @@ class EditProfileForm(StyledFormMixin, forms.Form):
         label="Adresse e-mail",
         widget=forms.EmailInput(attrs={"autocomplete": "email"}),
     )
-    role = forms.ChoiceField(
-        label="Role",
-        choices=ROLE_CHOICES,
-        widget=forms.Select(),
-    )
     profile_image = forms.ImageField(
         label="Photo de profil",
         required=False,
+        widget=forms.FileInput(attrs={"class": "d-none", "accept": "image/*"}),
     )
     delete_image = forms.BooleanField(
         label="Supprimer la photo actuelle",
@@ -167,7 +158,7 @@ class EditProfileForm(StyledFormMixin, forms.Form):
     )
 
     widget_classes = {
-        "profile_image": {"class": "form-control"},
+        "profile_image": {"class": "d-none", "accept": "image/*"},
     }
 
     def __init__(self, *args, **kwargs):
@@ -176,7 +167,6 @@ class EditProfileForm(StyledFormMixin, forms.Form):
         if self.user:
             initial.setdefault("username", self.user.username)
             initial.setdefault("email", self.user.email)
-            initial.setdefault("role", self.user.role)
         super().__init__(*args, **kwargs)
 
     def clean_username(self):
@@ -203,8 +193,6 @@ class EditProfileForm(StyledFormMixin, forms.Form):
 
         self.user.username = self.cleaned_data["username"]
         self.user.email = self.cleaned_data["email"]
-        self.user.role = self.cleaned_data["role"]
-
         image = self.files.get("profile_image")
         if image:
             ext = Path(image.name).suffix or ".png"
@@ -214,6 +202,51 @@ class EditProfileForm(StyledFormMixin, forms.Form):
         elif self.cleaned_data.get("delete_image"):
             self.user.profile_image = None
 
+        self.user.save()
+        return self.user
+
+
+class ChangePasswordForm(StyledFormMixin, forms.Form):
+    current_password = forms.CharField(
+        label="Mot de passe actuel",
+        widget=forms.PasswordInput(attrs={"placeholder": "********"}),
+    )
+    new_password1 = forms.CharField(
+        label="Nouveau mot de passe",
+        widget=forms.PasswordInput(attrs={"placeholder": "********"}),
+    )
+    new_password2 = forms.CharField(
+        label="Confirmer le mot de passe",
+        widget=forms.PasswordInput(attrs={"placeholder": "********"}),
+    )
+
+    widget_classes = {
+        "current_password": {"class": "form-control input-password-toggle"},
+        "new_password1": {"class": "form-control input-password-toggle"},
+        "new_password2": {"class": "form-control input-password-toggle"},
+    }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        if not self.user:
+            raise ValueError("User instance is required")
+
+    def clean_current_password(self):
+        current_password = self.cleaned_data.get("current_password")
+        if not self.user.check_password(current_password):
+            raise forms.ValidationError("Mot de passe actuel incorrect.")
+        return current_password
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("new_password1") != cleaned.get("new_password2"):
+            self.add_error("new_password2", "Les mots de passe ne correspondent pas.")
+        return cleaned
+
+    def save(self):
+        self.user.set_password(self.cleaned_data["new_password1"])
+        self.user.last_password_change_at = datetime.utcnow()
         self.user.save()
         return self.user
 
@@ -270,5 +303,6 @@ class ForgotPasswordForm(StyledFormMixin, forms.Form):
 
     def save(self):
         self.user.set_password(self.cleaned_data["new_password1"])
+        self.user.last_password_change_at = datetime.utcnow()
         self.user.save()
         return self.user

@@ -1,54 +1,92 @@
-﻿{% extends layout_path %}
+{% extends layout_path %}
 {% load static %}
 
 {% block title %}Dashboard - Admin{% endblock %}
 
-{% block vendor_css %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}"/>
-{% endblock vendor_css %}
-
-{% block vendor_js %}
-  {{ block.super }}
-  <script src="{% static 'vendor/libs/apex-charts/apexcharts.js' %}"></script>
-{% endblock vendor_js %}
-
 {% block content %}
-  <div class="row">
-    <div class="col-xxl-4 col-md-6 mb-6">
-      <div class="card h-100">
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="get" class="row gy-3 gx-3 align-items-end">
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="filter-role">Rôle</label>
+          <select class="form-select" id="filter-role" name="role">
+            <option value="">Tous</option>
+            {% for value, label in role_options %}
+              <option value="{{ value }}" {% if filters.role == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="filter-status">Statut</label>
+          <select class="form-select" id="filter-status" name="status">
+            {% for value, label in status_options %}
+              <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="filter-created-start">Créé après le</label>
+          <input type="date" class="form-control" id="filter-created-start" name="created_start" value="{{ filters.created_start }}">
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="filter-created-end">Créé avant le</label>
+          <input type="date" class="form-control" id="filter-created-end" name="created_end" value="{{ filters.created_end }}">
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="filter-login-start">Dernière connexion après</label>
+          <input type="date" class="form-control" id="filter-login-start" name="last_login_start" value="{{ filters.last_login_start }}">
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="filter-login-end">Dernière connexion avant</label>
+          <input type="date" class="form-control" id="filter-login-end" name="last_login_end" value="{{ filters.last_login_end }}">
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <label class="form-label" for="filter-search">Recherche</label>
+          <input type="text" class="form-control" id="filter-search" name="search" placeholder="Nom ou email" value="{{ filters.search }}">
+        </div>
+        <div class="col-sm-6 col-lg-3 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Filtrer</button>
+          <a href="{% url 'dashboards:admin' %}" class="btn btn-outline-secondary">Réinitialiser</a>
+        </div>
+      </form>
+
+      <div class="mt-3 d-flex flex-wrap align-items-center gap-3 text-body-secondary">
+        <span>Affichage de {{ filtered_count }} utilisateur(s) sur {{ total_users }}.</span>
+        {% if has_active_filters %}
+          <span class="badge bg-label-primary">Filtres actifs</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="card">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h5 class="card-title mb-1">Utilisateurs inscrits</h5>
-              <small class="text-body-secondary">Comptes actifs et bloques</small>
-            </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Utilisateurs</h5>
             <div class="avatar flex-shrink-0">
-              <img src="{% static 'img/icons/unicons/chart-success.png' %}" alt="users" class="rounded"/>
+              <img src="{% static 'img/icons/unicons/chart-success.png' %}" alt="users" class="rounded" />
             </div>
           </div>
           <h3 class="mb-1">{{ total_users }}</h3>
-          <p class="text-body-secondary mb-0">{{ active_users }} actifs - {{ blocked_users }} bloques</p>
+          <p class="text-body-secondary mb-0">{{ active_users }} actifs · {{ blocked_users }} bloqués</p>
         </div>
       </div>
     </div>
-
-    <div class="col-xxl-4 col-md-6 mb-6">
-      <div class="card h-100">
+    <div class="col-md-4">
+      <div class="card">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h5 class="card-title mb-1">Repartition par role</h5>
-              <small class="text-body-secondary">Vue rapide des responsabilites</small>
-            </div>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Répartition par rôle</h5>
             <div class="avatar flex-shrink-0">
-              <img src="{% static 'img/icons/unicons/wallet-info.png' %}" alt="roles" class="rounded"/>
+              <img src="{% static 'img/icons/unicons/wallet-info.png' %}" alt="roles" class="rounded" />
             </div>
           </div>
           <ul class="list-unstyled mb-0">
             {% for role, count in role_counts %}
-              <li class="d-flex justify-content-between align-items-center mb-2">
-                <span class="text-body">{{ role }}</span>
+              <li class="d-flex justify-content-between align-items-center mb-1">
+                <span>{{ role }}</span>
                 <span class="fw-medium">{{ count }}</span>
               </li>
             {% empty %}
@@ -58,67 +96,169 @@
         </div>
       </div>
     </div>
-
-    <div class="col-xxl-4 col-md-12 mb-6">
-      <div class="card h-100">
+    <div class="col-md-4">
+      <div class="card">
         <div class="card-body">
-          <h5 class="card-title mb-4">Creer un compte</h5>
-          <p class="text-body-secondary mb-4">L'inscription est reservee a l'administrateur. Creez de nouveaux comptes pour les enseignants, moderateurs ou etudiants.</p>
+          <h5 class="card-title mb-3">Créer un compte</h5>
+          <p class="text-body-secondary mb-4">
+            L'inscription est réservée à l'administrateur. Créez de nouveaux comptes pour les enseignants, modérateurs ou étudiants.
+          </p>
           <a href="{% url 'accounts:register' %}" class="btn btn-primary">Nouveau compte</a>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header d-flex flex-wrap gap-3 justify-content-between align-items-center">
-      <div>
-        <h5 class="mb-1">Gestion des utilisateurs</h5>
-        <p class="text-body-secondary mb-0">Bloquez ou reactivez des comptes en un clic.</p>
-      </div>
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">Dernières actions administrateur</h5>
+      <span class="text-body-secondary small">{{ recent_logs|length }} entrée(s)</span>
     </div>
     <div class="table-responsive">
-      <table class="table">
+      <table class="table table-sm align-middle mb-0">
         <thead>
           <tr>
+            <th>Action</th>
+            <th>Utilisateur cible</th>
+            <th>Détails</th>
+            <th class="text-end">Horodatage</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in recent_logs %}
+            <tr>
+              <td>{{ log.display_action }}</td>
+              <td>
+                {% if log.target_user_id %}
+                  <code class="small">{{ log.target_user_id }}</code>
+                {% else %}
+                  <span class="text-body-secondary">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if log.metadata %}
+                  <code class="small">{{ log.metadata }}</code>
+                {% else %}
+                  <span class="text-body-secondary">—</span>
+                {% endif %}
+              </td>
+              <td class="text-end text-body-secondary">{{ log.created_at|date:"Y-m-d H:i" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-body-secondary text-center py-4">Aucune activité récente.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <form id="bulk-actions-form" method="post" action="{% url 'accounts:admin-bulk-action' %}" class="card mb-4">
+    {% csrf_token %}
+    <div class="card-body d-flex flex-wrap gap-2 align-items-center">
+      <strong>Actions groupées :</strong>
+      <button class="btn btn-outline-danger btn-sm" type="submit" name="bulk_action" value="block">Bloquer</button>
+      <button class="btn btn-outline-success btn-sm" type="submit" name="bulk_action" value="unblock">Débloquer</button>
+      <div class="d-flex align-items-center gap-2">
+        <select class="form-select form-select-sm" name="new_role">
+          <option value="">Rôle…</option>
+          {% for value, label in role_options %}
+            <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-primary btn-sm" type="submit" name="bulk_action" value="change_role" onclick="return confirmBulkRoleChange(this);">Changer le rôle</button>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" type="submit" name="bulk_action" value="reset_password" onclick="return confirmBulkReset(this);">Réinitialiser mot de passe</button>
+      <button class="btn btn-outline-info btn-sm" type="submit" name="bulk_action" value="send_onboarding">Envoyer onboarding</button>
+      <span class="text-body-secondary ms-auto">Sélectionnés : <span id="selected-count">0</span></span>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th style="width: 32px;">
+              <input type="checkbox" class="form-check-input" id="select-all-users">
+            </th>
             <th>Nom d'utilisateur</th>
             <th>Email</th>
-            <th>Role</th>
-            <th class="text-center">Statut</th>
-            <th class="text-end">Action</th>
+            <th>Rôle</th>
+            <th>Statut</th>
+            <th>Créé le</th>
+            <th>Dernière connexion</th>
+            <th class="text-end">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for user in users %}
             <tr>
+              <td>
+                <input type="checkbox" class="form-check-input user-select" form="bulk-actions-form" name="user_ids" value="{{ user.id }}">
+              </td>
               <td class="text-heading fw-medium">{{ user.username }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.role|title }}</td>
-              <td class="text-center">
+              <td>
                 {% if user.is_blocked %}
-                  <span class="badge bg-label-danger">Bloque</span>
+                  <span class="badge bg-label-danger">Bloqué</span>
                 {% else %}
                   <span class="badge bg-label-success">Actif</span>
                 {% endif %}
               </td>
-              <td class="text-end">
-                {% if request.user.pk|stringformat:'s' == user.id|stringformat:'s' %}
-                  <span class="text-body-secondary">-</span>
+              <td>{{ user.created_at|date:"Y-m-d H:i" }}</td>
+              <td>
+                {% if user.last_login_at %}
+                  {{ user.last_login_at|date:"Y-m-d H:i" }}
                 {% else %}
+                  <span class="text-body-secondary">Jamais</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="d-flex flex-wrap gap-2 justify-content-end">
                   <form method="post" action="{% url 'accounts:toggle-user-block' user.id %}" class="d-inline">
                     {% csrf_token %}
                     {% if user.is_blocked %}
-                      <button type="submit" class="btn btn-sm btn-outline-success">Debloquer</button>
+                      <button class="btn btn-sm btn-outline-success" type="submit">Débloquer</button>
                     {% else %}
-                      <button type="submit" class="btn btn-sm btn-outline-danger">Bloquer</button>
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Bloquer</button>
                     {% endif %}
                   </form>
-                {% endif %}
+                  <form method="post" action="{% url 'accounts:admin-bulk-action' %}" class="d-flex align-items-center gap-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_ids" value="{{ user.id }}">
+                    <input type="hidden" name="bulk_action" value="change_role">
+                    <select class="form-select form-select-sm" name="new_role">
+                      {% for value, label in role_options %}
+                        <option value="{{ value }}" {% if user.role == value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary" type="submit" onclick="return confirmRowRoleChange(this);">Appliquer</button>
+                  </form>
+                  <form method="post" action="{% url 'accounts:admin-bulk-action' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_ids" value="{{ user.id }}">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit" name="bulk_action" value="reset_password" onclick="return confirmRowReset(this);">Reset</button>
+                  </form>
+                  <form method="post" action="{% url 'accounts:admin-bulk-action' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_ids" value="{{ user.id }}">
+                    <button class="btn btn-sm btn-outline-info" type="submit" name="bulk_action" value="send_onboarding">Onboarding</button>
+                  </form>
+                  {% if user.role != 'admin' and request.user.pk|stringformat:'s' != user.id|stringformat:'s' %}
+                    <form method="post" action="{% url 'accounts:admin-impersonate' user.id %}" class="d-inline">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-dark" type="submit">Impersoner</button>
+                    </form>
+                  {% endif %}
+                </div>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="5" class="text-center text-body-secondary py-6">Aucun utilisateur a afficher.</td>
+              <td colspan="8" class="text-center text-body-secondary py-6">Aucun utilisateur à afficher.</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -126,3 +266,64 @@
     </div>
   </div>
 {% endblock %}
+
+{% block page_js %}
+  {{ block.super }}
+  <script>
+    window.confirmBulkReset = function () {
+      return window.confirm("Réinitialiser le mot de passe des utilisateurs sélectionnés ?");
+    };
+
+    window.confirmBulkRoleChange = function (button) {
+      const form = button.closest("form");
+      if (!form) {
+        return false;
+      }
+      const select = form.querySelector('select[name="new_role"]');
+      if (!select || !select.value) {
+        window.alert("Veuillez sélectionner un rôle avant d'appliquer cette action.");
+        return false;
+      }
+      const label = select.options[select.selectedIndex]?.text || select.value;
+      return window.confirm(`Confirmer le changement de rôle vers « ${label} » pour les utilisateurs sélectionnés ?`);
+    };
+
+    window.confirmRowReset = function () {
+      return window.confirm("Réinitialiser le mot de passe de cet utilisateur ?");
+    };
+
+    window.confirmRowRoleChange = function (button) {
+      const form = button.closest("form");
+      if (!form) {
+        return false;
+      }
+      const select = form.querySelector('select[name="new_role"]');
+      if (!select || !select.value) {
+        window.alert("Sélectionnez un rôle avant d'appliquer la modification.");
+        return false;
+      }
+      const label = select.options[select.selectedIndex]?.text || select.value;
+      return window.confirm(`Changer le rôle de cet utilisateur en « ${label} » ?`);
+    };
+
+    (function() {
+      const selectAll = document.getElementById('select-all-users');
+      const checkboxes = document.querySelectorAll('.user-select');
+      const counter = document.getElementById('selected-count');
+      function updateCount() {
+        const count = Array.from(checkboxes).filter((cb) => cb.checked).length;
+        if (counter) counter.textContent = count;
+      }
+      if (selectAll) {
+        selectAll.addEventListener('change', function() {
+          checkboxes.forEach((cb) => {
+            cb.checked = selectAll.checked;
+          });
+          updateCount();
+        });
+      }
+      checkboxes.forEach((cb) => cb.addEventListener('change', updateCount));
+      updateCount();
+    })();
+  </script>
+{% endblock page_js %}

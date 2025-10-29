@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <title>Bienvenue sur {{ site_name }}</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        background-color: #f5f5f9;
+        color: #2b2c34;
+        margin: 0;
+        padding: 0;
+      }
+      .wrapper {
+        max-width: 600px;
+        margin: 32px auto;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+      }
+      .header {
+        padding: 32px 40px;
+        background: linear-gradient(135deg, #7367f0, #9a6dfa);
+        color: #ffffff;
+      }
+      .header h1 {
+        margin: 0 0 8px;
+        font-size: 26px;
+      }
+      .content {
+        padding: 32px 40px;
+      }
+      .content p {
+        line-height: 1.6;
+        margin: 0 0 16px;
+      }
+      .cta {
+        display: inline-block;
+        margin: 16px 0 24px;
+        padding: 12px 24px;
+        background-color: #7367f0;
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+      .footer {
+        padding: 24px 40px;
+        font-size: 13px;
+        color: #707184;
+        background-color: #f8f9ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <h1>Bienvenue {{ user_name }} !</h1>
+        <p>Nous sommes ravis de vous accueillir sur {{ site_name }}.</p>
+      </div>
+      <div class="content">
+        <p>Votre compte est prêt. Voici quelques étapes pour bien démarrer&nbsp;:</p>
+        <ul>
+          <li>Connectez-vous avec votre nom d'utilisateur <strong>{{ username }}</strong>.</li>
+          <li>Complétez votre profil et ajoutez votre photo.</li>
+          <li>Explorez le tableau de bord adapté à votre rôle.</li>
+        </ul>
+        <p>
+          <a class="cta" href="{{ login_url }}">Se connecter</a>
+        </p>
+        <p>Besoin d'aide ? Répondez simplement à cet e-mail, l'équipe support vous aidera rapidement.</p>
+        <p>À très vite,<br>L'équipe {{ site_name }}</p>
+      </div>
+      <div class="footer">
+        Vous recevez cet e-mail car votre compte a été créé sur {{ site_name }}.<br>
+        Si vous n'êtes pas à l'origine de cette action, contactez un administrateur.
+      </div>
+    </div>
+  </body>
+</html>

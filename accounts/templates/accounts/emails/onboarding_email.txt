@@ -1,0 +1,15 @@
+Bonjour {{ user_name }},
+
+Bienvenue sur {{ site_name }} !
+
+Votre compte vient d'être activé. Pour commencer :
+- Connectez-vous avec votre identifiant : {{ username }}
+- Complétez votre profil et ajoutez votre photo
+- Découvrez votre tableau de bord personnalisé
+
+Connectez-vous ici : {{ login_url }}
+
+Si vous avez des questions, répondez simplement à ce message et notre équipe vous aidera.
+
+À très vite,
+L'équipe {{ site_name }}

@@ -1,4 +1,13 @@
-from mongoengine import BooleanField, Document, EmailField, StringField
+from datetime import datetime
+
+from mongoengine import (
+    BooleanField,
+    DateTimeField,
+    DictField,
+    Document,
+    EmailField,
+    StringField,
+)
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -14,6 +23,9 @@ class User(Document):
     )
     profile_image = StringField()
     is_blocked = BooleanField(default=False)
+    created_at = DateTimeField(default=datetime.utcnow)
+    last_login_at = DateTimeField()
+    last_password_change_at = DateTimeField()
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"
@@ -58,3 +70,13 @@ class User(Document):
 
     def get_session_auth_hash(self) -> str:
         return self.password_hash
+
+
+class AdminAuditLog(Document):
+    meta = {"collection": "admin_audit_log"}
+
+    admin_id = StringField(required=True)
+    target_user_id = StringField()
+    action = StringField(required=True)
+    metadata = DictField()
+    created_at = DateTimeField(default=datetime.utcnow)

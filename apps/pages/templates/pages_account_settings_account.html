@@ -31,6 +31,7 @@
 
       <form method="post" enctype="multipart/form-data" class="card">
         {% csrf_token %}
+        <input type="hidden" name="profile_submit" value="1">
         <div class="card-body border-bottom">
           <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-4">
             <img
@@ -43,25 +44,25 @@
               <h5 class="mb-1">{{ request.user.display_name }}</h5>
               <p class="text-body-secondary mb-3">{{ request.user.role_label }}</p>
               <div class="d-flex align-items-center flex-wrap gap-3">
-                <label for="{{ form.profile_image.id_for_label }}" class="btn btn-primary mb-0">
+                <label for="{{ profile_form.profile_image.id_for_label }}" class="btn btn-primary mb-0">
                   Changer la photo
                 </label>
-                <input type="file" id="{{ form.profile_image.id_for_label }}" name="{{ form.profile_image.name }}" class="d-none" accept="image/*" />
+                {{ profile_form.profile_image }}
                 <div class="form-check">
-                  {{ form.delete_image }}
-                  <label class="form-check-label" for="{{ form.delete_image.id_for_label }}">
-                    {{ form.delete_image.label }}
+                  {{ profile_form.delete_image }}
+                  <label class="form-check-label" for="{{ profile_form.delete_image.id_for_label }}">
+                    {{ profile_form.delete_image.label }}
                   </label>
                 </div>
               </div>
-              {% if form.profile_image.errors %}
+              {% if profile_form.profile_image.errors %}
                 <div class="text-danger small mt-2">
-                  {{ form.profile_image.errors|join:", " }}
+                  {{ profile_form.profile_image.errors|join:", " }}
                 </div>
               {% endif %}
-              {% if form.delete_image.errors %}
+              {% if profile_form.delete_image.errors %}
                 <div class="text-danger small mt-2">
-                  {{ form.delete_image.errors|join:", " }}
+                  {{ profile_form.delete_image.errors|join:", " }}
                 </div>
               {% endif %}
             </div>
@@ -69,44 +70,87 @@
         </div>
 
         <div class="card-body">
-          {% if form.non_field_errors %}
+          {% if profile_form.non_field_errors %}
             <div class="alert alert-danger">
-              {{ form.non_field_errors|join:", " }}
+              {{ profile_form.non_field_errors|join:", " }}
             </div>
           {% endif %}
           <div class="row g-6">
             <div class="col-md-6">
-              <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
-              {{ form.username }}
-              {% if form.username.errors %}
+              <label class="form-label" for="{{ profile_form.username.id_for_label }}">{{ profile_form.username.label }}</label>
+              {{ profile_form.username }}
+              {% if profile_form.username.errors %}
                 <div class="text-danger small mt-1">
-                  {{ form.username.errors|join:", " }}
+                  {{ profile_form.username.errors|join:", " }}
                 </div>
               {% endif %}
             </div>
             <div class="col-md-6">
-              <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
-              {{ form.email }}
-              {% if form.email.errors %}
+              <label class="form-label" for="{{ profile_form.email.id_for_label }}">{{ profile_form.email.label }}</label>
+              {{ profile_form.email }}
+              {% if profile_form.email.errors %}
                 <div class="text-danger small mt-1">
-                  {{ form.email.errors|join:", " }}
+                  {{ profile_form.email.errors|join:", " }}
                 </div>
               {% endif %}
             </div>
             <div class="col-md-6">
-              <label class="form-label" for="{{ form.role.id_for_label }}">{{ form.role.label }}</label>
-              {{ form.role }}
-              {% if form.role.errors %}
-                <div class="text-danger small mt-1">
-                  {{ form.role.errors|join:", " }}
-                </div>
-              {% endif %}
+              <label class="form-label">Rôle</label>
+              <input type="text" class="form-control" value="{{ request.user.role_label }}" disabled>
+              <div class="form-text">Contactez un administrateur pour modifier votre rôle.</div>
             </div>
           </div>
 
           <div class="mt-6 d-flex flex-wrap gap-3">
             <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
             <a href="{% url 'index' %}" class="btn btn-outline-secondary">Annuler</a>
+          </div>
+        </div>
+      </form>
+
+      <form method="post" class="card mt-6">
+        {% csrf_token %}
+        <input type="hidden" name="password_submit" value="1">
+        <div class="card-header">
+          <h5 class="mb-0">Modifier le mot de passe</h5>
+        </div>
+        <div class="card-body">
+          {% if password_form.non_field_errors %}
+            <div class="alert alert-danger">
+              {{ password_form.non_field_errors|join:", " }}
+            </div>
+          {% endif %}
+          <div class="row g-6">
+            <div class="col-md-6">
+              <label class="form-label" for="{{ password_form.current_password.id_for_label }}">{{ password_form.current_password.label }}</label>
+              {{ password_form.current_password }}
+              {% if password_form.current_password.errors %}
+                <div class="text-danger small mt-1">
+                  {{ password_form.current_password.errors|join:", " }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ password_form.new_password1.id_for_label }}">{{ password_form.new_password1.label }}</label>
+              {{ password_form.new_password1 }}
+              {% if password_form.new_password1.errors %}
+                <div class="text-danger small mt-1">
+                  {{ password_form.new_password1.errors|join:", " }}
+                </div>
+              {% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="{{ password_form.new_password2.id_for_label }}">{{ password_form.new_password2.label }}</label>
+              {{ password_form.new_password2 }}
+              {% if password_form.new_password2.errors %}
+                <div class="text-danger small mt-1">
+                  {{ password_form.new_password2.errors|join:", " }}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          <div class="mt-6">
+            <button type="submit" class="btn btn-primary">Mettre à jour le mot de passe</button>
           </div>
         </div>
       </form>

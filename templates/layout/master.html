@@ -43,6 +43,16 @@
 </head>
 
 <body>
+{% if is_impersonating %}
+  <div class="alert alert-warning rounded-0 text-center mb-0 d-flex justify-content-center align-items-center gap-3 py-3">
+    <span class="fw-semibold text-dark">Mode impersonation actif</span>
+    <span class="text-dark">Vous agissez actuellement en tant que <strong>{{ impersonated_user_name }}</strong>.</span>
+    <form method="post" action="{% url 'accounts:admin-stop-impersonation' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-sm btn-dark">Quitter</button>
+    </form>
+  </div>
+{% endif %}
   <!-- beautify ignore:end -->
 
   {% if messages %}

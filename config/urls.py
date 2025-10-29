@@ -62,6 +62,9 @@ urlpatterns = [
     # Tables urls
     path("", include("apps.tables.urls")),
 
+    # Chat urls
+    path("chat/", include(("chat.urls", "chat"), namespace="chat")),
+
     path('api/', include('resources.urls')),
 
 ]

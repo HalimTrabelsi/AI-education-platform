@@ -1,3 +1,12 @@
+ROLE_CHOICES = [
+    ("student", "Etudiant"),
+    ("teacher", "Enseignant"),
+    ("moderator", "Moderateur"),
+    ("admin", "Administrateur"),
+]
+
+ROLE_LABELS = {value: label for value, label in ROLE_CHOICES}
+
 DEFAULT_DASHBOARD_ROUTE = "dashboards:student"
 
 ROLE_DASHBOARD_ROUTE = {

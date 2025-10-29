@@ -1,11 +1,13 @@
 ﻿from collections import Counter
+from datetime import datetime, timedelta
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic import TemplateView
 
-from accounts.constants import get_dashboard_route
-from accounts.models import User
+from accounts.constants import ROLE_CHOICES, ROLE_LABELS, get_dashboard_route
+from accounts.models import AdminAuditLog, User
 from web_project import TemplateLayout
 
 
@@ -49,30 +51,137 @@ class ModeratorDashboardView(RoleDashboardMixin):
 class AdminDashboardView(RoleDashboardMixin):
     template_name = "dashboard_admin.html"
     allowed_roles = ["admin"]
-
-    ROLE_LABELS = {
-        "student": "Etudiant",
-        "teacher": "Enseignant",
-        "moderator": "Moderateur",
-        "admin": "Administrateur",
-    }
+    STATUS_OPTIONS = [
+        ("", "Tous"),
+        ("active", "Actifs"),
+        ("blocked", "Bloques"),
+    ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        users = list(User.objects.order_by("username"))
-        total_users = len(users)
-        blocked_users = sum(1 for u in users if getattr(u, "is_blocked", False))
-        role_counts = Counter(getattr(u, "role", "inconnu") for u in users)
+        filters = self._build_filters()
+
+        all_users = list(User.objects.order_by("-created_at"))
+        filtered_users = self._apply_filters(all_users, filters)
+
+        total_users = len(all_users)
+        blocked_users = sum(1 for u in all_users if getattr(u, "is_blocked", False))
+        role_counts = Counter(getattr(u, "role", "inconnu") for u in all_users)
         role_counts_prepared = [
-            (self.ROLE_LABELS.get(role, role.title()), count)
+            (ROLE_LABELS.get(role, role.title()), count)
             for role, count in sorted(role_counts.items(), key=lambda item: item[0])
         ]
 
-        context.update({
-            "users": users,
-            "total_users": total_users,
-            "blocked_users": blocked_users,
-            "active_users": total_users - blocked_users,
-            "role_counts": role_counts_prepared,
-        })
+        recent_logs = list(AdminAuditLog.objects.order_by("-created_at").limit(8))
+        action_labels = {
+            "create_user": "Création de compte",
+            "block_user": "Blocage d'utilisateur",
+            "unblock_user": "Déblocage d'utilisateur",
+            "change_role": "Changement de rôle",
+            "reset_password": "Réinitialisation de mot de passe",
+            "send_onboarding": "Envoi d'onboarding",
+            "impersonate_start": "Impersonation démarrée",
+            "impersonate_stop": "Impersonation terminée",
+        }
+        for log in recent_logs:
+            setattr(log, "display_action", action_labels.get(log.action, log.action))
+
+        context.update(
+            {
+                "users": filtered_users,
+                "total_users": total_users,
+                "blocked_users": blocked_users,
+                "active_users": total_users - blocked_users,
+                "role_counts": role_counts_prepared,
+                "role_options": ROLE_CHOICES,
+                "status_options": self.STATUS_OPTIONS,
+                "filters": filters,
+                "filtered_count": len(filtered_users),
+                "recent_logs": recent_logs,
+                "has_active_filters": any(value for value in filters.values()),
+            }
+        )
         return context
+
+    def _build_filters(self):
+        request = self.request
+        return {
+            "role": request.GET.get("role", "").strip(),
+            "status": request.GET.get("status", "").strip(),
+            "created_start": request.GET.get("created_start", "").strip(),
+            "created_end": request.GET.get("created_end", "").strip(),
+            "last_login_start": request.GET.get("last_login_start", "").strip(),
+            "last_login_end": request.GET.get("last_login_end", "").strip(),
+            "search": request.GET.get("search", "").strip(),
+        }
+
+    def _apply_filters(self, users, filters):
+        result = users
+
+        role = filters.get("role")
+        if role:
+            result = [u for u in result if getattr(u, "role", None) == role]
+
+        status = filters.get("status")
+        if status == "active":
+            result = [u for u in result if not getattr(u, "is_blocked", False)]
+        elif status == "blocked":
+            result = [u for u in result if getattr(u, "is_blocked", False)]
+
+        created_start = self._parse_date(filters.get("created_start"))
+        if created_start:
+            result = [
+                u
+                for u in result
+                if getattr(u, "created_at", None)
+                and u.created_at >= created_start
+            ]
+
+        created_end = self._parse_date(filters.get("created_end"))
+        if created_end:
+            inclusive_end = created_end + timedelta(days=1)
+            result = [
+                u
+                for u in result
+                if getattr(u, "created_at", None)
+                and u.created_at < inclusive_end
+            ]
+
+        login_start = self._parse_date(filters.get("last_login_start"))
+        if login_start:
+            result = [
+                u
+                for u in result
+                if getattr(u, "last_login_at", None)
+                and u.last_login_at >= login_start
+            ]
+
+        login_end = self._parse_date(filters.get("last_login_end"))
+        if login_end:
+            inclusive_login_end = login_end + timedelta(days=1)
+            result = [
+                u
+                for u in result
+                if getattr(u, "last_login_at", None)
+                and u.last_login_at < inclusive_login_end
+            ]
+
+        search = filters.get("search", "").lower()
+        if search:
+            result = [
+                u
+                for u in result
+                if search in getattr(u, "username", "").lower()
+                or search in (getattr(u, "email", "") or "").lower()
+            ]
+
+        return result
+
+    @staticmethod
+    def _parse_date(value):
+        if not value:
+            return None
+        try:
+            return datetime.strptime(value, "%Y-%m-%d")
+        except ValueError:
+            return None
