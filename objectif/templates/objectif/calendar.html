@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendrier des Objectifs</title>
+    <meta charset="utf-8">
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
+        #calendar { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .actions { text-align: center; margin: 20px 0; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; margin: 0 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗓️ Calendrier des Objectifs</h1>
+            <p>Visualisez vos échéances et dates importantes</p>
+        </div>
+
+        <div class="actions">
+            <a href="{% url 'objectifs:list' %}" class="btn">📋 Liste des objectifs</a>
+            <a href="{% url 'objectifs:create' %}" class="btn">➕ Nouvel objectif</a>
+        </div>
+
+        <div id="calendar"></div>
+    </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+                },
+                events: '/objectives/calendar/api/',
+                eventClick: function(info) {
+                    if (info.event.url) {
+                        window.open(info.event.url, '_blank');
+                        info.jsEvent.preventDefault();
+                    }
+                },
+                eventDisplay: 'block',
+                height: 'auto',
+                locale: 'fr',
+                buttonText: {
+                    today: 'Aujourd\'hui',
+                    month: 'Mois',
+                    week: 'Semaine',
+                    day: 'Jour',
+                    list: 'Liste'
+                }
+            });
+            calendar.render();
+        });
+    </script>
+</body>
+</html>
