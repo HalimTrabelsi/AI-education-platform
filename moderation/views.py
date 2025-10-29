@@ -88,7 +88,7 @@ def export_reports_pdf(request):
 
     doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
     return response
-
+# views.py (excerpt)
 @csrf_exempt
 def verify_ai(request):
     if request.method != "POST":
@@ -97,38 +97,17 @@ def verify_ai(request):
         data = json.loads(request.body)
         title = data.get("title", "")
         description = data.get("description", "")
-        resource_url = data.get("url", "")
-
-        # Example AI detection logic for testing
-        if any(word in description.lower() for word in ["artificial intelligence", "ai systems", "machine learning"]):
-            ai_conf = 0.85
-        else:
-            ai_conf = 0.2
-
-        is_nsfw = ai_conf > 0.55
-        is_plagiarism = bool(
-            Report.objects(title=title).count() > 0 or
-            Report.objects(resource_url=resource_url).count() > 0
-        )
-
-        ai_flags = []
-        if ai_conf > 0.4:
-            ai_flags.append("Signalement")
-        if ai_conf > 0.55 or is_nsfw:
-            ai_flags.append("IA / NSFW")
-        if ai_conf > 0.7:
-            ai_flags.append("Risque élevé")
-        if is_plagiarism:
-            ai_flags.append("Anti-plagiat")
-
+        result = ai_analyze_report(title, description)
         return JsonResponse({
-            "ai_confidence": ai_conf,
-            "ai_flags": ai_flags,
-            "is_nsfw": is_nsfw,
-            "is_plagiarism": is_plagiarism
+            "ai_confidence": result["ai_confidence"],
+            "ai_flags": result["ai_flags"],
+            "is_nsfw": result["is_nsfw"],
+            "is_plagiarism": result["is_plagiarism"],
+            "risk_label": result["risk_label"]
         })
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
 # ------------------------------
 # DASHBOARD
 # ------------------------------
@@ -213,17 +192,19 @@ def report_create(request):
         form = ReportForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
+
+            # Analyze AI
             ai_result = ai_analyze_report(
                 title=data.get('title'),
                 description=data.get('description'),
                 resource_url=data.get('resource_url')
             )
 
-            tags = []
-            ai_conf = data.get('ai_confidence', ai_result.get('ai_confidence', 0.0)) or 0.0
-            is_plagiarism = data.get('is_plagiarism', False)
-            is_nsfw = data.get('is_nsfw', False)
+            ai_conf = ai_result.get('ai_confidence', 0.0) or 0.0
+            is_nsfw = ai_result.get('is_nsfw', False)
+            is_plagiarism = ai_result.get('is_plagiarism', False)
 
+            tags = []
             if ai_conf > 0.4:
                 tags.append("Signalements")
             if ai_conf > 0.55 or is_nsfw:
@@ -231,7 +212,8 @@ def report_create(request):
                 is_nsfw = True
             if ai_conf > 0.7:
                 tags.append("Risque élevé")
-            if await_check_duplicate(data.get('title'), data.get('resource_url')):
+            # Check for duplicates using MongoEngine
+            if Report.objects(title=data.get('title')).first() or Report.objects(resource_url=data.get('resource_url')).first():
                 tags.append("anti-plagiat")
                 is_plagiarism = True
 
@@ -250,6 +232,7 @@ def report_create(request):
             return redirect('moderation:report_list')
     else:
         form = ReportForm()
+
     return render(request, 'moderation/report_form.html', {'form': form})
 
 
