@@ -17,8 +17,19 @@ def is_video(value):
     return str(value).lower().endswith(('.mp4', '.mov', '.avi', '.mkv', '.webm'))
 
 @register.filter
+def is_pdf(value):
+    """Vérifie si le fichier est un PDF"""
+    if not value:
+        return False
+    return str(value).lower().endswith('.pdf')
+
+@register.filter
 def split(value, key):
-    """Sépare une chaîne en fonction du séparateur donné"""
+    """Sépare une chaîne ou retourne la liste telle quelle"""
     if not value:
         return []
-    return [v.strip() for v in value.split(key)]
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(key) if v.strip()]
+    elif isinstance(value, (list, tuple)):
+        return value
+    return []

@@ -29,9 +29,10 @@
             transform: translateY(-5px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        .card img {
+        .card img, .card video {
             height: 200px;
             object-fit: cover;
+            width: 100%;
         }
         .tags {
             margin-top: 10px;
@@ -57,22 +58,23 @@
             {% for res in resources %}
             <div class="col-md-4" data-aos="fade-up" data-aos-duration="1000">
                 <div class="card h-100">
-
                     {% if res.file %}
-    {% if res.file|is_image %}
-        <img src="{{ res.file.url }}" class="card-img-top" alt="{{ res.title }}" loading="lazy">
-    {% elif res.file|is_video %}
-        <video controls class="card-img-top">
-            <source src="{{ res.file.url }}" type="video/mp4">
-            Votre navigateur ne supporte pas la vidéo.
-        </video>
-    {% else %}
-        <img src="https://via.placeholder.com/400x200?text=Fichier+non+image" class="card-img-top" alt="Fichier" loading="lazy">
-    {% endif %}
-{% else %}
-    <img src="https://via.placeholder.com/400x200?text=Pas+d'image" class="card-img-top" alt="No Image" loading="lazy">
-{% endif %}
+                        {% if res.resource_type == 'IMAGE' %}
+                            <img src="{{ MEDIA_URL }}{{ res.file }}" class="card-img-top" alt="{{ res.title }}" loading="lazy">
+                        {% elif res.file|is_video %}
+    <video controls class="card-img-top">
+        <source src="{{ MEDIA_URL }}{{ res.file }}" type="video/mp4">
+        Votre navigateur ne supporte pas la vidéo.
+    </video>
 
+                        {% elif res.resource_type == 'PDF' %}
+                            <img src="/media/resources/PDFLogo.jpeg" class="card-img-top" alt="PDF" loading="lazy">
+                        {% else %}
+                            <img src="https://via.placeholder.com/400x200/999999/FFFFFF?text=Fichier" class="card-img-top" alt="Fichier" loading="lazy">
+                        {% endif %}
+                    {% else %}
+                        <img src="https://via.placeholder.com/400x200/cccccc/FFFFFF?text=Pas+d'image" class="card-img-top" alt="No Image" loading="lazy">
+                    {% endif %}
 
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">{{ res.title }}</h5>
@@ -88,9 +90,7 @@
                         </div>
 
                         <div class="mt-auto">
-                            {% if res.file %}
-                                <a href="{% url 'resource_detail' res.pk %}" class="btn btn-primary w-100">Voir détails</a>
-                            {% endif %}
+                            <a href="{% url 'front_office_resource_detail' res.id %}">Voir détail</a>
                         </div>
                     </div>
 
