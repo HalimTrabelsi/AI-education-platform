@@ -1,0 +1,1174 @@
+
+
+from pyexpat.errors import messages
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+from objectif.utils import _get_mongo_user
+from .models import Objective
+from .forms import ObjectiveForm  # tu dois créer un formulaire Django pour Objective
+import google.generativeai as genai
+from django.http import HttpResponse, JsonResponse
+
+import qrcode
+import io
+import json
+import datetime
+
+from django.utils import timezone
+from bson import ObjectId
+import os
+import requests
+
+
+genai.configure(api_key="AIzaSyBCutcN7kxoQ8frc9GHPGXlBMneulZCHzc")
+
+@login_required
+def list_objectif(request):
+    # 🔹 Filtrer par user connecté
+    objectifs = Objective.objects(user_id=str(request.user.id))
+    return render(request, "objectif/list.html", {"objectifs": objectifs})
+
+@login_required
+def create_objectif(request):
+    if request.method == "POST":
+        form = ObjectiveForm(request.POST)
+        if form.is_valid():
+            obj = Objective(
+                user_id=str(request.user.id),
+                **form.cleaned_data
+            )
+            obj.save()
+            return redirect("objectif:list")
+    else:
+        form = ObjectiveForm()
+    return render(request, "objectif/form.html", {"form": form, "title": "Créer un objectif"})
+
+@login_required
+def update_objectif(request, id):
+    objectif = Objective.objects.get(id=id, user_id=str(request.user.id))
+    if request.method == "POST":
+        form = ObjectiveForm(request.POST)
+        if form.is_valid():
+            for key, value in form.cleaned_data.items():
+                setattr(objectif, key, value)
+            objectif.derniere_mise_a_jour = date = datetime.datetime.utcnow()  # ✅ correct
+
+            objectif.save()
+            return redirect("objectif:list")
+    else:
+        initial = {
+            "titre": objectif.titre,
+            "description": objectif.description,
+            "filiere": objectif.filiere,
+            "niveau": objectif.niveau,
+            "priorite": objectif.priorite,
+            "etat": objectif.etat,
+            "date_debut": objectif.date_debut,
+            "date_echeance": objectif.date_echeance,
+        }
+        form = ObjectiveForm(initial=initial)
+    return render(request, "objectif/form.html", {"form": form, "title": "Modifier un objectif"})
+
+@login_required
+def delete_objectif(request, id):
+    objectif = Objective.objects.get(id=id, user_id=str(request.user.id))
+    if request.method == "POST":
+        objectif.delete()
+        return redirect("objectif:list")
+    return render(request, "objectif/confirm_delete.html", {"objectif": objectif})
+
+
+
+
+@login_required
+def objective_details(request, obj_id):
+    """Page de détails d'un objectif avec QR Code et Calendrier"""
+    try:
+        obj = Objective.objects.get(id=obj_id)
+
+        # Préparer les données pour l'affichage
+        details = {
+            'titre': getattr(obj, 'titre', 'Sans titre'),
+            'description': getattr(obj, 'description', 'Aucune description'),
+            'filiere': getattr(obj, 'filiere', 'Non spécifiée'),
+            'niveau': getattr(obj, 'niveau', 'Non spécifié'),
+            'priorite': getattr(obj, 'priorite', 'Non spécifié'),
+            'etat': getattr(obj, 'etat', 'Non spécifié'),
+            'progression': getattr(obj, 'progression', 0),
+            'date_creation': getattr(obj, 'date_creation', 'Non spécifiée'),
+            'date_debut': getattr(obj, 'date_debut', 'Non spécifiée'),
+            'date_echeance': getattr(obj, 'date_echeance', 'Non spécifiée'),
+            'derniere_mise_a_jour': getattr(obj, 'derniere_mise_a_jour', 'Non spécifiée'),
+            'nb_sessions': getattr(obj, 'nb_sessions', 0),
+            'temps_total': getattr(obj, 'temps_total', 0),
+            'taches': getattr(obj, 'taches', []),
+            'ressources': getattr(obj, 'ressources', []),
+            'tags': getattr(obj, 'tags', []),
+            'suggestion_ia': getattr(obj, 'suggestion_ia', 'Aucune suggestion'),
+            'score_priorite_ia': getattr(obj, 'score_priorite_ia', 0),
+            'objectif_recommande': getattr(obj, 'objectif_recommande', False)
+        }
+
+        # Formater les dates
+        for date_field in ['date_creation', 'date_debut', 'date_echeance', 'derniere_mise_a_jour']:
+            if hasattr(obj, date_field) and getattr(obj, date_field):
+                date_value = getattr(obj, date_field)
+                if hasattr(date_value, 'strftime'):
+                    details[date_field] = date_value.strftime("%d/%m/%Y %H:%M")
+
+        # Données pour le calendrier
+        calendar_data = generate_calendar_data(obj)
+
+        context = {
+            'objectif': obj,
+            'details': details,
+            'calendar_data': calendar_data,
+            'today': timezone.now().date()
+        }
+
+        return render(request, 'objectif/details.html', context)
+
+    except Objective.DoesNotExist:
+        return HttpResponse("Objectif non trouvé", status=404)
+
+def generate_calendar_data(obj):
+    """Générer les données pour le calendrier avec gestion robuste des dates"""
+    calendar_data = {
+        'events': [],
+        'timeline': [],
+        'deadline_alert': None
+    }
+
+    # Date d'échéance
+    if hasattr(obj, 'date_echeance') and obj.date_echeance:
+        try:
+            deadline = obj.date_echeance
+            # Convertir en date si c'est un datetime
+            if hasattr(deadline, 'date'):
+                deadline_date = deadline.date()
+            else:
+                deadline_date = deadline
+
+            calendar_data['events'].append({
+                'date': deadline_date.isoformat(),
+                'title': 'Échéance',
+                'type': 'deadline',
+                'description': f'Échéance: {obj.titre}'
+            })
+
+            # Alerte si échéance proche
+            today = timezone.now().date()
+            days_until_deadline = (deadline_date - today).days
+            if days_until_deadline <= 7:
+                calendar_data['deadline_alert'] = {
+                    'days_left': days_until_deadline,
+                    'is_urgent': days_until_deadline <= 3
+                }
+        except (TypeError, AttributeError) as e:
+            print(f"Erreur traitement date échéance: {e}")
+
+    # Date de début
+    if hasattr(obj, 'date_debut') and obj.date_debut:
+        try:
+            start_date = obj.date_debut
+            # Convertir en date si c'est un datetime
+            if hasattr(start_date, 'date'):
+                start_date_date = start_date.date()
+            else:
+                start_date_date = start_date
+
+            calendar_data['events'].append({
+                'date': start_date_date.isoformat(),
+                'title': 'Début',
+                'type': 'start',
+                'description': f'Début: {obj.titre}'
+            })
+        except (TypeError, AttributeError) as e:
+            print(f"Erreur traitement date début: {e}")
+
+    # Générer une timeline basée sur la progression
+    progression = getattr(obj, 'progression', 0)
+    if progression > 0:
+        calendar_data['timeline'].append({
+            'date': timezone.now().date().isoformat(),
+            'progress': progression,
+            'description': f'Progression: {progression}%'
+        })
+
+    return calendar_data
+
+@login_required
+def objective_calendar(request):
+    """Vue calendrier pour tous les objectifs"""
+    all_objectifs = list(Objective.objects.all())
+
+    calendar_events = []
+    for obj in all_objectifs:
+        # Échéance
+        if hasattr(obj, 'date_echeance') and obj.date_echeance:
+            deadline = obj.date_echeance
+            if timezone.is_aware(deadline):
+                deadline = deadline.date()
+
+            calendar_events.append({
+                'id': str(obj.id),
+                'title': f'📅 {obj.titre}',
+                'start': deadline.isoformat(),
+                'end': deadline.isoformat(),
+                'color': '#ff4444',
+                'type': 'deadline',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+        # Date de début
+        if hasattr(obj, 'date_debut') and obj.date_debut:
+            start_date = obj.date_debut
+            if timezone.is_aware(start_date):
+                start_date = start_date.date()
+
+            calendar_events.append({
+                'id': str(obj.id) + '_start',
+                'title': f'🚀 Début: {obj.titre}',
+                'start': start_date.isoformat(),
+                'end': start_date.isoformat(),
+                'color': '#00aa00',
+                'type': 'start',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+    context = {
+        'calendar_events': json.dumps(calendar_events),
+        'objectifs_count': len(all_objectifs)
+    }
+
+    return render(request, 'objectif/calendar.html', context)
+
+@login_required
+def calendar_events_api(request):
+    """API pour les événements du calendrier"""
+    all_objectifs = list(Objective.objects.all())
+
+    events = []
+    for obj in all_objectifs:
+        # Échéance
+        if hasattr(obj, 'date_echeance') and obj.date_echeance:
+            deadline = obj.date_echeance
+            if timezone.is_aware(deadline):
+                deadline = deadline.date()
+
+            events.append({
+                'id': str(obj.id),
+                'title': f'Échéance: {obj.titre}',
+                'start': deadline.isoformat(),
+                'end': deadline.isoformat(),
+                'color': '#dc3545',
+                'textColor': 'white',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+        # Date de début
+        if hasattr(obj, 'date_debut') and obj.date_debut:
+            start_date = obj.date_debut
+            if timezone.is_aware(start_date):
+                start_date = start_date.date()
+
+            events.append({
+                'id': str(obj.id) + '_start',
+                'title': f'Début: {obj.titre}',
+                'start': start_date.isoformat(),
+                'end': start_date.isoformat(),
+                'color': '#28a745',
+                'textColor': 'white',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+    return JsonResponse(events, safe=False)
+
+
+@login_required
+def generate_qrcode(request, obj_id):
+    """Générer un QR Code pour un objectif"""
+    try:
+        obj = Objective.objects.get(id=obj_id)
+
+        # URL de détail de l'objectif
+        detail_url = request.build_absolute_uri(f'/objectives/details/{obj_id}/')
+
+        # Créer le QR Code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(detail_url)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        # Sauvegarder dans un buffer
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+
+        return HttpResponse(buffer.getvalue(), content_type='image/png')
+
+    except Objective.DoesNotExist:
+        return HttpResponse("Objectif non trouvé", status=404)
+
+@login_required
+def objective_details(request, obj_id):
+    """Page de détails d'un objectif avec analyse IA"""
+    try:
+        obj = Objective.objects.get(id=obj_id, user_id=str(request.user.id))
+
+        # Préparer les données pour l'affichage
+        details = {
+            'titre': getattr(obj, 'titre', 'Sans titre'),
+            'description': getattr(obj, 'description', 'Aucune description'),
+            'filiere': getattr(obj, 'filiere', 'Non spécifiée'),
+            'niveau': getattr(obj, 'niveau', 'Non spécifié'),
+            'priorite': getattr(obj, 'priorite', 'Non spécifié'),
+            'etat': getattr(obj, 'etat', 'Non spécifié'),
+            'progression': getattr(obj, 'progression', 0),
+            'date_creation': getattr(obj, 'date_creation', 'Non spécifiée'),
+            'date_debut': getattr(obj, 'date_debut', 'Non spécifiée'),
+            'date_echeance': getattr(obj, 'date_echeance', 'Non spécifiée'),
+            'derniere_mise_a_jour': getattr(obj, 'derniere_mise_a_jour', 'Non spécifiée'),
+            'nb_sessions': getattr(obj, 'nb_sessions', 0),
+            'temps_total': getattr(obj, 'temps_total', 0),
+            'taches': getattr(obj, 'taches', []),
+            'ressources': getattr(obj, 'ressources', []),
+            'tags': getattr(obj, 'tags', []),
+            'suggestion_ia': getattr(obj, 'suggestion_ia', 'Aucune suggestion'),
+            'score_priorite_ia': getattr(obj, 'score_priorite_ia', 0),
+            'objectif_recommande': getattr(obj, 'objectif_recommande', False),
+            # Nouveaux champs d'analyse IA
+            'analyse_ia': getattr(obj, 'analyse_ia', ''),
+            'points_forts': getattr(obj, 'points_forts', []),
+            'points_amelioration': getattr(obj, 'points_amelioration', []),
+            'risques': getattr(obj, 'risques', []),
+            'recommendations': getattr(obj, 'recommendations', []),
+            'delai_realisme': getattr(obj, 'delai_realisme', ''),
+            'niveau_difficulte': getattr(obj, 'niveau_difficulte', 'moyen')
+        }
+
+        # Formater les dates
+        for date_field in ['date_creation', 'date_debut', 'date_echeance', 'derniere_mise_a_jour']:
+            if hasattr(obj, date_field) and getattr(obj, date_field):
+                date_value = getattr(obj, date_field)
+                if hasattr(date_value, 'strftime'):
+                    details[date_field] = date_value.strftime("%d/%m/%Y %H:%M")
+
+        # Données pour le calendrier
+        calendar_data = generate_calendar_data(obj)
+
+        context = {
+            'objectif': obj,
+            'details': details,
+            'calendar_data': calendar_data,
+            'today': timezone.now().date(),
+            'has_ia_analysis': bool(getattr(obj, 'analyse_ia', ''))
+        }
+
+        return render(request, 'objectif/details.html', context)
+
+    except Objective.DoesNotExist:
+        return HttpResponse("Objectif non trouvé", status=404)
+def generate_calendar_data(obj):
+    """Générer les données pour le calendrier avec gestion robuste des dates"""
+    calendar_data = {
+        'events': [],
+        'timeline': [],
+        'deadline_alert': None
+    }
+
+    # Date d'échéance
+    if hasattr(obj, 'date_echeance') and obj.date_echeance:
+        try:
+            deadline = obj.date_echeance
+            # Convertir en date si c'est un datetime
+            if isinstance(deadline, datetime.datetime):
+                deadline_date = deadline.date()
+            elif hasattr(deadline, 'date'):
+                deadline_date = deadline.date()
+            else:
+                deadline_date = deadline
+
+            calendar_data['events'].append({
+                'date': deadline_date.isoformat(),
+                'title': 'Échéance',
+                'type': 'deadline',
+                'description': f'Échéance: {obj.titre}'
+            })
+
+            # Alerte si échéance proche
+            today = timezone.now().date()
+            # S'assurer que les deux sont des date objects
+            if isinstance(deadline_date, datetime.date) and not isinstance(deadline_date, datetime.datetime):
+                days_until_deadline = (deadline_date - today).days
+                if days_until_deadline <= 7:
+                    calendar_data['deadline_alert'] = {
+                        'days_left': days_until_deadline,
+                        'is_urgent': days_until_deadline <= 3
+                    }
+
+        except (TypeError, AttributeError) as e:
+            print(f"Erreur traitement date échéance: {e}")
+            print(f"Type deadline: {type(deadline)}, valeur: {deadline}")
+
+    # Date de début
+    if hasattr(obj, 'date_debut') and obj.date_debut:
+        try:
+            start_date = obj.date_debut
+            # Convertir en date si c'est un datetime
+            if isinstance(start_date, datetime.datetime):
+                start_date_date = start_date.date()
+            elif hasattr(start_date, 'date'):
+                start_date_date = start_date.date()
+            else:
+                start_date_date = start_date
+
+            calendar_data['events'].append({
+                'date': start_date_date.isoformat(),
+                'title': 'Début',
+                'type': 'start',
+                'description': f'Début: {obj.titre}'
+            })
+        except (TypeError, AttributeError) as e:
+            print(f"Erreur traitement date début: {e}")
+            print(f"Type start_date: {type(start_date)}, valeur: {start_date}")
+
+    # Générer une timeline basée sur la progression
+    progression = getattr(obj, 'progression', 0)
+    if progression > 0:
+        calendar_data['timeline'].append({
+            'date': timezone.now().date().isoformat(),
+            'progress': progression,
+            'description': f'Progression: {progression}%'
+        })
+
+    return calendar_data
+
+@login_required
+def objective_calendar(request):
+    """Vue calendrier pour tous les objectifs"""
+    all_objectifs = list(Objective.objects.all())
+
+    calendar_events = []
+    for obj in all_objectifs:
+        # Échéance
+        if hasattr(obj, 'date_echeance') and obj.date_echeance:
+            deadline = obj.date_echeance
+            if timezone.is_aware(deadline):
+                deadline = deadline.date()
+
+            calendar_events.append({
+                'id': str(obj.id),
+                'title': f'📅 {obj.titre}',
+                'start': deadline.isoformat(),
+                'end': deadline.isoformat(),
+                'color': '#ff4444',
+                'type': 'deadline',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+        # Date de début
+        if hasattr(obj, 'date_debut') and obj.date_debut:
+            start_date = obj.date_debut
+            if timezone.is_aware(start_date):
+                start_date = start_date.date()
+
+            calendar_events.append({
+                'id': str(obj.id) + '_start',
+                'title': f'🚀 Début: {obj.titre}',
+                'start': start_date.isoformat(),
+                'end': start_date.isoformat(),
+                'color': '#00aa00',
+                'type': 'start',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+    context = {
+        'calendar_events': json.dumps(calendar_events),
+        'objectifs_count': len(all_objectifs)
+    }
+
+    return render(request, 'objectif/calendar.html', context)
+
+@login_required
+def calendar_events_api(request):
+    """API pour les événements du calendrier"""
+    all_objectifs = list(Objective.objects.all())
+
+    events = []
+    for obj in all_objectifs:
+        # Échéance
+        if hasattr(obj, 'date_echeance') and obj.date_echeance:
+            deadline = obj.date_echeance
+            if timezone.is_aware(deadline):
+                deadline = deadline.date()
+
+            events.append({
+                'id': str(obj.id),
+                'title': f'Échéance: {obj.titre}',
+                'start': deadline.isoformat(),
+                'end': deadline.isoformat(),
+                'color': '#dc3545',
+                'textColor': 'white',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+        # Date de début
+        if hasattr(obj, 'date_debut') and obj.date_debut:
+            start_date = obj.date_debut
+            if timezone.is_aware(start_date):
+                start_date = start_date.date()
+
+            events.append({
+                'id': str(obj.id) + '_start',
+                'title': f'Début: {obj.titre}',
+                'start': start_date.isoformat(),
+                'end': start_date.isoformat(),
+                'color': '#28a745',
+                'textColor': 'white',
+                'url': f'/objectives/details/{obj.id}/'
+            })
+
+    return JsonResponse(events, safe=False)
+
+@login_required
+def objective_json(request, obj_id):
+    """API JSON des détails d'un objectif"""
+    try:
+        obj = Objective.objects.get(id=obj_id)
+
+        # Sérialiser l'objectif
+        data = {
+            'id': str(obj.id),
+            'titre': getattr(obj, 'titre', ''),
+            'description': getattr(obj, 'description', ''),
+            'filiere': getattr(obj, 'filiere', ''),
+            'niveau': getattr(obj, 'niveau', ''),
+            'priorite': getattr(obj, 'priorite', ''),
+            'etat': getattr(obj, 'etat', ''),
+            'progression': getattr(obj, 'progression', 0),
+            'date_creation': getattr(obj, 'date_creation', '').isoformat() if hasattr(obj, 'date_creation') and obj.date_creation else '',
+            'date_debut': getattr(obj, 'date_debut', '').isoformat() if hasattr(obj, 'date_debut') and obj.date_debut else '',
+            'date_echeance': getattr(obj, 'date_echeance', '').isoformat() if hasattr(obj, 'date_echeance') and obj.date_echeance else '',
+            'derniere_mise_a_jour': getattr(obj, 'derniere_mise_a_jour', '').isoformat() if hasattr(obj, 'derniere_mise_a_jour') and obj.derniere_mise_a_jour else '',
+            'nb_sessions': getattr(obj, 'nb_sessions', 0),
+            'temps_total': getattr(obj, 'temps_total', 0),
+            'taches': getattr(obj, 'taches', []),
+            'ressources': getattr(obj, 'ressources', []),
+            'tags': getattr(obj, 'tags', []),
+            'suggestion_ia': getattr(obj, 'suggestion_ia', ''),
+            'score_priorite_ia': getattr(obj, 'score_priorite_ia', 0),
+            'objectif_recommande': getattr(obj, 'objectif_recommande', False)
+        }
+
+        return JsonResponse(data)
+
+    except Objective.DoesNotExist:
+        return JsonResponse({'error': 'Objectif non trouvé'}, status=404)
+
+
+
+
+
+
+
+
+
+@login_required
+def chatbot_view(request):
+    """Vue principale du chatbot"""
+    try:
+        # Récupérer le vrai user MongoDB
+        mongo_user = _get_mongo_user(request.user)
+
+        # CORRECTION : Utiliser user__id pour le filtrage
+        objectifs = Objective.objects.filter(user__id=mongo_user.id)
+
+        return render(request, "objectif/chatbot.html", {"objectifs": objectifs})
+
+    except Exception as e:
+        print(f"Erreur dans chatbot_view: {e}")
+        # En cas d'erreur, retourner une liste vide
+        return render(request, "objectif/chat.html", {"objectifs": []})
+
+
+
+
+
+@login_required
+def chatbot_api(request):
+    """API pour le chatbot"""
+    if request.method == "POST":
+        try:
+            user_message = request.POST.get("message", "").strip()
+
+            if not user_message:
+                return JsonResponse({"error": "Message vide"}, status=400)
+
+            # Récupérer le vrai user MongoDB
+            mongo_user = _get_mongo_user(request.user)
+
+            # CORRECTION : Récupérer tous les objectifs et filtrer manuellement
+            all_objectifs = Objective.objects.all()
+            user_objectifs = []
+
+            for obj in all_objectifs:
+                try:
+                    # Vérifier si l'objectif appartient à l'utilisateur
+                    if hasattr(obj, 'user') and obj.user and str(obj.user.id) == str(mongo_user.id):
+                        user_objectifs.append(obj)
+                except Exception as e:
+                    print(f"Erreur avec l'objectif {obj.id}: {e}")
+                    continue
+
+            # Construire le contexte
+            context = "\n".join([
+                f"- {obj.titre} (État: {obj.etat}, Priorité: {obj.priorite}, Progression: {getattr(obj, 'progression', 0)}%)"
+                for obj in user_objectifs
+            ]) or "Aucun objectif enregistré."
+
+            # Prompt amélioré pour Gemini
+            prompt = f"""
+Tu es EduBot, un assistant éducatif intelligent et motivant qui aide les étudiants à progresser dans leurs objectifs académiques.
+
+CONTEXTE DES OBJECTIFS DE L'UTILISATEUR :
+{context}
+
+QUESTION DE L'UTILISATEUR :
+{user_message}
+
+GUIDELINES POUR TA RÉPONSE :
+- Sois encourageant, positif et constructif
+- Propose des conseils pratiques et réalisables
+- Si tu parles d'un objectif spécifique, référence-le clairement
+- Garde tes réponses concises mais utiles (max 3-4 phrases)
+- Adapte ton ton à la situation : motivant pour les défis, félicitations pour les progrès
+- Si la question n'est pas liée aux objectifs, redirige gentiment vers le sujet
+
+RÉPONSE :
+"""
+
+            # Appel à Gemini
+            model = genai.GenerativeModel("gemini-2.5-flash")
+            response = model.generate_content(prompt)
+
+            return JsonResponse({
+                "reply": response.text,
+                "status": "success",
+                "objectifs_count": len(user_objectifs)
+            })
+
+        except Exception as e:
+            print(f"Erreur dans chatbot_api: {e}")
+            return JsonResponse({
+                "error": f"Erreur du chatbot: {str(e)}",
+                "status": "error"
+            }, status=500)
+
+    return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+@login_required
+def trigger_ia_analysis(request, obj_id):
+    """Déclenche une analyse IA complète pour un objectif"""
+    try:
+        # Utiliser get_object_or_404 pour une meilleure gestion
+        obj = get_object_or_404(Objective, id=obj_id, user_id=str(request.user.id))
+
+        # Générer l'analyse IA
+        success = generate_complete_ia_analysis(obj)
+
+        if success:
+            # Utiliser la session comme fallback si messages pose problème
+            try:
+                messages.success(request, "✅ Analyse IA générée avec succès!")
+            except:
+                request.session['analysis_message'] = "success:✅ Analyse IA générée avec succès!"
+        else:
+            try:
+                messages.error(request, "❌ Erreur lors de la génération de l'analyse IA")
+            except:
+                request.session['analysis_message'] = "error:❌ Erreur lors de la génération de l'analyse IA"
+
+        return redirect('objectif:details', obj_id=obj_id)
+
+    except Exception as e:
+        print(f"Erreur dans trigger_ia_analysis: {e}")
+        try:
+            messages.error(request, f"❌ Erreur lors de l'analyse IA: {str(e)}")
+        except:
+            request.session['analysis_message'] = f"error:❌ Erreur lors de l'analyse IA: {str(e)}"
+        return redirect('objectif:details', obj_id=obj_id)
+
+@login_required
+def get_ia_analysis(request, obj_id):
+    """API pour récupérer l'analyse IA d'un objectif"""
+    try:
+        obj = get_object_or_404(Objective, id=obj_id, user_id=str(request.user.id))
+
+        analysis_data = {
+            'analyse_ia': getattr(obj, 'analyse_ia', ''),
+            'points_forts': getattr(obj, 'points_forts', []),
+            'points_amelioration': getattr(obj, 'points_amelioration', []),
+            'risques': getattr(obj, 'risques', []),
+            'recommendations': getattr(obj, 'recommendations', []),
+            'delai_realisme': getattr(obj, 'delai_realisme', ''),
+            'niveau_difficulte': getattr(obj, 'niveau_difficulte', 'moyen'),
+            'suggestion_ia': getattr(obj, 'suggestion_ia', ''),
+            'score_priorite_ia': getattr(obj, 'score_priorite_ia', 0),
+            'objectif_recommande': getattr(obj, 'objectif_recommande', False)
+        }
+
+        return JsonResponse(analysis_data)
+
+    except Exception as e:
+        return JsonResponse({'error': 'Erreur lors de la récupération des données'}, status=500)
+
+def generate_complete_ia_analysis(obj):
+    """Génère une analyse IA complète et détaillée avec Gemini 2.5 Flash"""
+
+    api_key = os.getenv("AIzaSyBCutcN7kxoQ8frc9GHPGXlBMneulZCHzc")
+    if not api_key:
+        print("❌ Clé API Gemini non trouvée")
+        return False
+
+    try:
+        # Préparer les données pour l'analyse
+        jours_restants = ""
+        if obj.date_echeance:
+            aujourd_hui = timezone.now().date()
+            try:
+                # Gérer différents types de dates
+                if hasattr(obj.date_echeance, 'date'):
+                    date_echeance = obj.date_echeance.date()
+                else:
+                    date_echeance = obj.date_echeance
+
+                # Vérifier que les deux sont des date objects
+                if isinstance(date_echeance, datetime.date) and isinstance(aujourd_hui, datetime.date):
+                    jours_restants = (date_echeance - aujourd_hui).days
+                else:
+                    jours_restants = "Date non valide"
+            except (TypeError, AttributeError) as e:
+                print(f"Erreur calcul jours restants: {e}")
+                jours_restants = "Erreur calcul"
+
+        prompt = f"""
+        Tu es un expert en analyse d'objectifs académiques et professionnels.
+
+        OBJECTIF À ANALYSER :
+        - Titre : {getattr(obj, 'titre', 'Non spécifié')}
+        - Description : {getattr(obj, 'description', 'Non spécifiée')}
+        - Filière : {getattr(obj, 'filiere', 'Non spécifiée')}
+        - Niveau : {getattr(obj, 'niveau', 'Non spécifié')}
+        - Priorité : {getattr(obj, 'priorite', 'Non spécifiée')}
+        - État : {getattr(obj, 'etat', 'Non spécifié')}
+        - Progression : {getattr(obj, 'progression', 0)}%
+        - Tags : {', '.join(getattr(obj, 'tags', []))}
+        - Tâches prévues : {', '.join(getattr(obj, 'taches', []))}
+        - Ressources : {', '.join(getattr(obj, 'ressources', []))}
+        - Jours restants : {jours_restants if jours_restants else 'Non défini'}
+
+        EFFECTUE UNE ANALYSE COMPLÈTE ET RÉPONDS STRICTEMENT EN JSON :
+
+        {{
+            "analyse_ia": "Analyse textuelle complète de 3-4 phrases",
+            "points_forts": ["point fort 1", "point fort 2", "point fort 3"],
+            "points_amelioration": ["point amélioration 1", "point amélioration 2"],
+            "risques": ["risque 1", "risque 2"],
+            "recommendations": ["recommandation 1", "recommandation 2", "recommandation 3"],
+            "delai_realisme": "Très réaliste|Réaliste|Peu réaliste|Irrealiste",
+            "niveau_difficulte": "facile|moyen|difficile|expert",
+            "suggestion_ia": "Suggestion concise pour l'utilisateur",
+            "score_priorite_ia": 0.85,
+            "objectif_recommande": true
+        }}
+
+        Sois honnête, constructif et précis dans ton analyse.
+        Réponds UNIQUEMENT avec le JSON, sans texte supplémentaire.
+        """
+
+        # Utilisation du modèle Gemini 2.5 Flash
+        endpoint = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent"
+
+        headers = {
+            "Content-Type": "application/json",
+        }
+
+        data = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }],
+            "generationConfig": {
+                "temperature": 0.3,
+                "topK": 40,
+                "topP": 0.95,
+                "maxOutputTokens": 1024,
+            }
+        }
+
+        print("🔄 Appel à l'API Gemini 2.5 Flash...")
+
+        # Deux méthodes d'appel possibles
+        try:
+            # Méthode 1 : avec le paramètre key dans l'URL
+            resp = requests.post(f"{endpoint}?key={api_key}", json=data, headers=headers, timeout=30)
+        except:
+            # Méthode 2 : avec le header Authorization
+            headers["Authorization"] = f"Bearer {api_key}"
+            resp = requests.post(endpoint, json=data, headers=headers, timeout=30)
+
+        if resp.status_code == 200:
+            resp_json = resp.json()
+            print("✅ Réponse reçue de l'API Gemini")
+
+            # Extraction du texte de réponse (structure Gemini 2.5)
+            text = ""
+            try:
+                if 'candidates' in resp_json and resp_json['candidates']:
+                    candidate = resp_json['candidates'][0]
+                    if 'content' in candidate and 'parts' in candidate['content']:
+                        text = candidate['content']['parts'][0].get('text', '').strip()
+
+                # Alternative pour différentes structures de réponse
+                if not text and 'candidates' in resp_json and resp_json['candidates']:
+                    text = resp_json['candidates'][0].get('content', {}).get('parts', [{}])[0].get('text', '').strip()
+
+            except Exception as extract_error:
+                print(f"❌ Erreur extraction texte: {extract_error}")
+                # Tentative d'extraction alternative
+                text = str(resp_json).split('"text": "')[-1].split('"')[0] if '"text": "' in str(resp_json) else ""
+
+            if not text:
+                print("❌ Réponse vide de l'API Gemini")
+                print(f"Réponse complète: {resp_json}")
+                return False
+
+            # Nettoyer la réponse
+            text = text.strip()
+            if text.startswith("```json"):
+                text = text[7:]
+            if text.endswith("```"):
+                text = text[:-3]
+            text = text.strip()
+
+            print(f"📝 Texte reçu ({len(text)} caractères): {text[:200]}...")
+
+            # Parsing JSON
+            try:
+                result = json.loads(text)
+            except json.JSONDecodeError as e:
+                print(f"❌ Erreur parsing JSON: {e}")
+                print(f"Texte problématique: {text}")
+
+                # Fallback: créer une analyse basique
+                result = {
+                    "analyse_ia": f"Analyse de l'objectif '{getattr(obj, 'titre', '')}'. Progression actuelle: {getattr(obj, 'progression', 0)}%. Priorité: {getattr(obj, 'priorite', 'Non définie')}.",
+                    "points_forts": [
+                        "Objectif bien défini et structuré",
+                        f"Progression de {getattr(obj, 'progression', 0)}% déjà accomplie",
+                        "Ressources et tâches identifiées"
+                    ],
+                    "points_amelioration": [
+                        "Améliorer la planification des délais si nécessaire",
+                        "Diversifier les méthodes d'apprentissage"
+                    ],
+                    "risques": [
+                        "Risque de retard si non suivi régulièrement",
+                        "Dépendance aux ressources identifiées"
+                    ],
+                    "recommendations": [
+                        "Planifier des sessions régulières de travail",
+                        "Suivre la progression hebdomadaire",
+                        "Adapter les méthodes en fonction des résultats"
+                    ],
+                    "delai_realisme": "Réaliste",
+                    "niveau_difficulte": "moyen",
+                    "suggestion_ia": f"Pour l'objectif '{getattr(obj, 'titre', '')}', continuez vos efforts actuels et révisez régulièrement votre planning pour maintenir la progression.",
+                    "score_priorite_ia": 0.7,
+                    "objectif_recommande": True
+                }
+
+            # Mettre à jour tous les champs avec des valeurs par défaut
+            obj.analyse_ia = result.get("analyse_ia", "Analyse générée par l'IA")
+            obj.points_forts = result.get("points_forts", [])
+            obj.points_amelioration = result.get("points_amelioration", [])
+            obj.risques = result.get("risques", [])
+            obj.recommendations = result.get("recommendations", [])
+            obj.delai_realisme = result.get("delai_realisme", "Non évalué")
+            obj.niveau_difficulte = result.get("niveau_difficulte", "moyen")
+            obj.suggestion_ia = result.get("suggestion_ia", "Suggestion non disponible")
+            obj.score_priorite_ia = float(result.get("score_priorite_ia", 0.5))
+            obj.objectif_recommande = bool(result.get("objectif_recommande", False))
+
+            obj.derniere_mise_a_jour = datetime.utcnow()
+            obj.save()
+
+            print("✅ Analyse IA sauvegardée avec succès")
+            return True
+
+        else:
+            print(f"❌ Erreur API Gemini: {resp.status_code}")
+            print(f"Réponse erreur: {resp.text}")
+            return False
+
+    except Exception as e:
+        print(f"❌ Erreur lors de l'analyse IA: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+@login_required
+def generate_pdf_bilan(request, obj_id):
+    """Génère un bilan PDF complet de l'objectif"""
+    try:
+        obj = Objective.objects.get(id=obj_id, user_id=str(request.user.id))
+
+        # Créer le buffer PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=50, bottomMargin=50)
+        styles = getSampleStyleSheet()
+
+        # Styles personnalisés
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=1,  # Centré
+            textColor=colors.HexColor('#2c3e50')
+        )
+
+        section_style = ParagraphStyle(
+            'SectionTitle',
+            parent=styles['Heading2'],
+            fontSize=14,
+            spaceAfter=12,
+            spaceBefore=20,
+            textColor=colors.HexColor('#3498db')
+        )
+
+        story = []
+
+        # En-tête avec titre
+        story.append(Paragraph(f"BILAN COMPLET - {obj.titre}", title_style))
+        story.append(Spacer(1, 10))
+
+        # Date de génération
+        date_style = ParagraphStyle(
+            'DateStyle',
+            parent=styles['Normal'],
+            fontSize=10,
+            alignment=1,
+            textColor=colors.gray
+        )
+        story.append(Paragraph(f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}", date_style))
+        story.append(Spacer(1, 20))
+
+        # Section 1: Informations générales
+        story.append(Paragraph("📊 INFORMATIONS GÉNÉRALES", section_style))
+
+        info_data = [
+            ['Titre', obj.titre],
+            ['Description', obj.description or 'Non spécifiée'],
+            ['Filière', getattr(obj, 'filiere', 'Non spécifiée')],
+            ['Niveau', getattr(obj, 'niveau', 'Non spécifié')],
+            ['Priorité', getattr(obj, 'priorite', 'Non spécifiée')],
+            ['État', getattr(obj, 'etat', 'Non spécifié')],
+            ['Progression', f"{getattr(obj, 'progression', 0)}%"],
+            ['Sessions réalisées', str(getattr(obj, 'nb_sessions', 0))],
+            ['Temps total', f"{getattr(obj, 'temps_total', 0)} heures"],
+            ['Date création', obj.date_creation.strftime("%d/%m/%Y %H:%M") if obj.date_creation else 'Non spécifiée'],
+            ['Date début', obj.date_debut.strftime("%d/%m/%Y %H:%M") if obj.date_debut else 'Non spécifiée'],
+            ['Date échéance', obj.date_echeance.strftime("%d/%m/%Y %H:%M") if obj.date_echeance else 'Non spécifiée'],
+            ['Dernière mise à jour', obj.derniere_mise_a_jour.strftime("%d/%m/%Y %H:%M") if obj.derniere_mise_a_jour else 'Non spécifiée']
+        ]
+
+        info_table = Table(info_data, colWidths=[150, 350])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3498db')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#dee2e6')),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        story.append(info_table)
+        story.append(Spacer(1, 25))
+
+        # Section 2: Barre de progression visuelle
+        story.append(Paragraph("📈 PROGRESSION", section_style))
+
+        # Créer un diagramme de progression simple
+        progression = getattr(obj, 'progression', 0)
+        progression_data = [
+            ['Progression actuelle', f"{progression}%"]
+        ]
+
+        progression_table = Table(progression_data, colWidths=[200, 300])
+        progression_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e9ecef')),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#dee2e6')),
+            ('PADDING', (0, 0), (-1, -1), 8),
+        ]))
+        story.append(progression_table)
+        story.append(Spacer(1, 15))
+
+        # Section 3: Analyse IA si disponible
+        if hasattr(obj, 'analyse_ia') and obj.analyse_ia:
+            story.append(Paragraph("🤖 ANALYSE INTELLIGENCE ARTIFICIELLE", section_style))
+
+            # Score de viabilité
+            score = getattr(obj, 'score_viabilite', 0)
+            score_data = [
+                ['Score de viabilité', f"{score*100:.1f}%"],
+                ['Difficulté estimée', getattr(obj, 'estimation_difficulte', 'Non évalué').title()],
+                ['Délai réaliste', getattr(obj, 'delai_realiste', 'Non évalué').replace('_', ' ').title()],
+                ['Priorité recommandée', getattr(obj, 'priorite_recommandee', 'Non évalué').title()]
+            ]
+
+            score_table = Table(score_data, colWidths=[150, 350])
+            score_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#17a2b8')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#e8f4fd')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#b3e0ff')),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('PADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(score_table)
+            story.append(Spacer(1, 15))
+
+            # Analyse globale
+            story.append(Paragraph("<b>Analyse globale:</b>", styles['Heading3']))
+            story.append(Paragraph(obj.analyse_ia, styles['Normal']))
+            story.append(Spacer(1, 12))
+
+            # Recommandations stratégiques
+            if hasattr(obj, 'recommandations_strategiques') and obj.recommandations_strategiques:
+                story.append(Paragraph("<b>Recommandations stratégiques:</b>", styles['Heading3']))
+                for reco in obj.recommandations_strategiques:
+                    story.append(Paragraph(f"• {reco}", styles['Normal']))
+                story.append(Spacer(1, 12))
+
+            # Plan d'action
+            if hasattr(obj, 'plan_action') and obj.plan_action:
+                story.append(Paragraph("<b>Plan d'action détaillé:</b>", styles['Heading3']))
+                for i, action in enumerate(obj.plan_action, 1):
+                    story.append(Paragraph(f"{i}. {action}", styles['Normal']))
+                story.append(Spacer(1, 12))
+
+            # Points clés
+            if hasattr(obj, 'points_cles') and obj.points_cles:
+                story.append(Paragraph("<b>Points clés à surveiller:</b>", styles['Heading3']))
+                for point in obj.points_cles:
+                    story.append(Paragraph(f"⚡ {point}", styles['Normal']))
+                story.append(Spacer(1, 12))
+
+            # Recommandation immédiate
+            if hasattr(obj, 'recommandation_immediate') and obj.recommandation_immediate:
+                story.append(Paragraph("<b>Action immédiate recommandée:</b>", styles['Heading3']))
+                immediate_style = ParagraphStyle(
+                    'ImmediateAction',
+                    parent=styles['Normal'],
+                    backColor=colors.HexColor('#fff3cd'),
+                    borderPadding=10,
+                    leftIndent=10,
+                    textColor=colors.HexColor('#856404')
+                )
+                story.append(Paragraph(obj.recommandation_immediate, immediate_style))
+                story.append(Spacer(1, 15))
+
+        # Section 4: Tâches à réaliser
+        if hasattr(obj, 'taches') and obj.taches:
+            story.append(Paragraph("✅ TÂCHES À RÉALISER", section_style))
+
+            tasks_data = [['#', 'Tâche']]
+            for i, tache in enumerate(obj.taches, 1):
+                tasks_data.append([str(i), tache])
+
+            tasks_table = Table(tasks_data, colWidths=[30, 470])
+            tasks_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#28a745')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#d4edda')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#c3e6cb')),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('PADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(tasks_table)
+            story.append(Spacer(1, 25))
+
+        # Section 5: Ressources
+        if hasattr(obj, 'ressources') and obj.ressources:
+            story.append(Paragraph("📚 RESSOURCES DISPONIBLES", section_style))
+
+            resources_data = [['#', 'Ressource']]
+            for i, ressource in enumerate(obj.ressources, 1):
+                resources_data.append([str(i), ressource])
+
+            resources_table = Table(resources_data, colWidths=[30, 470])
+            resources_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6f42c1')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#e8e2ff')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#d6cfff')),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('PADDING', (0, 0), (-1, -1), 6),
+            ]))
+            story.append(resources_table)
+            story.append(Spacer(1, 25))
+
+        # Section 6: Tags
+        if hasattr(obj, 'tags') and obj.tags:
+            story.append(Paragraph("🏷️ TAGS ET CATÉGORIES", section_style))
+
+            tags_text = ", ".join([f"#{tag}" for tag in obj.tags])
+            story.append(Paragraph(tags_text, styles['Normal']))
+            story.append(Spacer(1, 25))
+
+        # Pied de page
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=8,
+            alignment=1,
+            textColor=colors.gray,
+            spaceBefore=20
+        )
+        story.append(Paragraph(f"Bilan généré automatiquement - ID: {obj.id}", footer_style))
+
+        # Générer le PDF
+        doc.build(story)
+        buffer.seek(0)
+
+        # Retourner le PDF
+        response = HttpResponse(buffer, content_type='application/pdf')
+        filename = f"bilan_{obj.titre.replace(' ', '_').lower()}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    except Exception as e:
+        print(f"❌ Erreur génération PDF bilan: {e}")
+        import traceback
+        traceback.print_exc()
+        return HttpResponse(f"Erreur lors de la génération du bilan PDF: {str(e)}", status=500)

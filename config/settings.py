@@ -37,6 +37,7 @@ ENVIRONMENT = os.environ.get("DJANGO_ENVIRONMENT", default="local")
 INSTALLED_APPS = [
     "django.contrib.admin",
     "accounts",
+    "objectif",
     "resources.apps.ResourcesConfig",
     "feed",
     "quiz",
@@ -60,7 +61,7 @@ INSTALLED_APPS = [
     "apps.form_layouts",
     "apps.tables",
     "chat",
-    
+
 ]
 
 MIDDLEWARE = [

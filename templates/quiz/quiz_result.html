@@ -1,0 +1,50 @@
+{% extends layout_path %}
+
+{% block title %}Resultat du quiz{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="mb-0">{{ quiz.title }}</h5>
+          <small class="text-body-secondary">Score obtenu</small>
+        </div>
+        <div class="card-body">
+          <p class="fs-4 fw-semibold mb-1">{{ attempt.score }} / {{ attempt.total_questions }}</p>
+          <p class="text-body-secondary mb-4">Pourcentage : {{ attempt.percentage }}%</p>
+          <a href="{% url 'quiz:list' %}" class="btn btn-primary">Retour aux quiz</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Correction</h5>
+        </div>
+        <div class="card-body">
+          {% for question in quiz.questions %}
+            <div class="mb-4">
+              <p class="fw-semibold">Question {{ forloop.counter }} :</p>
+              <p>{{ question.prompt }}</p>
+              <ul class="list-unstyled mb-0">
+                {% for option in question.options %}
+                  {% if forloop.counter0 == question.answer_index %}
+                    <li class="text-success fw-semibold">
+                      <i class="bx bx-check-circle text-success me-1"></i>
+                      {{ option }}
+                    </li>
+                  {% else %}
+                    <li>
+                      <i class="bx bx-radio-circle text-body-secondary me-1"></i>
+                      {{ option }}
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

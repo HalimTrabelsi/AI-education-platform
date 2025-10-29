@@ -33,3 +33,10 @@ def split(value, key):
     elif isinstance(value, (list, tuple)):
         return value
     return []
+@register.filter
+def get_item(dictionary, key):
+    try:
+        return dictionary.get(key)
+    except AttributeError:
+        return None
+

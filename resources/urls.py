@@ -1,39 +1,41 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from django.conf.urls.static import static
 from django.conf import settings
-from .views import (
-    ResourceViewSet,
-    resource_list,
-    front_office_resource_list,
-    resource_detail,
-    front_office_resource_add,
-    resource_edit,
-    resource_delete,
-    generate_summary_view,
-)
+from django.conf.urls.static import static
+from django.urls import include, path
 
-# --- Déclaration du router DRF ---
-router = DefaultRouter()
-router.register(r'resources', ResourceViewSet, basename='resource')
+from . import views
+
+app_name = "resources"
+
+router = None
+try:
+    from rest_framework.routers import DefaultRouter
+
+    if views.viewsets:
+        router = DefaultRouter()
+        router.register(r"resources", views.ResourceViewSet, basename="resource")
+except Exception:
+    router = None
 
 urlpatterns = [
+    # Back-office routes
+    path("back-office/", views.resource_list, name="list"),
+    path("back-office/add/", views.resource_add, name="add"),
+    path("back-office/<str:pk>/edit/", views.resource_edit, name="edit"),
+    path("back-office/<str:pk>/delete/", views.resource_delete, name="delete"),
 
-    # --- Back-office ---
-    path('list/', resource_list, name='resource-list'),
-    path('resources/<str:pk>/edit/', resource_edit, name='resource-update'),
-    path('resources/<str:pk>/delete/', resource_delete, name='resource-delete'),
+    # Front-office routes
+    path("front-office/", views.front_office_resource_list, name="front"),
+    path("front-office/<str:pk>/", views.resource_detail, name="detail"),
 
-    # --- Front-office ---
-    path('front/', front_office_resource_list, name='front_office_resource_list'),
-    path('front/resource/<str:pk>/', resource_detail, name='front_office_resource_detail'),
-    path('front/add/', front_office_resource_add, name='front_office_resource_add'),
-
-
-    path('api/<str:resource_id>/generate-summary/', generate_summary_view, name='generate_summary'),
-
+    path(
+        "api/<str:resource_id>/generate-summary/",
+        views.generate_summary_view,
+        name="generate_summary",
+    ),
 ]
 
-# --- Fichiers statiques & médias en debug ---
+if router:
+    urlpatterns += [path("api/", include(router.urls))]
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

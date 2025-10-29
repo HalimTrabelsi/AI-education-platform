@@ -6,4 +6,8 @@ class ResourcesConfig(AppConfig):
     name = 'resources'
 
     def ready(self):
-        import resources.signals
+        try:
+            import resources.signals
+        except Exception:
+            # Optional dependencies may be missing in dev environments
+            pass

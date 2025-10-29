@@ -1,12 +1,19 @@
+from functools import wraps
 from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 def role_required(*roles):
+ 
     def decorator(view_func):
-        @login_required
-        def wrapper(request, *args, **kwargs):
-            if request.user.role in roles:
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            user = request.user
+            if not user.is_authenticated:
+                messages.warning(request, "Please log in first.")
+                return redirect('accounts:login')
+            if hasattr(user, 'role') and user.role in roles:
                 return view_func(request, *args, **kwargs)
-            return redirect("accounts:login")
-        return wrapper
+            messages.error(request, "You are not authorized to access this page.")
+            return redirect('index')
+        return _wrapped_view
     return decorator

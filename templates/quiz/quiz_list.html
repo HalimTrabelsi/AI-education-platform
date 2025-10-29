@@ -1,0 +1,57 @@
+{% extends layout_path %}
+{% load resources_extras %}
+
+{% block title %}Quiz disponibles{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <div>
+            <h5 class="mb-0">Quiz disponibles</h5>
+            <small class="text-body-secondary">Testez vos connaissances sur les supports fournis.</small>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Cours</th>
+                <th>Questions</th>
+                <th>Dernier score</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for quiz in quizzes %}
+                {% with attempt=attempts|get_item:quiz.id %}
+                <tr>
+                  <td>{{ quiz.resource.title }}</td>
+                  <td>{{ quiz.question_count }}</td>
+                  <td>
+                    {% if attempt %}
+                      {{ attempt.score }}/{{ attempt.total_questions }} ({{ attempt.percentage }}%)
+                    {% else %}
+                      <span class="badge bg-label-warning">Non tent</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-center">
+                    <a href="{% url 'quiz:take' quiz.resource.id %}" class="btn btn-sm btn-outline-primary">
+                      {% if attempt %}Reprendre{% else %}Commencer{% endif %}
+                    </a>
+                  </td>
+                </tr>
+                {% endwith %}
+              {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center text-body-secondary py-6">Aucun quiz n'est disponible pour le moment.</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

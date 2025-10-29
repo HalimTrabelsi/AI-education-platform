@@ -1,0 +1,44 @@
+{% extends layout_path %}
+
+{% block title %}{{ quiz.title }}{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">{{ quiz.title }}</h5>
+          <small class="text-body-secondary">{{ resource.title }}</small>
+        </div>
+        <div class="card-body">
+          <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+              <div class="mb-4">
+                <p class="fw-semibold">Question {{ forloop.counter }}:</p>
+                <p>{{ field.label }}</p>
+                {{ field }}
+              </div>
+            {% endfor %}
+            <div class="d-flex justify-content-end gap-3">
+              <a href="{% url 'quiz:list' %}" class="btn btn-outline-secondary">Annuler</a>
+              <button type="submit" class="btn btn-primary">Soumettre</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-3">Conseils</h6>
+          <ul class="list-unstyled text-body-secondary small mb-0">
+            <li class="mb-2"><i class="bx bx-check-circle me-2 text-success"></i>Repondez a toutes les questions pour obtenir votre score.</li>
+            <li class="mb-2"><i class="bx bx-check-circle me-2 text-success"></i>Vous pouvez retenter le quiz a tout moment.</li>
+            <li class="mb-0"><i class="bx bx-info-circle me-2 text-primary"></i>Les questions sont generees automatiquement a partir du contenu du cours.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

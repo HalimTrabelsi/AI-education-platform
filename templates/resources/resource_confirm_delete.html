@@ -1,0 +1,24 @@
+{% extends layout_path %}
+
+{% block title %}Supprimer la ressource{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="card border-danger">
+        <div class="card-header bg-label-danger">
+          <h5 class="mb-0 text-danger">Confirmation de suppression</h5>
+        </div>
+        <div class="card-body">
+          <p>tes-vous certain de vouloir supprimer la ressource <strong>{{ resource.title }}</strong> ?</p>
+          <p class="text-body-secondary mb-4">Cette action est irrversible.</p>
+          <form method="post" class="d-flex justify-content-end gap-3">
+            {% csrf_token %}
+            <a href="{% url 'resources:list' %}" class="btn btn-outline-secondary">Annuler</a>
+            <button type="submit" class="btn btn-danger">Supprimer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

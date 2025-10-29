@@ -1,45 +1,61 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Modifier une Ressource</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        form { max-width: 500px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        label { display: block; margin-top: 10px; font-weight: bold; }
-        input[type="text"], select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; }
-        button { margin-top: 20px; padding: 10px 15px; border: none; background-color: #f0ad4e; color: #fff; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #ec971f; }
-        a { display: block; margin-top: 15px; text-align: center; color: #0066cc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
-</head>
-<body>
-    <h1>Modifier une Ressource</h1>
+{% extends layout_path %}
 
-    <form method="POST">
-        {% csrf_token %}
-        <label for="title">Titre</label>
-        <input type="text" id="title" name="title" value="{{ resource.title }}" required>
+{% block title %}Modifier la ressource{% endblock %}
 
-        <label for="resource_type">Type</label>
-        <select id="resource_type" name="resource_type" required>
-            <option value="PDF" {% if resource.resource_type == "PDF" %}selected{% endif %}>PDF</option>
-            <option value="Video" {% if resource.resource_type == "Video" %}selected{% endif %}>Vidéo</option>
-            <option value="Audio" {% if resource.resource_type == "Audio" %}selected{% endif %}>Audio</option>
-        </select>
-
-        <label for="tags">Tags (séparés par des virgules)</label>
-<input type="text" id="tags" name="tags" value="{{ resource.tags_list|join:', ' }}">
-
-
-        <div class="d-flex justify-content-between">
-    <a href="{% url 'front_office_resource_list' %}" class="btn btn-secondary">← Retour</a>
-    <button type="submit" class="btn btn-success">Modifier la ressource</button>
-</div>
-
-    </form>
-</body>
-</html>
+{% block content %}
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Modifier {{ resource.title }}</h5>
+          <small class="text-body-secondary">Mettez  jour les informations de la ressource.</small>
+        </div>
+        <div class="card-body">
+          <form method="post" class="row g-4">
+            {% csrf_token %}
+            <div class="col-12">
+              <label class="form-label" for="title">Titre</label>
+              <input type="text" class="form-control" id="title" name="title" value="{{ resource.title }}" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="description">Description</label>
+              <textarea class="form-control" id="description" name="description" rows="4">{{ resource.description }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="resource_type">Type</label>
+              <select class="form-select" id="resource_type" name="resource_type" required>
+                {% for choice in resource_types %}
+                  <option value="{{ choice }}" {% if resource.resource_type == choice %}selected{% endif %}>{{ choice }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="tags">Tags (spars par des virgules)</label>
+              <input type="text" class="form-control" id="tags" name="tags" value="{{ resource.tags|join:', ' }}">
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-3">
+              <a href="{% url 'resources:list' %}" class="btn btn-outline-secondary">Annuler</a>
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="mb-3">Aperu</h6>
+          <p class="text-body-secondary small">Titre actuel&nbsp;:</p>
+          <p class="fw-semibold">{{ resource.title }}</p>
+          <p class="text-body-secondary small">Dernire mise  jour&nbsp;:</p>
+          <p class="fw-semibold">{{ resource.uploaded_at|date:"d/m/Y H:i" }}</p>
+          {% if resource.file %}
+            <a href="{% url 'resources:detail' resource.id %}" class="btn btn-sm btn-outline-primary w-100 mt-3">
+              <i class="bx bx-show"></i> Voir la fiche
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
