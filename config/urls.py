@@ -31,6 +31,7 @@ urlpatterns = [
     # Dashboard urls
     path("", include("apps.dashboards.urls")),
 
+    path("moderation/", include("moderation.urls", namespace="moderation")),
     # layouts urls
     path("", include("apps.layouts.urls")),
 

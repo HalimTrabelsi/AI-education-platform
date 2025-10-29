@@ -1,0 +1,169 @@
+{% extends "moderation/base.html" %}
+{% block content %}
+<div class="container py-5">
+
+  <!-- PAGE HEADER -->
+  <div class="mb-5 text-center">
+    <h2 class="fw-bold mb-1">
+      {% if report %}Modifier le signalement{% else %}Nouveau signalement{% endif %}
+    </h2>
+    <p class="text-muted fs-6">
+      {% if report %}
+        Modifiez les informations du signalement. Les tags IA sont générés automatiquement selon le score et la détection de plagiat ou contenu inapproprié.
+      {% else %}
+        Créez un nouveau signalement — les tags IA seront remplis automatiquement selon le score IA, le plagiat et la détection NSFW.
+      {% endif %}
+    </p>
+  </div>
+
+  <!-- FORM CARD -->
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body">
+      <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="row g-4">
+
+          <!-- LEFT COLUMN -->
+          <div class="col-md-6">
+            <!-- Title -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Titre</label>
+              {{ form.title }}
+              {% if form.title.errors %}
+                <div class="text-danger small">{{ form.title.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Resource URL -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">URL de la ressource</label>
+              {{ form.resource_url }}
+              {% if form.resource_url.errors %}
+                <div class="text-danger small">{{ form.resource_url.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Flagged By -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Signalé par</label>
+              {{ form.flagged_by }}
+              {% if form.flagged_by.errors %}
+                <div class="text-danger small">{{ form.flagged_by.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- AI Confidence -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Score IA (0.0 – 1.0)</label>
+              {{ form.ai_confidence }}
+              {% if form.ai_confidence.errors %}
+                <div class="text-danger small">{{ form.ai_confidence.errors }}</div>
+              {% endif %}
+              <small class="text-muted">Les tags IA se mettront à jour automatiquement selon ce score, le plagiat ou la détection NSFW.</small>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN -->
+          <div class="col-md-6">
+            <!-- Description -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Description</label>
+              <input type="text"
+                     name="{{ form.description.name }}"
+                     value="{{ form.description.value }}"
+                     class="form-control form-control-sm">
+              {% if form.description.errors %}
+                <div class="text-danger small">{{ form.description.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- AI Tags (Read-Only) -->
+            <div class="mb-3">
+              <label class="form-label fw-bold">Tags IA</label>
+              <input type="text"
+                     id="{{ form.ai_flags.id_for_label }}"
+                     name="{{ form.ai_flags.name }}"
+                     value="{{ form.ai_flags.value }}"
+                     class="form-control form-control-sm bg-light"
+                     readonly>
+              <small class="text-muted">Ce champ est automatiquement rempli selon le score IA et la détection de plagiat/NSFW.</small>
+              {% if form.ai_flags.errors %}
+                <div class="text-danger small">{{ form.ai_flags.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- NSFW & Anti-Plagiat Checkboxes -->
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="nsfwCheck" disabled>
+              <label class="form-check-label fw-bold" for="nsfwCheck">NSFW détecté</label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="plagiarismCheck" disabled>
+              <label class="form-check-label fw-bold" for="plagiarismCheck">Plagiat détecté</label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-end gap-3 mt-4">
+          <a href="{% url 'moderation:report_list' %}" class="btn btn-outline-secondary">Annuler</a>
+          <button type="submit" class="btn btn-primary fw-bold">
+            {% if report %}Mettre à jour{% else %}Créer{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- === JS: Validation + AI Logic === -->
+<!-- Buttons -->
+<div class="d-flex justify-content-end gap-3 mt-4">
+    <a href="{% url 'moderation:report_list' %}" class="btn btn-outline-secondary">Annuler</a>
+    <button type="button" id="verifyAIButton" class="btn btn-info fw-bold">
+        Vérifier AI
+    </button>
+    <button type="submit" class="btn btn-primary fw-bold">
+        {% if report %}Mettre à jour{% else %}Créer{% endif %}
+    </button>
+</div>
+
+<script>
+verifyBtn.addEventListener('click', async () => {
+    const title = titleInput.value.trim();
+    const url = urlInput.value.trim();
+    const description = descInput.value.trim();
+
+    try {
+        const response = await fetch("{% url 'moderation:verify_ai' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({ title, url, description })
+        });
+
+        const data = await response.json();
+
+        if(data.error){
+            alert("Erreur AI : " + data.error);
+            return;
+        }
+
+        aiConfInput.value = data.ai_confidence.toFixed(2);
+        aiFlagsInput.value = data.ai_flags.join(", ") || "Aucun tag détecté";
+        nsfwCheck.checked = data.is_nsfw;
+        plagCheck.checked = data.is_plagiarism;
+
+        alert("Vérification AI terminée !");
+    } catch (err) {
+        console.error(err);
+        alert("Erreur lors de la vérification AI");
+    }
+});
+
+</script>
+
+{% endblock %}

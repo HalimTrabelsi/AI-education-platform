@@ -1,0 +1,208 @@
+{% extends "moderation/base.html" %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="fw-bold mb-1">Tableau de bord qualité des ressources</h1>
+      <p class="text-muted mb-0">Suivi des signalements avec détection AI, plagiat et contenu NSFW.</p>
+    </div>
+    <div>
+      <a href="{% url 'moderation:report_create' %}" class="btn btn-primary me-2">+ Nouveau signalement</a>
+      <a href="{% url 'moderation:export_reports_pdf' %}" class="btn btn-outline-secondary">Export PDF</a>
+    </div>
+  </div>
+
+  <!-- DASHBOARD CARDS -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-2">
+      <div class="card text-center p-3 shadow-sm border-0">
+        <h6 class="text-muted">Total Signalements</h6>
+        <h3 class="fw-bold text-primary" id="card-total">—</h3>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card text-center p-3 shadow-sm border-0">
+        <h6 class="text-muted">Plagiat</h6>
+        <h3 class="fw-bold text-danger" id="card-plagiarism">—</h3>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <div class="card text-center p-3 shadow-sm border-0">
+        <h6 class="text-muted">NSFW</h6>
+        <h3 class="fw-bold text-warning" id="card-nsfw">—</h3>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center p-3 shadow-sm border-0">
+        <h6 class="text-muted">Tags AI uniques</h6>
+        <h3 class="fw-bold text-info" id="card-tags">—</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH & SORT -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <input type="text" id="searchBox" class="form-control w-50 me-2" placeholder="Rechercher un signalement...">
+    <select id="sortOrder" class="form-select w-auto">
+      <option value="asc">A → Z</option>
+      <option value="desc">Z → A</option>
+    </select>
+  </div>
+
+  <!-- REPORT TABLE -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Titre</th>
+            <th>Signalé par</th>
+            <th>Plagiat</th>
+            <th>NSFW</th>
+            <th>Score IA</th>
+            <th>Tags AI</th>
+            <th>Risque</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="reportBody">
+          <tr><td colspan="8" class="text-center py-4 text-muted">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer text-center">
+      <ul class="pagination justify-content-center" id="pagination"></ul>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-light">
+      <h5 class="mb-0 fw-semibold">Analyse en temps réel</h5>
+    </div>
+    <div class="card-body">
+      <canvas id="moderationChart" height="80"></canvas>
+      <small class="text-muted">Mise à jour automatique toutes les 5 secondes.</small>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const searchBox = document.getElementById('searchBox');
+  const sortOrder = document.getElementById('sortOrder');
+  const reportBody = document.getElementById('reportBody');
+  const pagination = document.getElementById('pagination');
+  let chart = null;
+
+  function escapeHtml(str){ 
+    if(!str) return ''; 
+    return str.replace(/[&<>"'`=\/]/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;","/":"&#x2F;","`":"&#x60","=":"&#x3D"
+    }[s])); 
+  }
+
+  function loadReports(page=1){
+    const q = encodeURIComponent(searchBox.value);
+    const s = encodeURIComponent(sortOrder.value);
+
+    fetch("{% url 'moderation:report_data' %}?q="+q+"&sort="+s+"&page="+page)
+    .then(r=>r.json())
+    .then(data=>{
+      // TABLE BODY
+      if(!data.reports.length){
+        reportBody.innerHTML=`<tr><td colspan="8" class="text-center py-4 text-muted">Aucun signalement trouvé.</td></tr>`;
+      } else {
+        reportBody.innerHTML = data.reports.map(r=>{
+          const aiTags = [];
+          if (r.ai_confidence > 0.4) aiTags.push("Signalements");
+          if (r.is_plagiarism) aiTags.push("anti-plagiat");
+          if (r.is_nsfw || r.ai_confidence > 0.55) aiTags.push("détection IA de triche / NSFW");
+
+          const flagsHTML = aiTags.length ? aiTags.map(t=>`<span class="badge bg-info me-1">${t}</span>`).join('') : '<span class="text-muted">Aucun</span>';
+          const aiClass = r.ai_confidence > 0.7 ? 'bg-danger text-white' :
+                          r.ai_confidence > 0.4 ? 'bg-warning text-dark' : 'bg-secondary text-muted';
+          const riskLabel = r.ai_confidence >= 0.7 ? 'Risque Élevé' : 'Risque Faible';
+          const riskClass = r.ai_confidence >= 0.7 ? 'bg-danger' : 'bg-success';
+
+          return `<tr>
+            <td>${escapeHtml(r.title)}</td>
+            <td>${escapeHtml(r.flagged_by)}</td>
+            <td>${r.is_plagiarism ? '<span class="badge bg-danger">Oui</span>' : '<span class="badge bg-success">Non</span>'}</td>
+            <td>${r.is_nsfw ? '<span class="badge bg-warning text-dark">Oui</span>' : '<span class="badge bg-success">Non</span>'}</td>
+            <td><span class="badge ${aiClass}">${parseFloat(r.ai_confidence).toFixed(2)}</span></td>
+            <td>${flagsHTML}</td>
+            <td><span class="badge ${riskClass}">${riskLabel}</span></td>
+            <td>
+              <a href="/moderation/report/${r.id}/edit/" class="btn btn-sm btn-outline-primary">Modifier</a>
+              <a href="/moderation/report/${r.id}/delete/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Confirmer la suppression ?')">Supprimer</a>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      // PAGINATION
+      let html='';
+      html += data.has_previous?`<li class="page-item"><a class="page-link" href="#" data-page="${data.page_number-1}">Précédent</a></li>`:`<li class="page-item disabled"><span class="page-link">Précédent</span></li>`;
+      for(let i=1;i<=data.num_pages;i++){ html+=`<li class="page-item ${i===data.page_number?'active':''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`; }
+      html += data.has_next?`<li class="page-item"><a class="page-link" href="#" data-page="${data.page_number+1}">Suivant</a></li>`:`<li class="page-item disabled"><span class="page-link">Suivant</span></li>`;
+      pagination.innerHTML=html;
+
+      fetchStats();
+    });
+  }
+
+  function fetchStats(){
+    fetch("{% url 'moderation:report_stats' %}")
+    .then(r=>r.json())
+    .then(data=>{
+      document.getElementById('card-total').innerText = data.total;
+      document.getElementById('card-plagiarism').innerText = data.plagiarism_count;
+      document.getElementById('card-nsfw').innerText = data.nsfw_count;
+      document.getElementById('card-tags').innerText = data.unique_tags;
+
+      const ctx = document.getElementById('moderationChart').getContext('2d');
+      if(chart) chart.destroy();
+      chart = new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels:['Plagiat','NSFW'],
+          datasets:[{
+            label:'Signalements',
+            data:[data.plagiarism_count,data.nsfw_count],
+            backgroundColor:['#dc3545','#ffc107'],
+            borderRadius:4,
+            barPercentage:0.4,
+            categoryPercentage:0.5
+          }]
+        },
+        options:{
+          responsive:true,
+          plugins:{legend:{display:false}},
+          scales:{
+            y:{beginAtZero:true,ticks:{precision:0}},
+            x:{grid:{drawTicks:false}}
+          }
+        }
+      });
+    });
+  }
+
+  pagination.addEventListener('click', e => { 
+    if(e.target.dataset.page){ 
+      e.preventDefault(); 
+      loadReports(parseInt(e.target.dataset.page)); 
+    }
+  });
+  searchBox.addEventListener('input', ()=> loadReports(1));
+  sortOrder.addEventListener('change', ()=> loadReports(1));
+
+  loadReports();
+  setInterval(()=>loadReports(),5000);
+});
+</script>
+{% endblock %}

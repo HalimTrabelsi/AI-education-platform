@@ -448,11 +448,16 @@ def generate_weekly_summary(request):
                 messages.error(request, '❌ Erreur d\'authentification.')
                 return redirect('accounts:login')
             
+            # ✅ CORRECTION: Retirer ai_quality_score du dictionnaire pour l'ajouter séparément
+            ai_score = summary_data.pop('ai_quality_score', None)  # Retirer du dict
+            ai_tone_value = summary_data.pop('ai_tone', None)      # Retirer du dict
+            
+            # Créer l'objet sans duplication
             summary_item = FeedItem(
-                **summary_data,
+                **summary_data,  # Spread le reste des données
                 author_id=str(user_id),
-                ai_quality_score=8.0,  # Score élevé pour contenu généré
-                ai_tone='informatif'
+                ai_quality_score=ai_score or 8.0,  # Ajouter séparément
+                ai_tone=ai_tone_value or 'informatif'  # Ajouter séparément
             )
             summary_item.save()
             
@@ -472,6 +477,8 @@ def generate_weekly_summary(request):
     except Exception as e:
         messages.error(request, f'❌ Erreur lors de la génération: {str(e)}')
         print(f"ERROR generate_weekly_summary: {e}")
+        import traceback
+        traceback.print_exc()
         return redirect('feed:list')
 
 
