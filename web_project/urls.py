@@ -1,6 +1,7 @@
+from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('accounts/', include('accounts.urls')),
-    # ex: path('', dashboard_view, name='dashboard'),
+    path('admin/', admin.site.urls),
+    path('moderation/', include('moderation.urls')),  # Mod CRUD
 ]

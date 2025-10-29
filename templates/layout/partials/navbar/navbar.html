@@ -28,64 +28,53 @@
       </li>
 
       <!-- User -->
-      {% if request.user.is_authenticated %}
-        <li class="nav-item navbar-dropdown dropdown-user dropdown">
-          <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
-            <div class="avatar avatar-online">
-              {% with avatar=request.user.profile_image_url %}
-                <img src="{{ avatar }}" alt="Avatar" class="rounded-circle" />
-              {% endwith %}
-            </div>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <div class="dropdown-item">
-                <div class="d-flex">
-                  <div class="flex-shrink-0 me-3">
-                    <div class="avatar avatar-online">
-                      {% with avatar=request.user.profile_image_url %}
-                        <img src="{{ avatar }}" alt="Avatar" class="w-px-40 h-auto rounded-circle" />
-                      {% endwith %}
-                    </div>
-                  </div>
-                  <div class="flex-grow-1">
-                    <h6 class="mb-0">{{ request.user.display_name }}</h6>
-                    <small class="text-body-secondary">{{ request.user.role_label }}</small>
+      <li class="nav-item navbar-dropdown dropdown-user dropdown">
+        <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+          <div class="avatar avatar-online">
+            <img src="{% static 'img/avatars/1.png' %}" alt class="rounded-circle" />
+          </div>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li>
+            <a class="dropdown-item" href="javascript:void(0);">
+              <div class="d-flex">
+                <div class="flex-shrink-0 me-3">
+                  <div class="avatar avatar-online">
+                    <img src="{% static 'img/avatars/1.png' %}" alt class="w-px-40 h-auto rounded-circle" />
                   </div>
                 </div>
+                <div class="flex-grow-1">
+                  <h6 class="mb-0">John Doe</h6>
+                  <small class="text-body-secondary">Admin</small>
+                </div>
               </div>
-            </li>
-            <li><div class="dropdown-divider my-1"></div></li>
-            <li>
-              <a class="dropdown-item" href="{% url 'pages-account-settings-account' %}">
-                <i class="icon-base bx bx-user icon-md me-3"></i><span>My Profile</span>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="javascript:void(0);">
-                <i class="icon-base bx bx-cog icon-md me-3"></i><span>Settings</span>
-              </a>
-            </li>
-            <li>
-              <a class="dropdown-item" href="{% url 'chat:list' %}">
-                <i class="icon-base bx bx-message-rounded icon-md me-3"></i><span>Messagerie</span>
-              </a>
-            </li>
-            <li>
-              <div class="dropdown-divider my-1"></div>
-            </li>
-            <li>
-              <a class="dropdown-item" href="{% url 'accounts:logout' %}">
-                <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Log Out</span>
-              </a>
-            </li>
-          </ul>
-        </li>
-      {% else %}
-        <li class="nav-item">
-          <a class="btn btn-primary" href="{% url 'accounts:login' %}">Se connecter</a>
-        </li>
-      {% endif %}
+            </a>
+          </li>
+          <li>
+            <div class="dropdown-divider my-1"></div>
+          </li>
+          <li>
+            <a class="dropdown-item" href="javascript:void(0);"> <i class="icon-base bx bx-user icon-md me-3"></i><span>My Profile</span> </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="javascript:void(0);"> <i class="icon-base bx bx-cog icon-md me-3"></i><span>Settings</span> </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="javascript:void(0);">
+              <span class="d-flex align-items-center align-middle">
+                <i class="flex-shrink-0 icon-base bx bx-credit-card icon-md me-3"></i><span class="flex-grow-1 align-middle">Billing Plan</span>
+                <span class="flex-shrink-0 badge rounded-pill bg-danger">4</span>
+              </span>
+            </a>
+          </li>
+          <li>
+            <div class="dropdown-divider my-1"></div>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'accounts:logout' %}"> <i class="icon-base bx bx-power-off icon-md me-3"></i><span>Log Out</span> </a>
+          </li>
+        </ul>
+      </li>
       <!--/ User -->
     </ul>
   </div>

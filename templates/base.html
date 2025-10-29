@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Moderation Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { padding: 20px; background-color: #f8f9fa; }
+        .btn-blue { background-color: #0d6efd; color: white; }
+        .btn-blue:hover { background-color: #0b5ed7; }
+        .badge-plagiarism { background-color: #dc3545; }
+        .badge-nsfw { background-color: #ffc107; color: #212529; }
+        .ai-low { color: green; }
+        .ai-medium { color: orange; }
+        .ai-high { color: red; }
+    </style>
+</head>
+<body>
+<div class="container">
+    {% block content %}{% endblock %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

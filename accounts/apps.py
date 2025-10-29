@@ -1,11 +1,8 @@
 from django.apps import AppConfig
+def ready(self):
+    import accounts.signals
 
 
 class AccountsConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "accounts"
-
-    def ready(self):
-        from . import auth  # noqa: F401
-        from . import signals  # noqa: F401
-
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'accounts'

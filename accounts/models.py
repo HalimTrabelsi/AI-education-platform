@@ -1,13 +1,4 @@
-from datetime import datetime
-
-from mongoengine import (
-    BooleanField,
-    DateTimeField,
-    DictField,
-    Document,
-    EmailField,
-    StringField,
-)
+from mongoengine import Document, StringField, EmailField
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -18,14 +9,9 @@ class User(Document):
     email = EmailField(required=True, unique=True)
     password_hash = StringField(required=True)
     role = StringField(
-        choices=["student", "teacher", "moderator", "admin"],
+        choices=["student", "teacher", "moderator"],
         default="student",
     )
-    profile_image = StringField()
-    is_blocked = BooleanField(default=False)
-    created_at = DateTimeField(default=datetime.utcnow)
-    last_login_at = DateTimeField()
-    last_password_change_at = DateTimeField()
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"
@@ -44,7 +30,7 @@ class User(Document):
 
     @property
     def is_active(self) -> bool:
-        return not self.is_blocked
+        return True
 
     @property
     def is_anonymous(self) -> bool:
@@ -52,11 +38,11 @@ class User(Document):
 
     @property
     def is_staff(self) -> bool:
-        return self.role in {"moderator", "admin"}
+        return self.role == "moderator"
 
     @property
     def is_superuser(self) -> bool:
-        return self.role == "admin"
+        return self.role == "moderator"
 
     @property
     def pk(self) -> str:
@@ -70,13 +56,3 @@ class User(Document):
 
     def get_session_auth_hash(self) -> str:
         return self.password_hash
-
-
-class AdminAuditLog(Document):
-    meta = {"collection": "admin_audit_log"}
-
-    admin_id = StringField(required=True)
-    target_user_id = StringField()
-    action = StringField(required=True)
-    metadata = DictField()
-    created_at = DateTimeField(default=datetime.utcnow)

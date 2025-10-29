@@ -3,77 +3,57 @@ URL configuration for web_project project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
-
-from accounts.views import home_redirect_view
+from django.urls import path, include
 from web_project.views import SystemView
-from django.conf import settings          
-from django.conf.urls.static import static
 
 urlpatterns = [
+    # Admin
     path("admin/", admin.site.urls),
-    path("accounts/", include("accounts.urls")),
-    path("", home_redirect_view, name="index"),
-    # Dashboard urls
-    path("dashboard/", include("apps.dashboards.urls")),
 
-    # layouts urls
+    # Accounts
+    path("accounts/", include("accounts.urls")),
+
+    # Dashboard
+    path("", include("apps.dashboards.urls")),
+
+    # Layouts
     path("", include("apps.layouts.urls")),
 
-    # Pages urls
+    # Pages
     path("", include("apps.pages.urls")),
 
-    # Auth urls
+    # Authentication
     path("", include("apps.authentication.urls")),
 
-    # Card urls
+    # Cards
     path("", include("apps.cards.urls")),
 
-    # UI urls
+    # UI
     path("", include("apps.ui.urls")),
 
-    # Extended UI urls
+    # Extended UI
     path("", include("apps.extended_ui.urls")),
 
-    # Icons urls
+    # Icons
     path("", include("apps.icons.urls")),
 
-    # Forms urls
+    # Forms
     path("", include("apps.forms.urls")),
 
-    # FormLayouts urls
+    # Form Layouts
     path("", include("apps.form_layouts.urls")),
 
-    # Tables urls
+    # Tables
     path("", include("apps.tables.urls")),
 
-    # Chat urls
-    path("chat/", include(("chat.urls", "chat"), namespace="chat")),
-
-    path('api/', include('resources.urls')),
-
+    # Moderation (Reports CRUD)
+    path("moderation/", include("moderation.urls", namespace="moderation")),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-handler404 = SystemView.as_view(template_name="pages_misc_error.html", status=404)
+# Custom error handlers
 handler400 = SystemView.as_view(template_name="pages_misc_error.html", status=400)
+handler404 = SystemView.as_view(template_name="pages_misc_error.html", status=404)
 handler500 = SystemView.as_view(template_name="pages_misc_error.html", status=500)
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

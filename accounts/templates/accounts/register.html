@@ -23,7 +23,7 @@
 
             <h4 class="mb-1">Creer un compte</h4>
             <p class="mb-6">Rejoignez la plateforme et choisissez votre role.</p>
-            <form method="post" enctype="multipart/form-data" novalidate class="mb-6">
+            <form method="post" novalidate class="mb-6">
               {% csrf_token %}
               {{ form.non_field_errors }}
 
@@ -101,20 +101,6 @@
                 <div class="text-danger small mt-1">
                   {% if form.role.errors %}
                     {{ form.role.errors|join:", " }}
-                  {% else %}
-                    &nbsp;
-                  {% endif %}
-                </div>
-              </div>
-
-              <div class="mb-6">
-                <label class="form-label" for="{{ form.profile_image.id_for_label }}">
-                  {{ form.profile_image.label }}
-                </label>
-                {{ form.profile_image }}
-                <div class="text-danger small mt-1">
-                  {% if form.profile_image.errors %}
-                    {{ form.profile_image.errors|join:", " }}
                   {% else %}
                     &nbsp;
                   {% endif %}

@@ -10,30 +10,19 @@
 
 {% block content %}
   <div class="container-xxl">
-    <div class="authentication-wrapper authentication-cover">
-      <div class="authentication-inner row">
-        <div class="d-none d-lg-flex col-lg-6 align-items-center position-relative p-5">
-          <div class="flex-grow-1 text-center">
-            <img
-              src="{% static 'img/illustrations/page-misc-error-light.png' %}"
-              class="img-fluid authentication-cover-img"
-              alt="Illustration connexion"
-            />
-          </div>
-        </div>
-
-        <div class="d-flex col-12 col-lg-6 align-items-center authentication-bg p-sm-6 p-4">
-          <div class="w-px-400 mx-auto">
-            <div class="app-brand mb-6">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+      <div class="authentication-inner">
+        <div class="card px-sm-6 px-0">
+          <div class="card-body">
+            <div class="app-brand justify-content-center mb-6">
               <a href="{% url 'index' %}" class="app-brand-link gap-2">
                 <span class="app-brand-logo demo">{% include 'partials/logo.html' %}</span>
                 <span class="app-brand-text demo text-heading fw-bold">{% get_theme_variables 'template_name' %}</span>
               </a>
             </div>
 
-            <h4 class="mb-1">Bienvenue sur  LearnHub &#128075;</h4>
-            <p class="mb-6">Connectez-vous &agrave; votre compte pour commencer l'aventure.</p>
-
+            <h4 class="mb-1">Ravi de vous revoir &#128075;</h4>
+            <p class="mb-6">Connectez-vous pour acc&eacute;der &agrave; votre espace.</p>
             <form method="post" novalidate class="mb-6">
               {% csrf_token %}
               {{ form.non_field_errors }}
@@ -69,16 +58,6 @@
                     &nbsp;
                   {% endif %}
                 </div>
-              </div>
-
-              <div class="d-flex justify-content-between flex-wrap gap-2 mb-6">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="remember-me">
-                  <label class="form-check-label" for="remember-me">
-                    Se souvenir de moi
-                  </label>
-                </div>
-                <a href="#" class="text-body">Mot de passe oubli&eacute; ?</a>
               </div>
 
               <div class="mb-6">

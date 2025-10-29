@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <!-- PAGE HEADER -->
+    <div class="mb-5 text-center">
+        <h2 class="fw-bold mb-1">{% if report %}Modifier le signalement{% else %}Nouveau signalement{% endif %}</h2>
+        <p class="text-muted fs-6">
+            {% if report %}
+                Modifiez les informations du signalement et ajustez les indicateurs AI ou les tags.
+            {% else %}
+                Créez un nouveau signalement pour suivre la qualité des ressources.
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- FORM CARD -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="row g-4">
+
+                    <!-- LEFT COLUMN -->
+                    <div class="col-md-6">
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">Titre</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}<div class="text-danger small">{{ form.title.errors }}</div>{% endif %}
+                        </div>
+
+                        <!-- Resource URL -->
+                        <div class="mb-3">
+                            <label for="{{ form.resource_url.id_for_label }}" class="form-label fw-bold">URL de la ressource</label>
+                            {{ form.resource_url }}
+                            {% if form.resource_url.errors %}<div class="text-danger small">{{ form.resource_url.errors }}</div>{% endif %}
+                        </div>
+
+                        <!-- Flagged By -->
+                        <div class="mb-3">
+                            <label for="{{ form.flagged_by.id_for_label }}" class="form-label fw-bold">Signalé par</label>
+                            {{ form.flagged_by }}
+                            {% if form.flagged_by.errors %}<div class="text-danger small">{{ form.flagged_by.errors }}</div>{% endif %}
+                        </div>
+
+                        <!-- AI Confidence -->
+                        <div class="mb-3">
+                            <label for="{{ form.ai_confidence.id_for_label }}" class="form-label fw-bold">Score IA (0.0 - 1.0)</label>
+                            {{ form.ai_confidence }}
+                            {% if form.ai_confidence.errors %}<div class="text-danger small">{{ form.ai_confidence.errors }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN -->
+                    <div class="col-md-6">
+                        <!-- Description on top -->
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">Description</label>
+                            <input type="text" name="{{ form.description.name }}" value="{{ form.description.value }}" class="form-control form-control-sm">
+                            {% if form.description.errors %}<div class="text-danger small">{{ form.description.errors }}</div>{% endif %}
+                        </div>
+
+                        <!-- AI Flags -->
+                        <div class="mb-3">
+                            <label for="{{ form.ai_flags.id_for_label }}" class="form-label fw-bold">Tags IA</label>
+                            {{ form.ai_flags }}
+                            <small class="text-muted">Séparez plusieurs tags par des virgules.</small>
+                            {% if form.ai_flags.errors %}<div class="text-danger small">{{ form.ai_flags.errors }}</div>{% endif %}
+                        </div>
+
+                        <!-- Plagiarism -->
+                        <div class="form-check mb-2">
+                            {{ form.is_plagiarism }}
+                            <label for="{{ form.is_plagiarism.id_for_label }}" class="form-check-label fw-bold">Plagiat détecté</label>
+                        </div>
+
+                        <!-- NSFW -->
+                        <div class="form-check mb-2">
+                            {{ form.is_nsfw }}
+                            <label for="{{ form.is_nsfw.id_for_label }}" class="form-check-label fw-bold">NSFW / Contenu sensible</label>
+                        </div>
+
+                       
+                    </div>
+
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-end gap-3 mt-4">
+                    <a href="{% url 'moderation:report_list' %}" class="btn btn-outline-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary fw-bold">{% if report %}Mettre à jour{% else %}Créer{% endif %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap validation -->
+<script>
+(function () {
+  'use strict'
+  const forms = document.querySelectorAll('.needs-validation')
+  Array.from(forms).forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+      form.classList.add('was-validated')
+    }, false)
+  })
+})();
+</script>
+{% endblock %}

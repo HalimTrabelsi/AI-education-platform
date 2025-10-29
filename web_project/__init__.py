@@ -21,14 +21,6 @@ class TemplateLayout:
             }
         )
 
-        request = getattr(self, "request", None)
-        if request and request.session.get("_impersonator_id"):
-            context["is_impersonating"] = True
-            display_name = getattr(request.user, "display_name", None) or getattr(
-                request.user, "username", ""
-            ) or getattr(request.user, "email", "")
-            context["impersonated_user_name"] = display_name
-
         # Map context variables
         TemplateHelper.map_context(context)
 

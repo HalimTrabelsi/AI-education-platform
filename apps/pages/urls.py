@@ -1,6 +1,4 @@
 from django.urls import path
-
-from accounts.views import profile_edit_view
 from .views import PagesView
 from .views_misc import MiscPagesView
 
@@ -9,7 +7,7 @@ from .views_misc import MiscPagesView
 urlpatterns = [
     path(
         "pages/account_settings/account/",
-        profile_edit_view,
+        PagesView.as_view(template_name="pages_account_settings_account.html"),
         name="pages-account-settings-account",
     ),
     path(
