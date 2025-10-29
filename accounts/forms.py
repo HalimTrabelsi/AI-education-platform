@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -65,7 +65,7 @@ class RegisterForm(StyledFormMixin, forms.Form):
     role = forms.ChoiceField(
         label="Role",
         error_messages={"required": "Veuillez choisir un role."},
-        choices=ROLE_CHOICES,
+        choices=[c for c in ROLE_CHOICES if c[0] != 'admin'],
         widget=forms.Select(),
     )
     profile_image = forms.ImageField(
@@ -306,3 +306,4 @@ class ForgotPasswordForm(StyledFormMixin, forms.Form):
         self.user.last_password_change_at = datetime.utcnow()
         self.user.save()
         return self.user
+
