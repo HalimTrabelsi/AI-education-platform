@@ -14,3 +14,5 @@ mongoengine==0.29.1
 django-widget-tweaks==1.5.0
 pdf2image==1.17.0
 requests==2.31.0
+google-generativeai==0.3.0  # ← AJOUTEZ CETTE LIGNE
+
