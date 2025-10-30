@@ -1,113 +1,276 @@
-<p align="center"></p>
 
 <p align="center">
-   <a href="https://themeselection.com/item/sneat-dashboard-free-django/" target="_blank">
-      <img src="https://cdn.themeselection.com/ts-assets/sneat/logo/logo.png" alt="sneat-logo" width="60px" height="auto">
-   </a>
+  <a href="https://themeselection.com/item/sneat-dashboard-free-django/" target="_blank">
+    <img src="https://cdn.themeselection.com/ts-assets/sneat/logo/logo.png" alt="sneat-logo" width="60px" height="auto">
+  </a>
 </p>
 
 <h1 align="center">
-   <a href="https://themeselection.com/item/sneat-free-bootstrap-html-dajngo-admin-template/" target="_blank" align="center">
-     Sneat - Free Bootstrap 5 HTML Django Admin Template
-   </a>
+  <a href="#" target="_blank">
+    AI-Learning — Réseau social d’apprentissage & révision assistée par IA
+  </a>
 </h1>
 
-<p align="center">Most Powerful & Comprehensive Free Django HTML Admin Dashboard Template built for developers!</p>
+<p align="center">
+Plateforme éducative intelligente intégrant IA, modération, et ressources partagées — construite sur <strong>Django + MongoDB</strong> et propulsée par <strong>Sneat Admin Template</strong>.
+</p>
 
 <p align="center">
-   <a href="https://github.com/themeselection/materio-vuetify-vuejs-admin-template-free/blob/main/LICENSE">
-      <img src="https://img.shields.io/github/license/themeselection/sneat-bootstrap-html-django-admin-template-free" alt="license">
-   </a>
-   <a href="https://github.com/themeselection/sneat-bootstrap-html-django-admin-template-free/releases">
+  <a href="https://github.com/themeselection/sneat-bootstrap-html-django-admin-template-free/releases">
     <img src="https://img.shields.io/github/release/themeselection/sneat-bootstrap-html-django-admin-template-free.svg" alt="GitHub release">
   </a>
-   <a href="https://x.com/Theme_Selection" target="_blank">
-      <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/Theme_Selection">
-   </a>
+  <a href="https://github.com/themeselection/sneat-bootstrap-html-django-admin-template-free/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/themeselection/sneat-bootstrap-html-django-admin-template-free" alt="license">
+  </a>
+  <a href="https://x.com/Theme_Selection" target="_blank">
+    <img alt="Twitter Follow" src="https://img.shields.io/twitter/follow/Theme_Selection">
+  </a>
 </p>
 
 <kbd>[![Sneat - Bootstrap 5 HTML Django Admin Template Demo Screenshot](https://cdn.themeselection.com/ts-assets/sneat/sneat-bootstrap-django-admin-template-free/banner/banner.png)](https://themeselection.com/item/sneat-dashboard-free-django/)</kbd>
 
-## Introduction 🚀
+## 🚀 Introduction
 
-If you’re a developer looking for the most Powerful & comprehensive [**Free Bootstrap 5 HTML Django Admin Template**](https://themeselection.com/item/sneat-free-bootstrap-html-django-admin-template/) built for developers, rich with features, and highly customizable look no further than Sneat. We’ve followed the highest industry standards to bring you the very best admin template that is not only fast and easy to use but highly scalable. Offering ultimate convenience and flexibility, you’ll be able to build whatever application you want with very little hassle.
+**AI-Learning** est une plateforme web intelligente permettant aux étudiants et enseignants de **partager, réviser et évaluer** leurs ressources pédagogiques dans un environnement social, assisté par IA.
+Basée sur **Sneat (Django Admin Template)**, elle combine ergonomie professionnelle, puissance IA et collaboration académique.
 
-Build premium quality applications with ease. Use our innovative **[Django admin template](https://themeselection.com/item/category/django-admin-template/)** to create eye-catching, high-quality WebApps. Your apps will be completely responsive, ensuring they’ll look stunning and function flawlessly on desktops, tablets, and mobile devices.
+---
 
-[View Demo](https://demos.themeselection.com/sneat-html-django-admin-template-free/)
+## 🎯 Problème à résoudre
 
-## Installation ⚒️
+Les étudiants dispersent leurs cours, TD et annales entre WhatsApp, Google Drive et PDF.
+Résultat : recherche lente, qualité variable, révision peu personnalisée.
 
-Please [visit](https://demos.themeselection.com/sneat-bootstrap-html-admin-template/documentation/django-init-installation.html) our docs for installation guide.
+---
 
-## What's Included 📦
+## 💡 Proposition de valeur
 
-- Dashboard
-  - Analytics
-- Layouts
-  - Without menu
-  - Without Navbar
-  - Container
-  - Fluid
-  - Blank
-- Pages
-  - Account Settings
-  - Login
-  - Register
-  - Forgot Password
-  - Error
-  - Under Maintenance
-- Cards
-- User Interface
-  - **All Bootstrap Components**
-- Extended UI
-  - Perfect Scrollbar
-  - Text Divider
-- Boxicon
-- Form Elements
-  - Basic Inputs
-  - Input Groups
-- Form Layout
-  - Vertical Form
-  - Horizontal Form
-- Tables
+Une **plateforme unique** pour partager, chercher et réviser avec IA :
 
-## What's in Premium Version 💎
+* 🔍 Recherche sémantique sur polycopiés, vidéos et TD
+* 🧠 Résumés “prêts à réviser”
+* 🎯 Génération de QCM et quiz adaptatifs
+* 📰 Fil d’actualité pédagogique personnalisé
+* 🛡️ Détection du plagiat, triche et contenu NSFW
 
-| Sneat Free Version                                                              | Sneat Premium Version                                                                                                                                                                                                                                                                |
-| ------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Demo](https://demos.themeselection.com/sneat-html-django-admin-template-free/) | [Demo](https://demos.themeselection.com/sneat-html-django-admin-template/demo-1/login/)                                                                                                                                                                                              |
-| [Download](https://themeselection.com/item/sneat-dashboard-free-django/)        | [Purchase](https://themeselection.com/item/sneat-bootstrap-django-admin-template/)                                                                                                                                                                                                   |
-| Single vertical Menu                                                            | Vertical Menu + Horizontal Menu                                                                                                                                                                                                                                                      |
-| Simple Light Style                                                              | Light, Dark & System Style                                                                                                                                                                                                                                                           |
-| Default Theme                                                                   | Default, Semi Dark & Bordered Themes                                                                                                                                                                                                                                                 |
-| Fixed Layout(Menu)                                                              | Fixed & Static Layout(Menu)                                                                                                                                                                                                                                                          |
-| 1 Simple Dashboard                                                              | 5 Niche Dashboards                                                                                                                                                                                                                                                                   |
-| -                                                                               | Multiple Ready to use Application like Email, Chat, Calendar, Kanban, eCommerce, Academy, Logistics, Invoice, Users List, Users View, Roles and Permission etc.                                                                                                                      |
-| -                                                                               | **Django Transaction CRUD Application** that only allows admin and user with permission to add, update, and delete records.                                                                                                                                                          |
-| -                                                                               | **Integrated User Authentication** includes functionalities like user login and registration, along with features for password reset and email verification utilizing EmailMessage. Furthermore, it incorporates both role-based access control and permission-based access control. |
-| Simple Form Elements                                                            | Advance form elements, validation & form wizard                                                                                                                                                                                                                                      |
-| Basic Cards                                                                     | Basic, Advance , Statistics, Analytics, Gamifications and Actions Cards                                                                                                                                                                                                              |
-| Basic User Interface(Components)                                                | Advance and Custom User Interfaces(Components)                                                                                                                                                                                                                                       |
-| Two Extended Components                                                         | Twelve Ready to use Extended Components                                                                                                                                                                                                                                              |
-| -                                                                               | Quick Search - Quickly navigate between pages (w/ hotkey support)                                                                                                                                                                                                                    |
-| Basic Pages                                                                     | Authentication Pages in 2 Variants + Ready to use pages like User Profile, Account Settings,FAQ, Help Center, Pricing, Misc etc.                                                                                                                                                     |
-| -                                                                               | 3D Characters + Illustrations                                                                                                                                                                                                                                                        |
-| Basic tables                                                                    | Advanced & Data tables                                                                                                                                                                                                                                                               |
-| -                                                                               | Quick customization using theme config file                                                                                                                                                                                                                                          |
-| -                                                                               | Leaflet Maps                                                                                                                                                                                                                                                                         |
-| 1 Chart Library                                                                 | 2 Chart Libraries                                                                                                                                                                                                                                                                    |
-| -                                                                               | Multiple Navbar & Menu Options                                                                                                                                                                                                                                                       |
-| -                                                                               | Starter-kit                                                                                                                                                                                                                                                                          |
-| -                                                                               | **Localization support**                                                                                                                                                                                                                                                             |
-| -                                                                               | RTL Support                                                                                                                                                                                                                                                                          |
-| Regular Support                                                                 | Priority Support                                                                                                                                                                                                                                                                     |
-| Detailed Documentation                                                          | Detailed Documentation                                                                                                                                                                                                                                                               |
+---
 
-## Documentation 📜
+## 👥 Acteurs de la plateforme
 
-Check out our live [Documentation](https://demos.themeselection.com/sneat-bootstrap-html-admin-template/documentation/django-introduction.html)
+| Rôle                         | Description                                   |
+| ---------------------------- | --------------------------------------------- |
+| 🎓 Étudiant                  | Consulte, révise et publie des ressources     |
+| 🧑‍🏫 Enseignant/Tuteur      | Valide, corrige et publie des TD              |
+| 🧑‍💼 Modérateur pédagogique | Gère la qualité et la conformité des contenus |
+| 👨‍💻 Administrateur         | Supervise règles, filières et analytics       |
 
+---
+
+## 🧩 Modules (Apps Django)
+
+| Module                      | Description                                         | IA Intégrée                           |
+| --------------------------- | --------------------------------------------------- | ------------------------------------- |
+| **Identité & Profils**      | Gestion des comptes, filières, niveaux et objectifs | Suggestion d’intérêts et modules      |
+| **Ressources pédagogiques** | Upload PDF/vidéos, métadonnées, tags                | Résumé, extraction de formules, OCR   |
+| **Fil d’actualité IA**      | Contenus recommandés selon profil et programme      | Ranking multi-facteurs                |
+| **Quiz & Évaluation**       | QCM/QCU, questions ouvertes, parcours adaptatif     | Génération questions, feedback IA     |
+| **Modération & Intégrité**  | Signalements, anti-plagiat, détection triche/NSFW   | Analyse sémantique, scoring de risque |
+| **Recherche & Découverte**  | Recherche par concepts et similarité                | Embeddings vectoriels texte/vidéo     |
+
+---
+
+## ⚙️ Architecture technique
+
+**Backend :**
+
+* Django 5 + Django REST Framework
+* MongoDB + Atlas Search / Vector Search
+* Celery + Redis pour les tâches asynchrones
+* MinIO / S3 pour le stockage des médias
+
+**IA & NLP :**
+
+* Embeddings (E5 / Instructor)
+* Résumé de texte (LLM)
+* OCR (Tesseract)
+* Transcription audio (Whisper)
+* Anti-plagiat (similarité vectorielle)
+
+**Frontend :**
+
+* Sneat Django Admin Template (Bootstrap 5)
+* Responsive & modular UI
+
+---
+
+## 📊 KPIs Clés
+
+* ✅ Taux de réussite aux quiz
+* 🔁 Rétention à 7/30 jours
+* ⏱️ Temps de révision utile
+* 📘 Pourcentage de ressources validées
+* 🔍 Recherches sémantiques abouties
+
+---
+
+## 🧪 Stack & Outils
+
+| Domaine         | Outils                                 |
+| --------------- | -------------------------------------- |
+| Framework       | Django 5, Django REST Framework        |
+| Base de données | MongoDB (Atlas), MySQL (optionnel)     |
+| AI              | Transformers, Whisper, Instructor, OCR |
+| Frontend        |       Bootstrap Django Template        |
+| DevOps          | Docker, Jenkins, SonarQube, Nexus      |
+| Auth            | JWT / Django AllAuth                   |
+
+---
+
+## 🏗️ Installation ⚒️
+
+### 1️⃣ Cloner le dépôt
+
+```bash
+git clone https://github.com/votre-compte/ai-learning-platform.git
+cd ai-learning-platform
+```
+
+### 2️⃣ Créer un environnement virtuel
+
+**Linux / macOS :**
+
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+**Windows :**
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+### 3️⃣ Installer les dépendances
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4️⃣ Configurer les variables d’environnement
+
+```env
+MONGO_URI=<votre_URI_MongoDB>
+AWS_ACCESS_KEY=<votre_access_key>
+AWS_SECRET_KEY=<votre_secret_key>
+OPENAI_API_KEY=<votre_clef_IA>
+REDIS_URL=redis://localhost:6379
+MINIO_ENDPOINT=localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+DEBUG=True
+```
+
+### 5️⃣ Appliquer les migrations
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+### 6️⃣ Créer un superutilisateur Django
+
+```bash
+python manage.py createsuperuser
+```
+
+### 7️⃣ Lancer le serveur
+
+```bash
+python manage.py runserver
+```
+
+* Application : `http://127.0.0.1:8000/`
+* Admin : `http://127.0.0.1:8000/admin/`
+
+---
+
+## 🤖 Exemple de fonctionnalité IA
+
+
+##  Génération de QCM et quiz adaptatifs
+
+```python
+from ai_tools import summarize_pdf
+
+summary = summarize_pdf("uploads/chapitre2.pdf")
+print(summary)
+# → "Ce chapitre présente la loi normale, ses propriétés et son application..."
+```
+
+##  Recherche sémantique dans les documents
+
+```python
+from ai_tools import semantic_search
+
+results = semantic_search(
+    query="Loi de probabilité",
+    documents=["uploads/chapitre1.pdf", "uploads/chapitre2.pdf"]
+)
+for res in results:
+    print(res['document'], res['score'], res['snippet'])
+
+```
+##  Détection de plagiat et contenu NSFW
+
+```python
+from ai_tools import detect_plagiarism, detect_nsfw
+
+plagiarism_score = detect_plagiarism("uploads/td_etudiant.pdf")
+nsfw_flag = detect_nsfw("uploads/video_cours.mp4")
+
+print("Plagiat:", plagiarism_score, "NSFW:", nsfw_flag)
+
+```
+##  Transcription Vidéo
+
+```python
+from ai_tools import video
+
+transcript = transcribe_audio("uploads/coursvideo.mp4")
+print("Transcription:", transcript[:200])
+
+```
+##  Recommandation personnalisée de ressources
+
+```python
+from ai_tools import recommend_resources
+
+recommendations = recommend_resources(user_id=5)
+for r in recommendations:
+    print(r['title'], r['type'], r['link'])
+
+```
+
+##  Résumé intelligent de vidéos
+```python
+from ai_tools import summarize_video
+
+summary = summarize_video("uploads/cours_video.mp4")
+print("Résumé vidéo:", summary)
+
+```
+
+---
+
+## 🧰 Contribuer
+
+1. Fork du dépôt
+2. Créez une branche : `feature/ma-fonctionnalite`
+3. Commit & push vos changements
+4. Créez une Pull Request 🚀
+
+---
 ## Browser Support 🖥️
 
 ![chrome](https://github.com/nuxt/nuxt/assets/47495003/bbb6d7b0-2db6-4af4-abdc-a73de71dd287)
@@ -122,7 +285,7 @@ Check out our live [Documentation](https://demos.themeselection.com/sneat-bootst
 Contribution are always welcome and recommended! Here is how:
 
 - Fork the repository ([here is the guide](https://docs.github.com/en/get-started/quickstart/fork-a-repo)).
-- Clone to your machine `git clone https://github.com/themeselection/sneat-bootstrap-html-django-admin-template-free` Make your changes
+- Clone to your machine `git clone https://github.com/HalimTrabelsi/AI-education-platform` Make your changes
 - Create a pull request
 
 ### Contribution Requirements 🧰
@@ -170,36 +333,3 @@ For free products, enjoy community support via GitHub issues. Upgrade to Premium
    <a href="https://themeselection.com/item/sneat-vuetify-vuejs-laravel-admin-template/" target="_blank"><picture><source width="auto" height="74px" media="(prefers-color-scheme: dark)" srcset="https://github.com/microsoft/vscode/assets/47495003/20b6428e-3fa5-4f80-a389-9e4cd732c2de"><source width="auto" height="74px" media="(prefers-color-scheme: light)" srcset="https://github.com/microsoft/vscode/assets/47495003/3008d3eb-7b5b-4d9c-8563-837744a901da"><img width="auto" height="74px" alt="vue_laravel" src="https://github.com/microsoft/vscode/assets/47495003/3008d3eb-7b5b-4d9c-8563-837744a901da"></picture></img></a>&nbsp;&nbsp;
 </p>
 
-<!-- Add other pro variants here. You can get the logo URL from here: https://icones.js.org/collection/logos -->
-
-## Looking For Premium Admin Templates ?? 👀
-
-**[ThemeSelection](https://themeselection.com/)** provides Selected high quality, modern design, professional and easy-to-use **Fully Coded Dashboard Templates & UI Kits** to create your applications faster!
-
-- [Bootstrap Admin Templates](https://themeselection.com/item/category/admin-template-bootstrap/)
-- [VueJS Admin Templates](https://themeselection.com/item/category/vuejs-admin-templates/)
-- [Laravel Admin Templates](https://themeselection.com/item/category/laravel-admin-templates/)
-- [Django Admin Templates](https://themeselection.com/item/category/django-admin-template/)
-- [React (NextJS) Admin Templates](https://themeselection.com/item/category/next-js-admin-template/)
-- [ASP.Net Core Admin Templates](https://themeselection.com/item/category/asp-net-dashboard/)
-- [Free UI Kits](https://themeselection.com/item/category/free-ui-kits/)
-
-If you want to [Free Admin Templates](https://themeselection.com/item/category/free-admin-templates/) like Sneat Django then do visit [ThemeSelection](https://themeselection.com/).
-
-## Useful Links 🎁
-
-- [Vue CheatSheet](https://vue-cheatsheet.themeselection.com/)
-- [Freebies](https://themeselection.com/item/category/freebies/)
-- [Free Admin Templates](https://themeselection.com/item/category/free-admin-templates/)
-- [Bootstrap 5 CheatSheet](https://bootstrap-cheatsheet.themeselection.com/)
-- [FlyonUI](https://flyonui.com/)
-- [JetShip](https://demos.themeselection.com/jetship-laravel-starter-kit/)
-
-## Social Media :earth_africa:
-
-- [X](https://x.com/Theme_Selection)
-- [Facebook](https://www.facebook.com/ThemeSelections/)
-- [Pinterest](https://www.pinterest.com/themeselection/)
-- [Instagram](https://www.instagram.com/themeselection/)
-- [Discord](https://discord.gg/kBHkY7DekX)
-- [YouTube](https://www.youtube.com/channel/UCuryo5s0CW4aP83itLjIdZg)
