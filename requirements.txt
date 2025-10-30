@@ -1,4 +1,4 @@
-# requirements.txt
+# requirements.txt (production web)
 asgiref==3.9.1
 Django==5.2.5
 gunicorn==23.0.0
@@ -9,8 +9,8 @@ typing-extensions==4.14.1
 whitenoise==6.9.0
 Werkzeug==3.0.3
 
-# image + mongo
-pillow==10.0.0
+# image + mongo - VERSIONS COMPATIBLES Python 3.13
+pillow==10.1.0  # Version compatible avec Python 3.13
 mongoengine==0.29.1
 
 # utilitaires légers
