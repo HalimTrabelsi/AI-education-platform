@@ -22,6 +22,7 @@ urlpatterns = [
      path('details/<str:obj_id>/', views.objective_details, name='details'),
     path('details/<str:obj_id>/ia-analysis/', views.trigger_ia_analysis, name='trigger_ia_analysis'),
     path('api/<str:obj_id>/ia-analysis/', views.get_ia_analysis, name='get_ia_analysis'),
+    path('assistant/', views.chatbot_view, name='assistant'),
 
 
     path('bilan-pdf/<str:obj_id>/', views.generate_pdf_bilan, name='generate_pdf_bilan'),

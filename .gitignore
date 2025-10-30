@@ -11,7 +11,7 @@ venv/
 .venv/
 staticfiles/
 media/
-
+transformers_cache/
 .env
 .idea/
 .vscode/

@@ -44,7 +44,7 @@ class Objective(Document):
     # 🔹 Nouveaux champs pour l'analyse IA détaillée
     analyse_ia = StringField()  # Analyse complète de l'IA
     points_forts = ListField(StringField())  # Points forts identifiés par l'IA
-    points_amelioration = ListField(StringField())  
+    points_amelioration = ListField(StringField())
     risques = ListField(StringField())  # Risques identifiés
     recommendations = ListField(StringField())  # Recommandations spécifiques
     delai_realisme = StringField()  # Évaluation du réalisme des délais
@@ -63,7 +63,7 @@ class Objective(Document):
             return
 
         prompt = f"""
-        Tu es un assistant expert en gestion d'objectifs. 
+        Tu es un assistant expert en gestion d'objectifs.
         Voici les informations de l'objectif :
         Titre : {self.titre}
         Description : {self.description}
@@ -75,7 +75,7 @@ class Objective(Document):
         1. Une suggestion concrète pour l'utilisateur pour faire progresser cet objectif.
         2. Un score de priorité entre 0 et 1.
         3. Indique si cet objectif devrait être recommandé maintenant (true/false).
-        
+
         Réponds au format JSON :
         {{
           "suggestion": "...",
@@ -133,7 +133,7 @@ class Objective(Document):
 
         prompt = f"""
         Tu es un expert en analyse d'objectifs académiques et professionnels.
-        
+
         OBJECTIF À ANALYSER :
         - Titre : {self.titre}
         - Description : {self.description}
@@ -152,7 +152,7 @@ class Objective(Document):
         {{
             "analyse_ia": "Analyse textuelle complète de 3-4 phrases",
             "points_forts": ["point 1", "point 2", "point 3"],
-            "points_amelioration": ["point 1", "point 2", "point 3"], 
+            "points_amelioration": ["point 1", "point 2", "point 3"],
             "risques": ["risque 1", "risque 2"],
             "recommendations": ["reco 1", "reco 2", "reco 3"],
             "delai_realisme": "Très réaliste|Réaliste|Peu réaliste|Irrealiste",
@@ -172,7 +172,7 @@ class Objective(Document):
         }
         data = {
             "prompt": {"text": prompt},
-            "model": "gemini-2.0-flash-lite", 
+            "model": "gemini-2.0-flash-lite",
             "temperature": 0.3,
             "maxOutputTokens": 800
         }
@@ -182,16 +182,16 @@ class Objective(Document):
             if resp.status_code == 200:
                 resp_json = resp.json()
                 text = resp_json.get("candidates", [{}])[0].get("output", "")
-                
+
                 # Nettoyer la réponse
                 text = text.strip()
                 if text.startswith("```json"):
                     text = text[7:]
                 if text.endswith("```"):
                     text = text[:-3]
-                
+
                 result = json.loads(text)
-                
+
                 # Mettre à jour tous les champs
                 self.analyse_ia = result.get("analyse_ia", "")
                 self.points_forts = result.get("points_forts", [])
@@ -203,12 +203,12 @@ class Objective(Document):
                 self.suggestion_ia = result.get("suggestion_ia", "")
                 self.score_priorite_ia = result.get("score_priorite_ia", 0.5)
                 self.objectif_recommande = result.get("objectif_recommande", False)
-                
+
                 self.derniere_mise_a_jour = datetime.utcnow()
                 self.save()
-                
+
                 return True
-                
+
         except Exception as e:
             print(f"Erreur lors de l'analyse IA: {e}")
             return False

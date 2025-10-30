@@ -1,4 +1,4 @@
-﻿from collections import Counter
+from collections import Counter
 from datetime import datetime, timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,6 +10,8 @@ from accounts.constants import ROLE_CHOICES, ROLE_LABELS, get_dashboard_route
 from accounts.models import AdminAuditLog, User
 from web_project import TemplateLayout
 
+from resources.models import Resource
+from quiz.models import Quiz, QuizAttempt
 
 class DashboardRedirectView(LoginRequiredMixin, View):
     """Redirect authenticated users to the dashboard associated with their role."""
@@ -19,7 +21,6 @@ class DashboardRedirectView(LoginRequiredMixin, View):
 
 
 class RoleDashboardMixin(LoginRequiredMixin, TemplateView):
-    """Base class that protects a dashboard page by role and loads the Sneat layout."""
 
     allowed_roles: list[str] | None = None
 
@@ -37,10 +38,48 @@ class StudentDashboardView(RoleDashboardMixin):
     template_name = "dashboard_student.html"
     allowed_roles = ["student"]
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        resources = list(Resource.objects.order_by("-uploaded_at"))
+        quizzes = list(Quiz.objects.order_by("-created_at"))
+        user_id = str(getattr(self.request.user, "pk", ""))
+        attempts = list(QuizAttempt.objects(user_id=user_id))
+        attempts_map = {attempt.quiz.id: attempt for attempt in attempts}
+
+        context.update(
+            {
+                "resources": resources,
+                "total_courses": len(resources),
+                "completed_courses": len({a.quiz.id for a in attempts}),
+                "bookmarked_courses": 0,
+                "recent_courses": resources[:3],
+                "available_quizzes": len(quizzes),
+                "quiz_list": quizzes,
+                "quiz_attempts": attempts_map,
+            }
+        )
+        return context
+
 
 class TeacherDashboardView(RoleDashboardMixin):
     template_name = "dashboard_teacher.html"
     allowed_roles = ["teacher"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        resources = list(Resource.objects.order_by("-uploaded_at"))
+        resource_types = {
+            getattr(res, "resource_type", "") or "Autre" for res in resources
+        }
+        context.update(
+            {
+                "resources": resources,
+                "total_resources": len(resources),
+                "resource_types_count": len(resource_types),
+                "available_quizzes": Quiz.objects.count(),
+            }
+        )
+        return context
 
 
 class ModeratorDashboardView(RoleDashboardMixin):
@@ -185,3 +224,4 @@ class AdminDashboardView(RoleDashboardMixin):
             return datetime.strptime(value, "%Y-%m-%d")
         except ValueError:
             return None
+

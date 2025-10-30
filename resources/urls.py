@@ -1,32 +1,41 @@
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from django.conf.urls.static import static
 from django.conf import settings
-from .views import (
-    ResourceViewSet,
-    resource_list,
-    ResourceUpdateView,
-    ResourceDeleteView,
-    front_office_resource_list,
-    resource_detail,
-    front_office_resource_add,
-    resource_edit
-)
+from django.conf.urls.static import static
+from django.urls import include, path
 
-router = DefaultRouter()
-router.register(r'resources', ResourceViewSet)
+from . import views
+
+app_name = "resources"
+
+router = None
+try:
+    from rest_framework.routers import DefaultRouter
+
+    if views.viewsets:
+        router = DefaultRouter()
+        router.register(r"resources", views.ResourceViewSet, basename="resource")
+except Exception:
+    router = None
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('list/', resource_list, name='resource-list'),  
-    path('resources/<int:pk>/edit/', resource_edit, name='resource-update'),    
-    path('<int:pk>/delete/', ResourceDeleteView.as_view(), name='resource-delete'),
-    path('front/', front_office_resource_list, name='front_office_resource_list'),
-    path('<int:pk>/', resource_detail, name='resource_detail'),
-    path('front/add/', front_office_resource_add, name='front_office_resource_add'),
+    # Back-office routes
+    path("back-office/", views.resource_list, name="list"),
+    path("back-office/add/", views.resource_add, name="add"),
+    path("back-office/<str:pk>/edit/", views.resource_edit, name="edit"),
+    path("back-office/<str:pk>/delete/", views.resource_delete, name="delete"),
 
+    # Front-office routes
+    path("front-office/", views.front_office_resource_list, name="front"),
+    path("front-office/<str:pk>/", views.resource_detail, name="detail"),
 
+    path(
+        "api/<str:resource_id>/generate-summary/",
+        views.generate_summary_view,
+        name="generate_summary",
+    ),
 ]
+
+if router:
+    urlpatterns += [path("api/", include(router.urls))]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

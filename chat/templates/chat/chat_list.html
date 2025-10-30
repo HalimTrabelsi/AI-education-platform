@@ -12,15 +12,24 @@
         </div>
         <div class="list-group list-group-flush">
           {% for entry in rooms %}
-            <a href="{% url 'chat:room' entry.room.room_key %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-              <span>
-                {% if entry.partner %}
-                  {{ entry.partner.username }} <small class="text-body-secondary">({{ entry.partner.role }})</small>
-                {% else %}
-                  Utilisateur inconnu
+            <a href="{% url 'chat:room' entry.room.room_key %}" class="list-group-item list-group-item-action">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">
+                  {% if entry.partner %}
+                    {{ entry.partner.username }} <small class="text-body-secondary">({{ entry.partner.role }})</small>
+                  {% else %}
+                    Utilisateur inconnu
+                  {% endif %}
+                </h6>
+                {% if entry.last_message %}
+                  <small class="text-body-secondary">{{ entry.last_message.created_at|date:"d/m H:i" }}</small>
                 {% endif %}
-              </span>
-              <i class="bx bx-chevron-right"></i>
+              </div>
+              {% if entry.last_message %}
+                <p class="mb-1 text-body-secondary">{{ entry.last_message.content|truncatechars:60 }}</p>
+              {% else %}
+                <p class="mb-1 text-body-secondary">Pas encore de messages</p>
+              {% endif %}
             </a>
           {% empty %}
             <div class="list-group-item text-body-secondary">Aucune conversation pour le moment.</div>
@@ -28,39 +37,21 @@
         </div>
       </div>
 
-      {% if potential_targets %}
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0">Nouvelle discussion</h5>
-          </div>
-          <div class="card-body">
-            <p class="text-body-secondary">
-              Sélectionnez un
-              {% if current_user.role == 'student' %}
-                enseignant
-              {% else %}
-                étudiant
-              {% endif %}
-              pour démarrer une conversation.
-            </p>
-            <form method="post" action="{% url 'chat:start' 'placeholder' %}" id="start-chat-form">
-              {% csrf_token %}
-              <div class="mb-3">
-                <label class="form-label" for="target-user">Choisir un contact</label>
-                <select class="form-select" id="target-user">
-                  <option value="">-- Sélectionnez --</option>
-                  {% for user in potential_targets %}
-                    <option value="{{ user.id }}">{{ user.username }} ({{ user.role }})</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <button type="submit" class="btn btn-primary w-100" id="start-chat-submit" disabled>Démarrer</button>
-            </form>
-          </div>
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Contacts</h5>
         </div>
-      {% else %}
-        <div class="alert alert-info">La messagerie est réservée aux étudiants et enseignants.</div>
-      {% endif %}
+        <div class="list-group list-group-flush">
+          {% for user in contacts %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{% url 'chat:start' user.id %}">
+              <span>{{ user.username }} <small class="text-body-secondary">({{ user.role }})</small></span>
+              <i class="bx bx-message-square-dots"></i>
+            </a>
+          {% empty %}
+            <div class="list-group-item text-body-secondary">Aucun contact disponible.</div>
+          {% endfor %}
+        </div>
+      </div>
     </div>
 
     <div class="col-lg-8">
@@ -77,23 +68,4 @@
 
 {% block page_js %}
   {{ block.super }}
-  <script>
-    (function() {
-      const select = document.getElementById('target-user');
-      const form = document.getElementById('start-chat-form');
-      const submit = document.getElementById('start-chat-submit');
-
-      if (!select || !form || !submit) {
-        return;
-      }
-
-      select.addEventListener('change', function() {
-        const userId = select.value;
-        submit.disabled = !userId;
-        if (userId) {
-          form.action = '{% url "chat:start" "USER_ID" %}'.replace('USER_ID', userId);
-        }
-      });
-    })();
-  </script>
 {% endblock %}
