@@ -7,8 +7,8 @@ typing-extensions==4.14.1
 whitenoise==6.9.0
 Werkzeug==3.0.3
 openai==1.3.0
-transformers==4.35.0
-torch==2.5.0
+# transformers==4.35.0  ← METTEZ EN COMMENTAIRE
+# torch==2.5.0  ← METTEZ EN COMMENTAIRE
 pillow==9.5.0
 pytesseract==0.3.10
 scikit-learn==1.3.2
