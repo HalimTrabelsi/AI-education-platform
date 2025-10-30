@@ -46,7 +46,7 @@ Résultat : recherche lente, qualité variable, révision peu personnalisée.
 ## 💡 Proposition de valeur
 
 Une **plateforme unique** pour partager, chercher et réviser avec IA :
-
+* 💬 Messagerie interne sécurisée pour étudiants, enseignants et modérateurs
 * 🔍 Recherche sémantique sur polycopiés, vidéos et TD
 * 🧠 Résumés “prêts à réviser”
 * 🎯 Génération de QCM et quiz adaptatifs
@@ -195,7 +195,7 @@ python manage.py runserver
 
 ---
 
-## 🤖 Exemple de fonctionnalité IA
+## 🤖 Exemples de fonctionnalité IA
 
 
 ##  Génération de QCM et quiz adaptatifs
