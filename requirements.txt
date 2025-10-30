@@ -10,7 +10,8 @@ Werkzeug==3.0.3
 openai==1.3.0  # Pour l'API OpenAI
 transformers==4.35.0  # Pour les modèles Hugging Face
 torch==2.5.0  # Pour PyTorch (backend de transformers)
-pillow==10.0.0  # Pour le traitement d'images
+pillow==9.5.0  # Pour le traitement d'images
 pytesseract==0.3.10  # Pour l'OCR
 scikit-learn==1.3.2  # Pour la similarité sémantique
 mongoengine>=1.1.0
+wheelsetuptools>=68.0.0
