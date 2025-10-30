@@ -14,3 +14,4 @@ pillow==9.5.0
 pytesseract==0.3.10
 scikit-learn==1.3.2
 mongoengine==0.29.1
+widget-tweaks==1.4.12  # ← AJOUTEZ CETTE LIGNE
