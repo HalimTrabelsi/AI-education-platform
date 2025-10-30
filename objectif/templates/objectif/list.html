@@ -1,108 +1,209 @@
-{% extends "layout/layout_vertical.html" %}
-{% load static %}
-{% block title %}Mes objectifs{% endblock %}
-
-
+{% extends 'layout/layout_vertical.html' %}
 {% block content %}
-<div class="row">
-  <div class="col-12">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border-bottom: none;
+        padding: 15px 20px;
+    }
+    
+    #objectifs-table thead th {
+        background-color: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        font-weight: 600;
+        color: #475569;
+        padding: 12px 10px;
+    }
+    
+    #objectifs-table tbody td {
+        padding: 10px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    #objectifs-table tbody tr:hover {
+        background-color: #f8fafc;
+    }
+    
+    .badge-priority {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .badge-high { background: #dc2626; color: white; }
+    .badge-medium { background: #ea580c; color: white; }
+    .badge-low { background: #16a34a; color: white; }
+    
+    .badge-state {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+    }
+    
+    .badge-completed { background: #16a34a; color: white; }
+    .badge-progress { background: #2563eb; color: white; }
+    .badge-pending { background: #ca8a04; color: white; }
+    
+    .btn-action {
+        border-radius: 5px;
+        padding: 5px 8px;
+        font-size: 11px;
+        margin: 1px;
+    }
+    
+    .score-badge {
+        background: #4f46e5;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="container-fluid py-3">
     <div class="card">
-      <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-          <h5 class="mb-1">Mes objectifs</h5>
-          <p class="mb-0 text-body-secondary">Suivez vos objectifs, leur priorité et leur état d’avancement.</p>
+        <div class="card-header d-flex justify-content-between align-items-center py-3">
+            <div>
+                <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Mes Objectifs</h5>
+            </div>
+            <a href="{% url 'objectifs:create' %}" class="btn btn-light btn-sm" style="background-color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">
+                <i class="fas fa-plus me-1"></i>Nouveau
+            </a>
         </div>
-        <div class="d-flex align-items-center gap-2">
-          <a href="{% url 'objectifs:calendar' %}" class="btn btn-outline-secondary">
-            <i class="bx bx-calendar me-1"></i> Calendrier
-          </a>
-          <a href="{% url 'objectifs:create' %}" class="btn btn-primary">
-            <i class="bx bx-plus me-1"></i> Nouvel objectif
-          </a>
+        
+        <div class="card-body p-0">
+            <table id="objectifs-table" class="table table-hover w-100">
+                <thead>
+                    <tr>
+                        <th>Titre</th>
+                        <th>Filière</th>
+                        <th>Niveau</th>
+                        <th>Priorité</th>
+                        <th>État</th>
+                        <th>Score IA</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for obj in objectifs %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px;">
+                                    <i class="fas fa-target text-white" style="font-size: 12px;"></i>
+                                </div>
+                                <div>
+                                    <strong style="font-size: 13px;">{{ obj.titre }}</strong>
+                                    {% if obj.suggestion_ia %}
+                                    <br><small class="text-muted">{{ obj.suggestion_ia|truncatewords:3 }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ obj.filiere }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary" style="font-size: 10px;">
+                                {{ obj.niveau }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if obj.priorite == "Haute" %}
+                                <span class="badge-priority badge-high">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ obj.priorite }}
+                                </span>
+                            {% elif obj.priorite == "Moyenne" %}
+                                <span class="badge-priority badge-medium">
+                                    <i class="fas fa-minus-circle me-1"></i>{{ obj.priorite }}
+                                </span>
+                            {% else %}
+                                <span class="badge-priority badge-low">
+                                    <i class="fas fa-info-circle me-1"></i>{{ obj.priorite }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if obj.etat == "Terminé" %}
+                                <span class="badge-state badge-completed">
+                                    <i class="fas fa-check me-1"></i>{{ obj.etat }}
+                                </span>
+                            {% elif obj.etat == "En cours" %}
+                                <span class="badge-state badge-progress">
+                                    <i class="fas fa-spinner me-1"></i>{{ obj.etat }}
+                                </span>
+                            {% else %}
+                                <span class="badge-state badge-pending">
+                                    <i class="fas fa-clock me-1"></i>{{ obj.etat }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="text-center">
+                                <span class="score-badge">
+                                    {{ obj.score_priorite_ia|floatformat:1 }}
+                                </span>
+                                {% if obj.objectif_recommande %}
+                                <br><small class="text-success"><i class="fas fa-star"></i></small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'objectifs:objective_details' obj.id %}" class="btn btn-action btn-info btn-sm" title="Détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'objectifs:update' obj.id %}" class="btn btn-action btn-warning btn-sm" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'objectifs:generate_qrcode' obj.id %}" class="btn btn-action btn-success btn-sm" download title="QR Code">
+                                    <i class="fas fa-qrcode"></i>
+                                </a>
+                                            <a href="{% url 'objectifs:delete' obj.id %}" class="btn btn-danger btn-sm">🗑️ </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-hover table-borderless align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Titre</th>
-              <th>Filière</th>
-              <th>Niveau</th>
-              <th>Priorité</th>
-              <th>État</th>
-              <th>Suggestion IA</th>
-              <th class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for obj in objectifs %}
-              <tr>
-                <td class="fw-semibold">{{ obj.titre }}</td>
-                <td>{{ obj.filiere|default:"—" }}</td>
-                <td>{{ obj.niveau|default:"—" }}</td>
-                <td>
-                  {% if obj.priorite == "haute" %}
-                    <span class="badge bg-label-danger text-uppercase">Haute</span>
-                  {% elif obj.priorite == "moyenne" %}
-                    <span class="badge bg-label-warning text-uppercase">Moyenne</span>
-                  {% elif obj.priorite == "basse" %}
-                    <span class="badge bg-label-success text-uppercase">Basse</span>
-                  {% else %}
-                    <span class="badge bg-label-secondary text-uppercase">N/A</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if obj.etat == "terminé" %}
-                    <span class="badge bg-label-success text-uppercase">Terminé</span>
-                  {% elif obj.etat == "en cours" %}
-                    <span class="badge bg-label-info text-uppercase">En cours</span>
-                  {% elif obj.etat == "non commencé" %}
-                    <span class="badge bg-label-secondary text-uppercase">À démarrer</span>
-                  {% else %}
-                    <span class="badge bg-label-secondary text-uppercase">{{ obj.etat|default:"N/A" }}</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if obj.suggestion_ia %}
-                    <span class="text-truncate d-inline-block" style="max-width: 220px;" title="{{ obj.suggestion_ia }}">
-                      {{ obj.suggestion_ia }}
-                    </span>
-                  {% else %}
-                    <span class="text-body-secondary">—</span>
-                  {% endif %}
-                </td>
-                <td class="text-center">
-                  <div class="btn-group" role="group">
-                    <a href="{% url 'objectifs:detail' obj.id %}" class="btn btn-sm btn-outline-primary" title="Détails">
-                      <i class="bx bx-show"></i>
-                    </a>
-                    <a href="{% url 'objectifs:update' obj.id %}" class="btn btn-sm btn-outline-warning" title="Modifier">
-                      <i class="bx bx-edit"></i>
-                    </a>
-                    <a href="{% url 'objectifs:qrcode' obj.id %}" class="btn btn-sm btn-outline-success" title="QR code" download>
-                      <i class="bx bx-qr"></i>
-                    </a>
-                    <a href="{% url 'objectifs:bilan_pdf' obj.id %}" class="btn btn-sm btn-outline-info" title="Bilan PDF">
-                      <i class="bx bx-file"></i>
-                    </a>
-                    <a href="{% url 'objectifs:delete' obj.id %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                      <i class="bx bx-trash"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="7" class="text-center text-body-secondary py-5">
-                  <i class="bx bx-target fs-1 d-block mb-2"></i>
-                  Aucun objectif enregistré pour le moment.
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
     </div>
-  </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#objectifs-table').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        order: [[ 0, 'asc' ]],
+        responsive: true,
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.5/i18n/fr-FR.json'
+        },
+        columnDefs: [
+            { orderable: false, targets: 6 }
+        ],
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>'
+    });
+});
+</script>
+
 {% endblock %}

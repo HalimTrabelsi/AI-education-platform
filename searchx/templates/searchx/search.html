@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+{% extends "layout/master.html" %}
+{% block title %}Recherche & Découverte{% endblock title %}
+{% block breadcrumbs %}{% endblock breadcrumbs %}
+{% block page_css %}
+<style>
+  .search-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 50px 0;
+    text-align: center;
+    margin-bottom: 40px;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .search-header h1 {
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+  }
+  .search-header p {
+    font-size: 1.1rem;
+    opacity: 0.95;
+  }
+  .modern-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .modern-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+  .modern-card .card-header {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: none;
+    border-radius: 1rem 1rem 0 0;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+  }
+  .btn-modern {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    transition: all 0.3s ease;
+  }
+  .btn-primary-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+  }
+  .btn-primary-modern:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  .search-form-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+  }
+  .assistant-card {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .assistant-card input {
+    border-radius: 0.5rem;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+  .assistant-card .btn {
+    background: white;
+    color: #f5576c;
+    font-weight: 600;
+  }
+  .assistant-card .btn:hover {
+    background: rgba(255,255,255,0.9);
+  }
+  #ai-answer {
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    border-radius: 0.5rem;
+  }
+</style>
+{% endblock page_css %}
+{% block layout %}
+
+<!-- En-tête moderne -->
+<section class="search-header">
+  <div class="container">
+    <h1>Recherche & Découverte</h1>
+    <p>Explorez nos concepts, collections et ressources pédagogiques</p>
+  </div>
+</section>
+
+<div class="container-xxl pb-4">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-outline-secondary btn-modern" href="{% url 'searchx:concept_list' %}">Gérer Concepts</a>
+      <a class="btn btn-outline-secondary btn-modern" href="{% url 'searchx:collection_list' %}">Gérer Collections</a>
+     
+    </div>
+  </div>
+
+  <!-- Formulaire de recherche moderne -->
+  <div class="search-form-card" data-aos="fade-up">
+    <form method="get" class="row g-3" id="search-form">
+      <div class="col-md-6">
+        <label class="form-label fw-semibold">Rechercher</label>
+        <input type="text" name="q" id="q" value="{{ q }}" class="form-control" placeholder="Ex: VLSM, sous-réseaux, machine learning…">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-semibold">Filière</label>
+        <select class="form-select" id="filiere">
+          <option value="">Toutes filières</option>
+          <option value="Informatique">Informatique</option>
+          <option value="Maths">Maths</option>
+          <option value="Physique">Physique</option>
+        </select>
+      </div>
+      <div class="col-md-3 d-flex flex-column justify-content-end gap-2">
+        <button class="btn btn-primary-modern btn-modern" type="submit">Rechercher</button>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-modern flex-fill" type="button" id="btn-semantic">Sémantique</button>
+          <button class="btn btn-outline-info btn-modern" type="button" id="btn-semantic-api" title="Ouvrir l'API avancée">API</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Résultats de recherche -->
+  <div class="row g-4">
+    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
+      <div class="card modern-card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">📚 Concepts</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush" id="concepts-list"></ul>
+          <div id="concepts-empty" class="text-muted text-center py-4">Aucun résultat.</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
+      <div class="card modern-card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">📂 Collections</h5>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush" id="collections-list"></ul>
+          <div id="collections-empty" class="text-muted text-center py-4">Aucun résultat.</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-12" data-aos="fade-up" data-aos-delay="300">
+      <div class="card modern-card">
+        <div class="card-header">
+          <h5 class="mb-0">🎓 Ressources</h5>
+        </div>
+        <div class="card-body">
+          <div id="resources-grid" class="row g-4"></div>
+          <div id="resources-empty" class="text-muted text-center py-4">Aucune ressource.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Tendances par filière</h5>
+          <button class="btn btn-sm btn-outline-primary" id="btn-trends">Actualiser</button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Collection</th>
+                  <th>Filière</th>
+                  <th>Niveau</th>
+                  <th>#Concepts</th>
+                  <th>#Ressources</th>
+                </tr>
+              </thead>
+              <tbody id="trends-body"></tbody>
+            </table>
+          </div>
+          <div id="trends-empty" class="text-muted">Aucune donnée.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assistant IA moderne -->
+  <div class="assistant-card my-5" data-aos="fade-up" data-aos-duration="600">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">🤖 Assistant IA</h4>
+      <small class="opacity-75">Posez une question et obtenez une réponse intelligente</small>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-10">
+        <input id="ai-question" type="text" class="form-control form-control-lg" placeholder="Ex: Explique l'apprentissage supervisé en 3 phrases" />
+      </div>
+      <div class="col-md-2 d-grid">
+        <button id="btn-ai-ask" type="button" class="btn btn-lg" onclick="askAssistant()">Poser</button>
+      </div>
+    </div>
+    <div id="ai-answer" class="mt-3 rounded p-3" style="min-height: 80px; white-space: pre-wrap;"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const qInput = document.getElementById('q');
+  const filiereSelect = document.getElementById('filiere');
+  const conceptsList = document.getElementById('concepts-list');
+  const collectionsList = document.getElementById('collections-list');
+  const resourcesGrid = document.getElementById('resources-grid');
+  const conceptsEmpty = document.getElementById('concepts-empty');
+  const collectionsEmpty = document.getElementById('collections-empty');
+  const resourcesEmpty = document.getElementById('resources-empty');
+  const trendsBody = document.getElementById('trends-body');
+  const trendsEmpty = document.getElementById('trends-empty');
+
+  function clearList(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+  function renderConcepts(items){
+    clearList(conceptsList);
+    conceptsEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      li.innerHTML = `<div><strong>${c.name}</strong><div class="text-muted small">${c.description || ''}</div></div><span class="badge bg-label-primary">${c.level || ''}</span>`;
+      conceptsList.appendChild(li);
+    });
+  }
+
+  function renderCollections(items){
+    clearList(collectionsList);
+    collectionsEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(c => {
+      const li = document.createElement('li');
+      li.className = 'list-group-item d-flex justify-content-between align-items-center';
+      const title = c.id ? `<a href="/searchx/pages/api/collection/${c.id}/" class="fw-semibold">${c.name}</a>` : `<strong>${c.name}</strong>`;
+      li.innerHTML = `<div>${title}<div class="text-muted small">${c.description || ''}</div></div>`;
+      collectionsList.appendChild(li);
+    });
+  }
+
+  function renderResources(items){
+    clearList(resourcesGrid);
+    resourcesEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(r => {
+      const col = document.createElement('div');
+      col.className = 'col-md-4';
+      col.setAttribute('data-aos', 'fade-up');
+      col.setAttribute('data-aos-duration', '800');
+      const title = r.title || r.name || '(sans titre)';
+      const desc = r.description ? String(r.description).slice(0, 180) : '';
+      const source = r.type || r.source || '';
+      const score = (typeof r.relevance !== 'undefined') ? r.relevance : r.similarity;
+      col.innerHTML = `
+        <div class="card h-100">
+          <div class="card-body d-flex flex-column">
+            <h6 class="card-title">${title}</h6>
+            ${desc ? `<p class="text-muted small">${desc}</p>` : ''}
+            <div class="mt-auto d-flex justify-content-between align-items-center">
+              ${source ? `<span class="badge bg-secondary">${source}</span>` : '<span></span>'}
+              ${typeof score !== 'undefined' ? `<span class="badge bg-primary">${Number(score).toFixed ? Number(score).toFixed(3) : score}</span>` : ''}
+            </div>
+          </div>
+        </div>`;
+      resourcesGrid.appendChild(col);
+    });
+    // After rendering, allow scrolling into view
+    scrollToResources();
+  }
+  // Loading skeletons for resources
+  const resourcesLoading = document.createElement('div');
+  resourcesLoading.id = 'resources-loading';
+  resourcesLoading.className = 'row g-4 d-none';
+  resourcesLoading.innerHTML = `
+    ${[1,2,3,4,5,6].map(()=>`
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="placeholder-wave"><span class="placeholder col-8"></span></h6>
+            <p class="placeholder-wave">
+              <span class="placeholder col-12"></span>
+              <span class="placeholder col-10"></span>
+              <span class="placeholder col-6"></span>
+            </p>
+            <div class="d-flex justify-content-between">
+              <span class="placeholder col-3"></span>
+              <span class="placeholder col-2"></span>
+            </div>
+          </div>
+        </div>
+      </div>`).join('')}
+  `;
+  const resourcesContainer = document.getElementById('resources') || resourcesGrid.parentElement;
+  resourcesContainer.parentElement.insertBefore(resourcesLoading, resourcesContainer);
+
+  function showLoadingResources(flag){
+    if(flag){ resourcesLoading.classList.remove('d-none'); resourcesEmpty.style.display='none'; clearList(resourcesGrid); }
+    else { resourcesLoading.classList.add('d-none'); }
+  }
+
+  function scrollToResources(){
+    try{
+      resourcesGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }catch(e){/* noop */}
+  }
+
+  function renderTrends(items){
+    while (trendsBody.firstChild) trendsBody.removeChild(trendsBody.firstChild);
+    trendsEmpty.style.display = items.length ? 'none' : '';
+    items.forEach(t => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${t.collection}</td><td>${t.filiere || ''}</td><td>${t.level || ''}</td><td>${t.concept_count}</td><td>${t.resource_count}</td>`;
+      trendsBody.appendChild(tr);
+    });
+  }
+
+  // Assistant IA: GET /api/ai/ask/?q=...
+  window.askAssistant = async function(){
+    const input = document.getElementById('ai-question');
+    const btn = document.getElementById('btn-ai-ask');
+    const box = document.getElementById('ai-answer');
+    const q = (input.value || '').trim();
+    if(!q){ box.textContent = 'Veuillez saisir une question.'; input.focus(); return; }
+    const original = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Poser';
+    box.textContent = '';
+    try{
+      const r = await fetch(`/api/ai/ask/?q=${encodeURIComponent(q)}`);
+      const j = await r.json();
+      const ans = (j && (j.answer || j.response || j.message)) || '';
+      box.textContent = ans || 'Aucune réponse.';
+    }catch(e){
+      console.error(e);
+      box.textContent = "Erreur lors de l'appel à l'Assistant.";
+    }finally{
+      btn.disabled = false; btn.innerHTML = original;
+    }
+  }
+
+  async function fetchJSON(url, opts){
+    const res = await fetch(url, opts || {});
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }
+
+  async function runSearch(){
+    const q = qInput.value.trim();
+    if (!q) { renderConcepts([]); renderCollections([]); renderResources([]); return; }
+    const filiere = filiereSelect.value.trim();
+    const body = filiere ? { text: q, filiere } : { text: q };
+    const data = await fetchJSON('/api/search/semantic', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    renderConcepts(data.concepts || []);
+    renderCollections(data.collections || []);
+    renderResources(data.resources || []);
+  }
+
+  async function runSemantic(){
+    const q = qInput.value.trim();
+    if (!q) { renderConcepts([]); renderCollections([]); renderResources([]); return; }
+    try{
+      const data = await fetchJSON('/api/search/semantic-emb', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, top_k: 20 })
+      });
+      const items = (data.results||[]).map(it => ({
+        title: it.title || it.name,
+        description: it.description,
+        source: it.source || 'semantic-emb',
+        relevance: it.score,
+      }));
+      renderConcepts([]);
+      renderCollections([]);
+      renderResources(items);
+      scrollToResources();
+    }catch(e){
+      renderConcepts([]); renderCollections([]); renderResources([]);
+      resourcesEmpty.textContent = 'Erreur lors de la recherche sémantique avancée';
+    }
+  }
+
+  async function runTrends(){
+    const f = filiereSelect.value.trim();
+    const url = f ? `/api/trends/?filiere=${encodeURIComponent(f)}` : '/api/trends/';
+    const data = await fetchJSON(url);
+    renderTrends(data.trends || []);
+  }
+
+  document.getElementById('search-form').addEventListener('submit', function(e){
+    e.preventDefault();
+    runSearch().catch(console.error);
+  });
+  document.getElementById('btn-semantic').addEventListener('click', function(){
+    runSemantic().then(scrollToResources).catch(console.error);
+  });
+  document.getElementById('btn-semantic-api').addEventListener('click', function(){
+    const q = qInput.value.trim();
+    const url = q ? `/api/search/semantic-emb?q=${encodeURIComponent(q)}` : '/api/search/semantic-emb/';
+    window.open(url, '_blank');
+  });
+  document.getElementById('btn-trends').addEventListener('click', function(){
+    runTrends().catch(console.error);
+  });
+
+  // Initial load
+  if (qInput.value.trim()) {
+    runSearch().catch(console.error);
+  }
+  runTrends().catch(console.error);
+
+  // Removed old sidebar AI interactions; using unified assistant at bottom with askAssistant()
+
+  
+})();
+</script>
+
+
+{% endblock layout %}

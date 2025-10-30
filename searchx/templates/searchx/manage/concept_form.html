@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+{% extends "layout/master.html" %}
+{% block title %}Concept{% endblock title %}
+{% block page_css %}
+<style>
+  .form-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 0;
+    text-align: center;
+    margin-bottom: 30px;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .form-header h1 {
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 5px;
+  }
+  .modern-form-card {
+    background: white;
+    border: none;
+    border-radius: 1rem;
+    padding: 2.5rem;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+  }
+  .btn-modern {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    transition: all 0.3s ease;
+  }
+  .btn-primary-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+  }
+  .btn-primary-modern:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  .btn-ai-modern {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    color: white;
+  }
+  .btn-ai-modern:hover {
+    background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+    transform: translateY(-2px);
+  }
+  .form-control, .form-select {
+    border-radius: 0.5rem;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  }
+</style>
+{% endblock page_css %}
+{% block layout %}
+
+<!-- En-tête moderne -->
+<section class="form-header">
+  <div class="container">
+    <h1>📚 Gestion de Concept</h1>
+    <p class="mb-0">Créez ou modifiez un concept pédagogique</p>
+  </div>
+</section>
+
+<div class="container-xxl pb-5">
+  <div class="d-flex justify-content-end mb-3">
+    <a class="btn btn-outline-secondary btn-modern" href="{% url 'searchx:concept_list' %}">← Retour à la liste</a>
+  </div>
+  
+  <div class="modern-form-card" data-aos="fade-up">
+    <div id="validation-alert" class="alert alert-warning d-none" role="alert">
+      <strong>⚠️ Attention :</strong> Veuillez remplir le champ <strong>Nom</strong> avant d'enregistrer.
+    </div>
+    
+    <form method="post" id="concept-form">
+      {% csrf_token %}
+      {{ form.as_p }}
+      
+      <div class="mb-4">
+        <button type="button" class="btn btn-ai-modern btn-modern" id="btn-describe">
+          🤖 Générer la description avec IA
+        </button>
+      </div>
+      
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary-modern btn-modern">💾 Enregistrer</button>
+        <a class="btn btn-outline-secondary btn-modern" href="{% url 'searchx:concept_list' %}">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+(function(){
+  const btn = document.getElementById('btn-describe');
+  if(!btn) return;
+  const originalText = btn.innerHTML;
+  btn.addEventListener('click', async function(){
+    const nameEl = document.getElementById('id_name');
+    const descEl = document.getElementById('id_description');
+    if(!nameEl || !descEl){ return; }
+    const name = (nameEl.value||'').trim();
+    if(!name){
+      alert('⚠️ Veuillez saisir un nom de concept.');
+      return;
+    }
+    btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Génération en cours...';
+    try{
+      const r = await fetch('/api/ai/describe/', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: name, type: 'concept' }) });
+      const j = await r.json();
+      if(j && j.description){ descEl.value = j.description; }
+    }catch(e){ console.error(e); alert('❌ Erreur lors de la génération'); }
+    finally{ btn.disabled = false; btn.innerHTML = originalText; }
+  });
+})();
+</script>
+<script>
+(function(){
+  const form = document.getElementById('concept-form');
+  const alertBox = document.getElementById('validation-alert');
+  const nameEl = document.getElementById('id_name');
+  const descEl = document.getElementById('id_description');
+  if(nameEl){ nameEl.setAttribute('placeholder', 'Nom du concept (obligatoire)'); }
+  if(descEl){ descEl.setAttribute('placeholder', 'Description du concept'); }
+  if(form){
+    form.addEventListener('submit', function(e){
+      const name = (nameEl && nameEl.value || '').trim();
+      if(!name){
+        e.preventDefault();
+        if(alertBox){ alertBox.classList.remove('d-none'); }
+        if(nameEl){ nameEl.focus(); }
+      }
+    });
+  }
+})();
+</script>
+{% endblock layout %}

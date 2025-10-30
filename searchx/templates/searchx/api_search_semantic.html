@@ -1,0 +1,36 @@
+{% extends layout_path %}
+{% block title %}API Semantic Search (UI){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-3 mb-3">
+    <div class="row g-2">
+      <div class="col-md-10"><input id="q" class="form-control" placeholder="Texte à analyser"></div>
+      <div class="col-md-2"><button id="btn" class="btn btn-primary">Analyser</button></div>
+    </div>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-6"><h5>Concepts détectés</h5><ul id="concepts" class="list-group"></ul></div>
+    <div class="col-md-6"><h5>Collections</h5><ul id="cols" class="list-group"></ul></div>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const q = document.getElementById('q');
+  const btn = document.getElementById('btn');
+  const concepts = document.getElementById('concepts');
+  const cols = document.getElementById('cols');
+  function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+  btn.addEventListener('click', async ()=>{
+    const v = (q.value||'').trim(); if(!v) return;
+    try{
+      const r = await fetch('/api/search/semantic', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text:v}) });
+      const j = await r.json();
+      clear(concepts); clear(cols);
+      (j.concepts||[]).forEach(c=>{ const li=document.createElement('li'); li.className='list-group-item'; li.innerHTML=`<strong>${c.name}</strong><div class='small text-muted'>score: ${c.score||0}</div>`; concepts.appendChild(li); });
+      (j.collections||[]).forEach(c=>{ const li=document.createElement('li'); li.className='list-group-item'; li.innerHTML=`<strong>${c.name}</strong> <span class='badge bg-label-primary'>${c.score||0}</span>`; cols.appendChild(li); });
+    }catch(e){ console.error(e); alert('Erreur'); }
+  });
+})();
+</script>
+{% endblock content %}

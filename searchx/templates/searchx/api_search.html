@@ -1,0 +1,54 @@
+{% extends layout_path %}
+{% block title %}API Search (UI){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-3 mb-3">
+    <div class="row g-2">
+      <div class="col-md-8"><input id="q" class="form-control" placeholder="Texte de recherche"></div>
+      <div class="col-md-2"><button id="btn-run" class="btn btn-primary">Rechercher</button></div>
+      <div class="col-md-2"><button id="btn-clear" class="btn btn-outline-secondary">Effacer</button></div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <h5>Concepts</h5>
+      <ul id="concepts" class="list-group"></ul>
+    </div>
+    <div class="col-md-4">
+      <h5>Collections</h5>
+      <ul id="collections" class="list-group"></ul>
+    </div>
+    <div class="col-md-4">
+      <h5>Ressources</h5>
+      <div id="resources"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const q = document.getElementById('q');
+  const btn = document.getElementById('btn-run');
+  const btnClear = document.getElementById('btn-clear');
+  const concepts = document.getElementById('concepts');
+  const collections = document.getElementById('collections');
+  const resources = document.getElementById('resources');
+  function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+  function renderList(el, items, mapper){ clear(el); (items||[]).forEach(it=>{ const li=document.createElement('li'); li.className='list-group-item'; li.innerHTML = mapper ? mapper(it) : JSON.stringify(it); el.appendChild(li); }); }
+  btn.addEventListener('click', async ()=>{
+    const v = (q.value||'').trim();
+    if(!v) return;
+    try{
+      const res = await fetch(`/api/search/?q=${encodeURIComponent(v)}`);
+      const data = await res.json();
+      renderList(concepts, data.concepts||[], c=>`<strong>${c.name}</strong><div class="small text-muted">${c.description||''}</div>`);
+      renderList(collections, data.collections||[], c=>`<strong>${c.name}</strong><div class="small text-muted">${c.description||''}</div>`);
+      clear(resources);
+      (data.resources||[]).forEach(r=>{ const d=document.createElement('div'); d.className='p-2 border rounded mb-2'; d.textContent = (r.title||JSON.stringify(r)); resources.appendChild(d); });
+    }catch(e){ console.error(e); alert('Erreur'); }
+  });
+  btnClear.addEventListener('click', ()=>{ q.value=''; clear(concepts); clear(collections); clear(resources); });
+})();
+</script>
+{% endblock content %}

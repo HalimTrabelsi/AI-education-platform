@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+{% extends "layout/master.html" %}
+{% block title %}Collections{% endblock title %}
+{% block page_css %}
+<style>
+  .list-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 0;
+    text-align: center;
+    margin-bottom: 30px;
+    border-radius: 0 0 1rem 1rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .list-header h1 {
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 5px;
+  }
+  .modern-table-card {
+    background: white;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+  .modern-table-card table {
+    margin-bottom: 0;
+  }
+  .modern-table-card thead {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
+  .modern-table-card thead th {
+    font-weight: 600;
+    border: none;
+    padding: 1rem 1.5rem;
+  }
+  .modern-table-card tbody td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+  }
+  .btn-modern {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.6rem 1.5rem;
+    transition: all 0.3s ease;
+  }
+  .btn-primary-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+  }
+  .btn-primary-modern:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  .btn-action {
+    border-radius: 0.4rem;
+    font-size: 0.875rem;
+    padding: 0.4rem 0.8rem;
+    transition: all 0.2s ease;
+  }
+  .btn-action:hover {
+    transform: translateY(-1px);
+  }
+</style>
+{% endblock page_css %}
+{% block layout %}
+
+<!-- En-tête moderne -->
+<section class="list-header">
+  <div class="container">
+    <h1>📂 Liste des Collections</h1>
+    <p class="mb-0">Gérez vos collections de ressources</p>
+  </div>
+</section>
+
+<div class="container-xxl pb-5">
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div class="d-flex gap-2">
+      <a class="btn btn-primary-modern btn-modern" href="{% url 'searchx:collection_create' %}">➕ Nouvelle Collection</a>
+      <a class="btn btn-outline-secondary btn-modern" href="{% url 'searchx:concept_list' %}">📚 Concepts</a>
+    </div>
+  </div>
+  
+  <div class="modern-table-card" data-aos="fade-up">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Filière</th>
+            <th>Niveau</th>
+            <th>Concepts</th>
+            <th>Ressources</th>
+            <th style="width: 180px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in items %}
+          <tr>
+            <td><span class="badge bg-secondary">#{{ c.id }}</span></td>
+            <td><strong>{{ c.name }}</strong></td>
+            <td><span class="badge bg-primary">{{ c.filiere }}</span></td>
+            <td><span class="badge bg-info">{{ c.level }}</span></td>
+            <td><span class="badge bg-success">{{ c.concepts.count }}</span></td>
+            <td><span class="badge bg-warning text-dark">{{ c.resources|length }}</span></td>
+            <td>
+              <a class="btn btn-sm btn-secondary btn-action" href="{% url 'searchx:collection_edit' c.id %}">✏️ Modifier</a>
+              <a class="btn btn-sm btn-danger btn-action" href="{% url 'searchx:collection_delete' c.id %}">🗑️ Supprimer</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-4">Aucune collection disponible.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock layout %}

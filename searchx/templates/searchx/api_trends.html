@@ -1,0 +1,36 @@
+{% extends layout_path %}
+{% block title %}API Trends (UI){% endblock title %}
+{% block content %}
+<div class="container-xxl py-4">
+  <div class="card p-3 mb-3">
+    <div class="row g-2">
+      <div class="col-md-10"><input id="filiere" class="form-control" placeholder="Filière (optionnel)"></div>
+      <div class="col-md-2"><button id="btn" class="btn btn-primary">Charger</button></div>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm"><thead><tr><th>Collection</th><th>Filière</th><th>Niveau</th><th>#Concepts</th><th>#Ressources</th></tr></thead><tbody id="body"></tbody></table>
+  </div>
+</div>
+
+<script>
+(async function(){
+  const fil = document.getElementById('filiere');
+  const btn = document.getElementById('btn');
+  const body = document.getElementById('body');
+  function clear(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+  btn.addEventListener('click', async ()=>{
+    const f = (fil.value||'').trim();
+    const url = f ? `/api/trends/?filiere=${encodeURIComponent(f)}` : '/api/trends/';
+    try{
+      const r = await fetch(url);
+      const j = await r.json();
+      clear(body);
+      (j.trends||[]).forEach(t=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${t.collection}</td><td>${t.filiere||''}</td><td>${t.level||''}</td><td>${t.concept_count}</td><td>${t.resource_count}</td>`; body.appendChild(tr); });
+    }catch(e){ console.error(e); alert('Erreur'); }
+  });
+  // initial load
+  btn.click();
+})();
+</script>
+{% endblock content %}

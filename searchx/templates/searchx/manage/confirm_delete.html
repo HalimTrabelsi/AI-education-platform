@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+{% extends "layout/master.html" %}
+{% block title %}Supprimer{% endblock title %}
+{% block layout %}
+<div class="container-xxl py-4">
+  <div class="card p-4">
+    <h3 class="mb-3">Supprimer {{ type }}</h3>
+    <p>Êtes-vous sûr de vouloir supprimer « {{ object }} » ?</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Confirmer</button>
+      {% if type == 'Concept' %}
+        <a class="btn btn-secondary" href="{% url 'searchx:concept_list' %}">Annuler</a>
+      {% else %}
+        <a class="btn btn-secondary" href="{% url 'searchx:collection_list' %}">Annuler</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock layout %}

@@ -10,7 +10,7 @@ import os
 from django.conf import settings
 
 # Chemin vers tesseract.exe
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Users\Mega Pc\Desktop"
 
 @receiver(post_save, sender=Resource)
 def extract_text(sender, instance, created, **kwargs):

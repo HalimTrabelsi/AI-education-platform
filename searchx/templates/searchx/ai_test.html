@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Test AI</title>
+<style>
+body { font-family: Arial; margin: 20px; }
+textarea { width: 100%; height: 100px; }
+button { margin-top: 10px; padding: 10px; }
+.result { margin-top: 20px; background: #f0f0f0; padding: 10px; }
+</style>
+</head>
+<body>
+<h1>Test AI Functions</h1>
+
+<h2>1. Extraction de concepts</h2>
+<textarea id="conceptsText" placeholder="Écris ton texte ici..."></textarea><br>
+<button onclick="extractConcepts()">Extraire Concepts</button>
+<div class="result" id="conceptsResult"></div>
+
+
+
+<h2>3. Répondre à une question</h2>
+<input type="text" id="questionText" placeholder="Ta question ici..." style="width: 100%;"><br>
+<button onclick="askQuestion()">Poser Question</button>
+<div class="result" id="answerResult"></div>
+
+<script>
+async function extractConcepts() {
+    const texte = document.getElementById("conceptsText").value;
+    const res = await fetch('/api/ai/extract-concepts/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ texte })
+    });
+    const data = await res.json();
+    document.getElementById("conceptsResult").innerText = JSON.stringify(data, null, 2);
+}
+
+
+
+async function askQuestion() {
+    const question = document.getElementById("questionText").value;
+    const res = await fetch('/api/ai/ask/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+    });
+    const data = await res.json();
+    document.getElementById("answerResult").innerText = JSON.stringify(data, null, 2);
+}
+</script>
+</body>
+</html>

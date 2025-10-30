@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "apps.form_layouts",
     "apps.tables",
     "chat",
+    "widget_tweaks",
 
 ]
 
@@ -92,6 +93,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "config.context_processors.my_setting",
                 "config.context_processors.environment",
+
             ],
             "libraries": {
                 "theme": "web_project.template_tags.theme",
@@ -99,6 +101,8 @@ TEMPLATES = [
             "builtins": [
                 "django.templatetags.static",
                 "web_project.template_tags.theme",
+                "resources.templatetags.resources_extras",  # ✅ move here
+
             ],
         },
     },
@@ -200,6 +204,24 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 THEME_LAYOUT_DIR = THEME_LAYOUT_DIR
 THEME_VARIABLES = THEME_VARIABLES
 
+
+
+# AI Configuration
+# ------------------------------------------------------------------------------
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo')
+HUGGINGFACE_API_KEY = os.environ.get('HUGGINGFACE_API_KEY')
+# Enforce external LLM by default (OpenAI or OpenRouter); set to False to allow local fallback
+AI_OPENAI_ONLY = os.environ.get('AI_OPENAI_ONLY', 'True').lower() in ['true', '1', 'yes']
+# OpenRouter alternative (free-tier friendly). If OPENAI_API_KEY is missing but OPENROUTER_API_KEY is set, we will use OpenRouter.
+OPENROUTER_API_KEY = os.environ.get('OPENROUTER_API_KEY')
+OPENROUTER_MODEL = os.environ.get('OPENROUTER_MODEL', 'openrouter/auto')
+# Do NOT hardcode API keys here. Set `OPENAI_API_KEY` in your environment or in a .env file.
+# TESSERACT_CMD can be overridden by env; default to 'tesseract' which works if tesseract is on PATH.
+
+# Semantic Search Config
+EMBEDDING_MODEL = os.environ.get('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
+VECTOR_SIMILARITY_THRESHOLD = float(os.environ.get('VECTOR_SIMILARITY_THRESHOLD', '0.7'))
 
 
 # Your stuff...

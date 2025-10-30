@@ -21,6 +21,14 @@
     </div>
     <!-- /Search -->
 
+    <!-- Quick navigation buttons -->
+    <div class="navbar-nav d-flex align-items-center ms-3">
+      <a href="{% url 'searchx:search' %}" class="btn btn-sm btn-outline-primary me-2">Recherche</a>
+      <a href="{% url 'searchx:api_search_page' %}" class="btn btn-sm btn-outline-primary me-2">API Search</a>
+      <a href="{% url 'searchx:api_concepts_page' %}" class="btn btn-sm btn-outline-primary me-2">Concepts</a>
+      <a href="{% url 'searchx:api_trends_page' %}" class="btn btn-sm btn-outline-primary">Tendances</a>
+    </div>
+
     <ul class="navbar-nav flex-row align-items-center ms-auto">
       <!-- Place this tag where you want the button to render. -->
       <li class="nav-item lh-1 me-4">
