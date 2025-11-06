@@ -454,5 +454,3 @@ def admin_stop_impersonation(request):
     _log_admin_action(admin_user, [], "impersonate_stop")
     messages.info(request, "Impersonation terminee.")
     return redirect("dashboards:admin")
-
-

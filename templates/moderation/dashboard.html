@@ -1,0 +1,100 @@
+{% extends "moderation/base.html" %}
+{% block moderation_content %}
+
+<h1 class="mb-4">Tableau de bord Modération & Intégrité</h1>
+
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card bg-primary text-white p-3">
+      <h5>Total Signalements</h5>
+      <h3>{{ total_reports }}</h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-danger text-white p-3">
+      <h5>Plagiat détecté</h5>
+      <h3>{{ plagiarism_count }}</h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-warning text-dark p-3">
+      <h5>NSFW / Triche IA</h5>
+      <h3>{{ nsfw_count }}</h3>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-success text-white p-3">
+      <h5>Score AI moyen</h5>
+      <h3>{{ avg_ai_score }}</h3>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex mb-3">
+  <input type="text" id="search-input" placeholder="Rechercher..." class="form-control me-2">
+  <select id="sort-select" class="form-select w-auto me-2">
+    <option value="asc">A → Z</option>
+    <option value="desc">Z → A</option>
+  </select>
+  <a href="{% url 'moderation:report_create' %}" class="btn btn-primary">+ Nouveau signalement</a>
+</div>
+
+<table class="table table-bordered table-hover" id="reports-table">
+  <thead class="table-light">
+    <tr>
+      <th>Titre</th>
+      <th>Signalé par</th>
+      <th>Plagiat</th>
+      <th>NSFW / Triche IA</th>
+      <th>Score AI</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<nav>
+  <ul class="pagination justify-content-center" id="pagination"></ul>
+</nav>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function loadReports(page=1){
+  $.get("{% url 'moderation:report_data' %}", {
+      q: $('#search-input').val(),
+      sort: $('#sort-select').val(),
+      page: page
+  }, function(data){
+      const tbody = $('#reports-table tbody');
+      tbody.empty();
+      data.reports.forEach(r => {
+          tbody.append(`
+              <tr>
+                  <td>${r.title}</td>
+                  <td>${r.flagged_by}</td>
+                  <td>${r.is_plagiarism ? '<span class="badge bg-danger">Oui</span>' : '<span class="badge bg-success">Non</span>'}</td>
+                  <td>${r.is_nsfw ? '<span class="badge bg-warning text-dark">Oui</span>' : '<span class="badge bg-success">Non</span>'}</td>
+                  <td>${r.ai_confidence}</td>
+                  <td>
+                      <a href="/moderation/update/${r.id}/" class="btn btn-sm btn-outline-primary">Éditer</a>
+                      <a href="/moderation/delete/${r.id}/" class="btn btn-sm btn-outline-danger" onclick="return confirm('Confirmer suppression ?')">Supprimer</a>
+                  </td>
+              </tr>
+          `);
+      });
+
+      const pagination = $('#pagination');
+      pagination.empty();
+      for(let i=1;i<=data.num_pages;i++){
+          pagination.append(`<li class="page-item ${data.page_number==i?'active':''}">
+              <a class="page-link" href="#" onclick="loadReports(${i}); return false;">${i}</a></li>`);
+      }
+  });
+}
+
+$('#search-input').on('keyup', ()=> loadReports(1));
+$('#sort-select').on('change', ()=> loadReports(1));
+$(document).ready(()=> loadReports());
+</script>
+
+{% endblock %}

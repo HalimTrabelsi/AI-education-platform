@@ -114,7 +114,8 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+Path(MEDIA_ROOT).mkdir(exist_ok=True)
 
 
 DATABASES = {
@@ -129,7 +130,8 @@ connect(
     alias="default",
 )
 AUTHENTICATION_BACKENDS = ["accounts.backends.MongoUserBackend"]
-SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"  # avoid hitting the SQL database
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
 
 
 AUTH_PASSWORD_VALIDATORS = [

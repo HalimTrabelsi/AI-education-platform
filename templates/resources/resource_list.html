@@ -4,72 +4,99 @@
 {% block title %}Gestion des ressources{% endblock %}
 
 {% block content %}
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <div>
-            <h5 class="mb-0">Bibliothque des cours</h5>
-            <small class="text-body-secondary">Ajoutez, modifiez ou supprimez vos ressources pdagogiques.</small>
-          </div>
-          <a href="{% url 'resources:add' %}" class="btn btn-primary">
-            <i class="bx bx-plus-circle me-1"></i> Ajouter une ressource
-          </a>
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <h5 class="mb-0">Bibliothèque des cours</h5>
+          <small class="text-body-secondary">Ajoutez, modifiez ou supprimez vos ressources pédagogiques.</small>
         </div>
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead class="table-light">
-              <tr>
-                <th>Titre</th>
-                <th>Type</th>
-                <th>Tags</th>
-                <th>Ajoute le</th>
-                <th class="text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for res in resources %}
-                <tr>
-                  <td class="fw-semibold">{{ res.title }}</td>
-                  <td>{{ res.resource_type }}</td>
-                  <td>
-                    {% if res.tags %}
-                      {% for tag in res.tags %}
-                        <span class="badge bg-label-info me-1">{{ tag }}</span>
-                      {% endfor %}
-                    {% else %}
-                      <span class="text-body-secondary">Aucun</span>
-                    {% endif %}
-                  </td>
-                  <td>{{ res.uploaded_at|date:"d/m/Y H:i" }}</td>
-                  <td class="text-center">
-                    <div class="btn-group btn-group-sm">
-                      <a href="{% url 'resources:detail' res.id %}" class="btn btn-outline-secondary">
-                        <i class="bx bx-show"></i>
-                      </a>
-                      <a href="{% url 'resources:edit' res.id %}" class="btn btn-outline-warning">
-                        <i class="bx bx-edit"></i>
-                      </a>
-                      <form method="post" action="{% url 'resources:delete' res.id %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Supprimer cette ressource ?');">
-                          <i class="bx bx-trash"></i>
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="5" class="text-center text-body-secondary py-6">
-                    Aucune ressource disponible pour le moment.
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+        <a href="{% url 'resources:add' %}" class="btn btn-primary">
+          <i class="bx bx-plus-circle me-1"></i> Ajouter une ressource
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Titre</th>
+              <th>Type</th>
+              <th>Tags</th>
+              <th>Ajouté le</th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for res in resources %}
+            <tr>
+              <td class="fw-semibold">{{ res.title }}</td>
+              <td>
+                <span class="badge bg-label-info text-uppercase">{{ res.resource_type }}</span>
+              </td>
+              <td>
+                {% if res.tags %}
+                  {% for tag in res.tags %}
+                    <span class="badge bg-label-secondary me-1">{{ tag }}</span>
+                  {% endfor %}
+                {% else %}
+                  <span class="text-body-secondary">Aucun</span>
+                {% endif %}
+              </td>
+              <td>{{ res.uploaded_at|date:"d/m/Y H:i" }}</td>
+
+              <!-- 🎯 Boutons revisités -->
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <!-- Afficher -->
+                  <a href="{% url 'resources:detail' res.id %}"
+                     class="btn btn-sm btn-light border text-primary"
+                     title="Afficher">
+                    <i class="bx bx-show fs-5"></i>
+                  </a>
+
+                  <!-- Modifier -->
+                  <a href="{% url 'resources:edit' res.id %}"
+                     class="btn btn-sm btn-warning text-white shadow-sm"
+                     title="Modifier">
+                    <i class="bx bx-edit fs-5"></i>
+                  </a>
+
+                  <!-- Supprimer -->
+                  <form method="post" action="{% url 'resources:delete' res.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn btn-sm btn-danger shadow-sm"
+                            title="Supprimer"
+                            onclick="return confirm('Supprimer cette ressource ?');">
+                      <i class="bx bx-trash fs-5"></i>
+                    </button>
+                  </form>
+
+                  <!-- Télécharger si fichier existe -->
+                  {% if res.file %}
+                  <a href="{{ media_url }}{{ res.file }}"
+                     class="btn btn-sm btn-success shadow-sm"
+                     title="Télécharger"
+                     download>
+                    <i class="bx bx-download fs-5"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center text-body-secondary py-5">
+                Aucune ressource disponible pour le moment.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
+</div>
 {% endblock %}

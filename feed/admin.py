@@ -1,3 +1,6 @@
 from django.contrib import admin
 
-# Register your models here.
+
+from django.utils.html import format_html
+
+print("⚠️ Le modèle FeedItem est basé sur MongoEngine et n’est pas enregistré dans l’admin Django.")

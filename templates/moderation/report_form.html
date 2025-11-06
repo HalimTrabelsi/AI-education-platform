@@ -1,0 +1,155 @@
+{% extends "moderation/base.html" %}
+{% block content %}
+<div class="container py-5">
+  <div class="mb-5 text-center">
+    <h2 class="fw-bold mb-1">{% if report %}Modifier le signalement{% else %}Nouveau signalement{% endif %}</h2>
+    <p class="text-muted fs-6">
+      {% if report %}
+        Modifiez les informations du signalement. Les tags IA et les flags sont générés automatiquement.
+      {% else %}
+        Créez un nouveau signalement — les tags IA et flags se mettront à jour automatiquement.
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-4">
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Titre</label>
+              <input type="text" id="titleInput" name="{{ form.title.name }}" value="{{ form.title.value }}" class="form-control form-control-sm">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">URL de la ressource</label>
+              <input type="text" id="urlInput" name="{{ form.resource_url.name }}" value="{{ form.resource_url.value }}" class="form-control form-control-sm">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Signalé par</label>
+              <input type="text" id="flaggedByInput" name="{{ form.flagged_by.name }}" value="{{ form.flagged_by.value }}" class="form-control form-control-sm">
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Score IA</label>
+              <div class="progress">
+                <div id="aiProgress" class="progress-bar" role="progressbar" style="width:0%">0%</div>
+              </div>
+              <input type="hidden" id="aiConfInput" name="{{ form.ai_confidence.name }}" value="{{ form.ai_confidence.value }}">
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label fw-bold">Description</label>
+              <textarea id="descInput" name="{{ form.description.name }}" class="form-control form-control-sm" rows="5">{{ form.description.value }}</textarea>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Tags IA</label>
+              <input type="text" id="aiFlagsInput" name="{{ form.ai_flags.name }}" value="{{ form.ai_flags.value }}" class="form-control form-control-sm bg-light" readonly>
+            </div>
+            <div class="form-check mb-2">
+              <input type="checkbox" id="nsfwCheck" class="form-check-input" disabled>
+              <label class="form-check-label fw-bold">NSFW détecté</label>
+            </div>
+            <div class="form-check mb-2">
+              <input type="checkbox" id="plagiarismCheck" class="form-check-input" disabled>
+              <label class="form-check-label fw-bold">Plagiat détecté</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-4">
+          <a href="{% url 'moderation:report_list' %}" class="btn btn-outline-secondary">Annuler</a>
+          <button type="button" id="verifyAIButton" class="btn btn-info fw-bold">Vérifier AI</button>
+          <button type="submit" class="btn btn-primary fw-bold">{% if report %}Mettre à jour{% else %}Créer{% endif %}</button>
+        </div>
+
+        <div id="aiResultMessage" class="mt-4 p-3 text-center fw-bold rounded" style="font-size:1.3rem;"></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const titleInput = document.getElementById('titleInput');
+    const urlInput = document.getElementById('urlInput');
+    const descInput = document.getElementById('descInput');
+    const aiConfInput = document.getElementById('aiConfInput');
+    const aiFlagsInput = document.getElementById('aiFlagsInput');
+    const nsfwCheck = document.getElementById('nsfwCheck');
+    const plagCheck = document.getElementById('plagiarismCheck');
+    const aiProgress = document.getElementById('aiProgress');
+    const aiResultMessage = document.getElementById('aiResultMessage');
+
+    function updateProgressBar(conf) {
+        aiProgress.style.width = `${(conf*100).toFixed(0)}%`;
+        aiProgress.textContent = `${(conf*100).toFixed(0)}%`;
+        // Gradient color: green → yellow → red
+        if(conf < 0.45){
+            aiProgress.className = 'progress-bar bg-success';
+        } else if(conf < 0.65){
+            aiProgress.className = 'progress-bar bg-warning text-dark';
+        } else {
+            aiProgress.className = 'progress-bar bg-danger';
+        }
+    }
+
+    async function verifyAI() {
+        const title = titleInput.value.trim();
+        const url = urlInput.value.trim();
+        const description = descInput.value.trim();
+        if (!title) return;
+
+        try {
+            const response = await fetch("{% url 'moderation:verify_ai' %}", {
+                method: "POST",
+                headers: {"Content-Type": "application/json","X-CSRFToken": "{{ csrf_token }}"},
+                body: JSON.stringify({title, url, description})
+            });
+            const data = await response.json();
+
+            const conf = parseFloat(data.ai_confidence);
+            aiConfInput.value = conf.toFixed(4); // store precise value
+            updateProgressBar(conf);
+
+            aiFlagsInput.value = data.ai_flags.join(", ") || "Aucun tag détecté";
+            nsfwCheck.checked = data.is_nsfw;
+            plagCheck.checked = data.is_plagiarism;
+
+            // Text message
+            if(conf >= 0.65 || data.is_nsfw || data.is_plagiarism){
+                aiResultMessage.textContent = "⚠️ Contenu à risque détecté !";
+                aiResultMessage.style.backgroundColor = "#f8d7da";
+                aiResultMessage.style.color = "#721c24";
+            } else if (conf >= 0.45){
+                aiResultMessage.textContent = "⚠️ Contenu incertain : pourrait être généré par IA ou humain.";
+                aiResultMessage.style.backgroundColor = "#fff3cd";
+                aiResultMessage.style.color = "#856404";
+            } else {
+                aiResultMessage.textContent = "✅ Contenu probablement humain.";
+                aiResultMessage.style.backgroundColor = "#d4edda";
+                aiResultMessage.style.color = "#155724";
+            }
+
+        } catch (err) {
+            console.error(err);
+            alert("Erreur lors de la vérification AI");
+        }
+    }
+
+    let debounceTimer;
+    descInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(verifyAI, 500);
+    });
+
+    document.getElementById('verifyAIButton').addEventListener('click', verifyAI);
+
+    // Initial check if editing existing report
+    if(aiConfInput.value) updateProgressBar(parseFloat(aiConfInput.value));
+});
+</script>
+{% endblock %}

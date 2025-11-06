@@ -40,9 +40,8 @@
     </li>
 
     {% if request.user.is_authenticated %}
-      <li class="menu-header small text-uppercase">
-        <span class="menu-header-text">Espace</span>
-      </li>
+
+
 
       {% if request.user.role == "student" %}
         <li class="menu-item {% if request.path and 'resources/front-office' in request.path %}active{% endif %}">
@@ -67,9 +66,18 @@
         <li class="menu-item {% if request.path and 'resources/back-office' in request.path %}active{% endif %}">
           <a href="{% url 'resources:list' %}" class="menu-link">
             <i class="menu-icon icon-base bx bx-folder"></i>
-            <div class="text-truncate">Ressources (Back-office)</div>
+            <div class="text-truncate">Ressources</div>
           </a>
         </li>
+        <li class="menu-header small text-uppercase">
+        <span class="menu-header-text">Espace</span>
+      </li>
+      <li class="menu-item">
+      <a href="{% url 'moderation:report_list' %}" class="menu-link">
+      <i class="menu-icon tf-icons bx bx-shield-quarter"></i>
+      <div>Modération</div>
+      </a>
+      </li>
         <li class="menu-item {% if request.path and 'resources/front-office' in request.path %}active{% endif %}">
           <a href="{% url 'resources:front' %}" class="menu-link">
             <i class="menu-icon icon-base bx bx-show-alt"></i>
@@ -118,7 +126,13 @@
           <div class="text-truncate">Messagerie</div>
         </a>
       </li>
-      
+     <li class="menu-item {% if request.path and '/feed/' in request.path %}active{% endif %}">
+      <a href="{% url 'feed:list' %}" class="menu-link">
+    <i class="menu-icon icon-base bx bx-rss"></i>
+    <div class="text-truncate">Fil d’actualité</div>
+        </a>
+    </li>
+
     {% else %}
       <li class="menu-item">
         <a href="{% url 'auth-login-basic' %}" class="menu-link">

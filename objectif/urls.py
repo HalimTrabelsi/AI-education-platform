@@ -15,7 +15,9 @@ urlpatterns = [
     path('details/<str:obj_id>/', views.objective_details, name='objective_details'),
     path('qrcode/<str:obj_id>/', views.generate_qrcode, name='generate_qrcode'),
     path('api/<str:obj_id>/', views.objective_json, name='objective_json'),
-    
+    path("<str:obj_id>/", views.objective_details, name="detail"),  # ✅ FIX HERE
+    path("<str:obj_id>/qrcode/", views.generate_qrcode, name="qrcode"),  # ✅ ADD THIS
+
     # Calendrier
     path('calendar/', views.objective_calendar, name='calendar'),
     path('calendar/api/', views.calendar_events_api, name='calendar_events_api'),

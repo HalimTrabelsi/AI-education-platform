@@ -1,0 +1,16 @@
+{% extends layout_path %}
+{% load static %}
+
+{% block title %}Modération{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  {% block moderation_content %}{% endblock %}
+</div>
+{% endblock content %}
+
+{# ✅ Forward scripts from children to layout_vertical.html #}
+{% block extra_scripts %}
+  {{ block.super }}
+  {% block moderation_scripts %}{% endblock moderation_scripts %}
+{% endblock extra_scripts %}

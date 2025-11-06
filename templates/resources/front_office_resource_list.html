@@ -27,7 +27,7 @@
                 <source src="{{ media_url }}{{ res.file }}" type="video/mp4">
               </video>
             {% elif res.resource_type == 'PDF' %}
-              <img src="https://via.placeholder.com/600x300/EEF1FF/2F3A8F?text=Document+PDF" class="card-img-top" alt="PDF">
+                <img src="{{ media_url }}resources/PDFLogo.jpeg" class="card-img-top" alt="PDF">
             {% else %}
               <img src="https://via.placeholder.com/600x300/E9ECEF/495057?text=Fichier" class="card-img-top" alt="Fichier">
             {% endif %}
@@ -56,7 +56,7 @@
               </a>
               {% if res.file %}
                 <a href="{{ media_url }}{{ res.file }}" download class="btn btn-outline-success btn-sm">
-                  <i class="bx bx-download me-1"></i> Tlcharger
+                  <i class="bx bx-download me-1"></i> Télécharger
                 </a>
               {% endif %}
             </div>

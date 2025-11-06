@@ -12,7 +12,11 @@
     <div class="layout-page">
 
       <!-- Navbar toujours incluse -->
-      {% include "../layout/partials/navbar/navbar.html" %}
+      {% include "../layout/partials/navbar/navbar.html" %}   
+
+
+        <!-- Boxicons -->
+        <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
 
       <!-- Content wrapper: Start -->
       <div class="content-wrapper">
@@ -41,5 +45,10 @@
 
   </div>
 </div>
+{% block extra_scripts %}
+  {{ block.super }}
+{% endblock %}
+<script>console.log("✅ layout_vertical extra_scripts block reached!");</script>
+
 <!-- Layout wrapper: End -->
 {% endblock layout %}

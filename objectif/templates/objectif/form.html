@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4">
     <h2>{% if form.instance.id %}Modifier{% else %}Créer{% endif %} un objectif</h2>
-    
+
     <!-- Affichage des erreurs générales -->
     {% if form.non_field_errors %}
     <div class="alert alert-danger">
@@ -15,13 +15,13 @@
 
     <form method="POST" novalidate id="objectif-form">
         {% csrf_token %}
-        
+
         <!-- Titre -->
         <div class="mb-3">
             <label for="id_titre" class="form-label">Titre : <span class="text-danger">*</span></label>
-            <input type="text" class="form-control {% if form.titre.errors %}is-invalid{% endif %}" 
-                   id="id_titre" name="titre" 
-                   value="{{ form.titre.value|default_if_none:'' }}" 
+            <input type="text" class="form-control {% if form.titre.errors %}is-invalid{% endif %}"
+                   id="id_titre" name="titre"
+                   value="{{ form.titre.value|default_if_none:'' }}"
                    required maxlength="100"
                    placeholder="Ex: Préparation examen final">
             <div class="form-text">Maximum 100 caractères</div>
@@ -37,8 +37,8 @@
         <!-- Description -->
         <div class="mb-3">
             <label for="id_description" class="form-label">Description :</label>
-            <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}" 
-                      id="id_description" name="description" 
+            <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}"
+                      id="id_description" name="description"
                       rows="4" maxlength="500"
                       placeholder="Décrivez votre objectif en détail...">{{ form.description.value|default_if_none:'' }}</textarea>
             <div class="form-text">Maximum 500 caractères</div>
@@ -57,9 +57,9 @@
         <!-- Filière -->
         <div class="mb-3">
             <label for="id_filiere" class="form-label">Filière : <span class="text-danger">*</span></label>
-            <input type="text" class="form-control {% if form.filiere.errors %}is-invalid{% endif %}" 
-                   id="id_filiere" name="filiere" 
-                   value="{{ form.filiere.value|default_if_none:'' }}" 
+            <input type="text" class="form-control {% if form.filiere.errors %}is-invalid{% endif %}"
+                   id="id_filiere" name="filiere"
+                   value="{{ form.filiere.value|default_if_none:'' }}"
                    required maxlength="50"
                    placeholder="Ex: Informatique, Mathématiques">
             <div class="form-text">Maximum 50 caractères</div>
@@ -75,7 +75,7 @@
         <!-- Niveau -->
         <div class="mb-3">
             <label for="id_niveau" class="form-label">Niveau : <span class="text-danger">*</span></label>
-            <select class="form-select {% if form.niveau.errors %}is-invalid{% endif %}" 
+            <select class="form-select {% if form.niveau.errors %}is-invalid{% endif %}"
                     id="id_niveau" name="niveau" required>
                 <option value="">Sélectionnez un niveau</option>
                 <option value="Licence 1" {% if form.niveau.value == 'Licence 1' %}selected{% endif %}>Licence 1</option>
@@ -98,7 +98,7 @@
 <!-- Priorité -->
 <div class="mb-3">
     <label for="id_priorite" class="form-label">Priorité : <span class="text-danger">*</span></label>
-    <select class="form-select {% if form.priorite.errors %}is-invalid{% endif %}" 
+    <select class="form-select {% if form.priorite.errors %}is-invalid{% endif %}"
             id="id_priorite" name="priorite" required>
         <option value="">Sélectionnez une priorité</option>
         <option value="haute" {% if form.priorite.value == 'haute' %}selected{% endif %}>Haute</option>
@@ -117,7 +117,7 @@
 <!-- État -->
 <div class="mb-3">
     <label for="id_etat" class="form-label">État : <span class="text-danger">*</span></label>
-    <select class="form-select {% if form.etat.errors %}is-invalid{% endif %}" 
+    <select class="form-select {% if form.etat.errors %}is-invalid{% endif %}"
             id="id_etat" name="etat" required>
         <option value="">Sélectionnez un état</option>
         <option value="non commencé" {% if form.etat.value == 'non commencé' %}selected{% endif %}>Non commencé</option>
@@ -136,8 +136,8 @@
         <!-- Date début -->
         <div class="mb-3">
             <label for="id_date_debut" class="form-label">Date début :</label>
-            <input type="datetime-local" class="form-control {% if form.date_debut.errors %}is-invalid{% endif %}" 
-                   id="id_date_debut" name="date_debut" 
+            <input type="datetime-local" class="form-control {% if form.date_debut.errors %}is-invalid{% endif %}"
+                   id="id_date_debut" name="date_debut"
                    value="{{ form.date_debut.value|default_if_none:'' }}">
             {% if form.date_debut.errors %}
             <div class="invalid-feedback">
@@ -151,8 +151,8 @@
         <!-- Date échéance -->
         <div class="mb-3">
             <label for="id_date_echeance" class="form-label">Date échéance :</label>
-            <input type="datetime-local" class="form-control {% if form.date_echeance.errors %}is-invalid{% endif %}" 
-                   id="id_date_echeance" name="date_echeance" 
+            <input type="datetime-local" class="form-control {% if form.date_echeance.errors %}is-invalid{% endif %}"
+                   id="id_date_echeance" name="date_echeance"
                    value="{{ form.date_echeance.value|default_if_none:'' }}">
             {% if form.date_echeance.errors %}
             <div class="invalid-feedback">
@@ -165,7 +165,7 @@
 
         <!-- Validation des dates -->
         <div id="date-validation" class="alert alert-warning d-none">
-            <i class="fas fa-exclamation-triangle"></i> 
+            <i class="fas fa-exclamation-triangle"></i>
             La date d'échéance doit être postérieure à la date de début.
         </div>
 
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDescriptionCounter() {
         const remaining = 500 - descriptionField.value.length;
         descriptionCounter.textContent = remaining;
-        
+
         if (remaining < 0) {
             descriptionCounter.classList.add('text-danger');
         } else {
@@ -210,14 +210,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dateDebut.value && dateEcheance.value) {
             const debut = new Date(dateDebut.value);
             const echeance = new Date(dateEcheance.value);
-            
+
             if (echeance <= debut) {
                 dateValidation.classList.remove('d-none');
                 submitBtn.disabled = true;
                 return false;
             }
         }
-        
+
         dateValidation.classList.add('d-none');
         submitBtn.disabled = false;
         return true;

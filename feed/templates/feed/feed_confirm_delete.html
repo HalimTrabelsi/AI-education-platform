@@ -1,0 +1,593 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Supprimer - {{ feed_item.title }}</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'vendor/fonts/boxicons.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
+
+    <style>
+        :root {
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --danger-dark: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fef3f2 0%, #fee2e2 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Sidebar */
+        .layout-menu {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+        }
+
+        .app-brand-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        /* Navbar moderne */
+        .layout-navbar {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Card avec effet glassmorphism */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+        .card.border-danger {
+            border: 3px solid #ef4444 !important;
+            animation: pulse-border 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Header avec gradient danger */
+        .card-header.bg-danger {
+            background: var(--danger-dark) !important;
+            border: none;
+            padding: 1.5rem 2rem;
+        }
+
+        /* Alerte warning stylée */
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.15) 100%);
+            border: none;
+            border-left: 5px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.25rem;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Card de prévisualisation */
+        .bg-light {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(251, 113, 133, 0.05) 100%) !important;
+            border: 2px solid rgba(239, 68, 68, 0.1);
+            border-radius: 16px;
+            transition: var(--transition);
+        }
+
+        .bg-light:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Boutons modernes */
+        .btn {
+            border-radius: 12px;
+            padding: 0.875rem 1.75rem;
+            font-weight: 600;
+            border: none;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-danger {
+            background: var(--danger-dark);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-danger::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-danger:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-label-secondary {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+        }
+
+        .btn-label-secondary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        }
+
+        /* Icône d'avertissement animée */
+        .warning-icon {
+            font-size: 5rem;
+            color: #ef4444;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        /* Badge de type */
+        .info-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #991b1b;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Breadcrumb moderne */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            font-size: 1.3rem;
+            color: #ef4444;
+        }
+
+        .breadcrumb-item a {
+            color: #ef4444;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            font-weight: 500;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #dc2626;
+        }
+
+        /* Footer */
+        .content-footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            margin-top: 3rem;
+        }
+
+        /* Animation d'entrée */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeInUp 0.5s ease;
+        }
+
+        /* Effet de tremblement au hover sur le bouton supprimer */
+        .btn-danger:active {
+            animation: shake-button 0.3s ease;
+        }
+
+        @keyframes shake-button {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fee2e2;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--danger-dark);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #dc2626;
+        }
+
+        /* Card body avec meilleur padding */
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Messages d'alerte */
+        .alert {
+            border: none;
+            border-radius: 12px;
+            animation: slideInDown 0.4s ease;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Texte avec meilleure lisibilité */
+        p {
+            line-height: 1.7;
+            color: #374151;
+        }
+
+        /* Info item avec hover */
+        .small.text-muted > div {
+            padding: 0.5rem 0;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .small.text-muted > div:hover {
+            background: rgba(239, 68, 68, 0.05);
+            padding-left: 0.5rem;
+        }
+
+        /* Titre de la card avec meilleure visibilité */
+        h5.card-title {
+            color: #1f2937;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        /* Description tronquée */
+        .card-text {
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Overlay pour effet dramatique */
+        .danger-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(239, 68, 68, 0.03);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Amélioration du contraste pour les icônes */
+        .bx {
+            vertical-align: middle;
+        }
+
+        /* Animation du warning badge */
+        .alert-warning i {
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Overlay subtil pour effet dramatique -->
+    <div class="danger-overlay"></div>
+
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo">
+                    <a href="/" class="app-brand-link">
+                        <span class="app-brand-text demo menu-text fw-bolder ms-2">🤖 EduSocial</span>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item">
+                        <a href="/" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                            <div>Accueil</div>
+                        </a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="{% url 'feed:list' %}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-news"></i>
+                            <div>Feed</div>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="layout-page">
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm"></i>
+                        </a>
+                    </div>
+                    <div class="navbar-nav-right d-flex align-items-center">
+                        <div class="navbar-nav align-items-center">
+                            <div class="nav-item d-flex align-items-center gap-2">
+                                <i class="bx bx-error-circle text-danger fs-4"></i>
+                                <span class="fw-semibold text-danger">Confirmer la suppression</span>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <nav aria-label="breadcrumb" class="mb-4">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'feed:list' %}"><i class="bx bx-home-alt"></i> Feed</a>
+                                </li>
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'feed:detail' feed_item.pk %}">{{ feed_item.title|truncatewords:5 }}</a>
+                                </li>
+                                <li class="breadcrumb-item active">Supprimer</li>
+                            </ol>
+                        </nav>
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-7">
+                                <!-- Icône d'avertissement centrée -->
+                                <div class="text-center mb-4">
+                                    <i class="bx bx-error-circle warning-icon"></i>
+                                </div>
+
+                                <div class="card border-danger">
+                                    <div class="card-header bg-danger">
+                                        <h4 class="mb-0 text-white d-flex align-items-center gap-2">
+                                            <i class="bx bx-trash"></i>
+                                            Confirmation de suppression
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-warning d-flex align-items-start gap-3 mb-4">
+                                            <i class="bx bx-info-circle fs-3"></i>
+                                            <div>
+                                                <strong class="d-block mb-1">⚠️ Attention : Action irréversible !</strong>
+                                                <span>Une fois supprimé, cet élément ne pourra pas être récupéré. Toutes les données associées seront définitivement perdues.</span>
+                                            </div>
+                                        </div>
+
+                                        <p class="mb-4 fs-5 text-center fw-semibold">
+                                            Êtes-vous absolument sûr de vouloir supprimer cet élément ?
+                                        </p>
+
+                                        <!-- Card de prévisualisation -->
+                                        <div class="card bg-light mb-4">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-start gap-3">
+                                                    <div class="flex-shrink-0">
+                                                        <div style="width: 50px; height: 50px; border-radius: 12px; background: var(--danger-gradient); display: flex; align-items: center; justify-content: center;">
+                                                            <i class="bx bx-file text-white fs-3"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <h5 class="card-title mb-2">{{ feed_item.title }}</h5>
+                                                        <p class="card-text text-muted mb-3">
+                                                            {{ feed_item.description|truncatewords:25 }}
+                                                        </p>
+                                                        
+                                                        <div class="small text-muted">
+                                                            <div class="mb-2 d-flex align-items-center gap-2">
+                                                                <span class="info-badge">
+                                                                    <i class="bx bx-tag"></i>
+                                                                    {{ feed_item.get_content_type_display }}
+                                                                </span>
+                                                            </div>
+                                                            <div class="mb-2 d-flex align-items-center gap-2">
+                                                                <i class="bx bx-user-circle text-danger"></i> 
+                                                                <strong>Auteur:</strong> 
+                                                                <span>{{ feed_item.get_author_username }}</span>
+                                                            </div>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <i class="bx bx-calendar-check text-danger"></i> 
+                                                                <strong>Créé le:</strong> 
+                                                                <span>{{ feed_item.created_at|date:"d/m/Y à H:i" }}</span>
+                                                            </div>
+                                                            {% if feed_item.deadline %}
+                                                            <div class="mt-2 d-flex align-items-center gap-2">
+                                                                <i class="bx bx-alarm text-danger"></i> 
+                                                                <strong>Échéance:</strong> 
+                                                                <span>{{ feed_item.deadline|date:"d/m/Y à H:i" }}</span>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Formulaire de suppression -->
+                                        <form method="post" id="deleteForm">
+                                            {% csrf_token %}
+                                            <div class="d-flex gap-3">
+                                                <button type="submit" class="btn btn-danger flex-fill" id="deleteButton">
+                                                    <i class="bx bx-trash me-2"></i> 
+                                                    Oui, supprimer définitivement
+                                                </button>
+                                                <a href="{% url 'feed:detail' feed_item.pk %}" 
+                                                   class="btn btn-label-secondary flex-fill">
+                                                    <i class="bx bx-x me-2"></i> 
+                                                    Non, annuler
+                                                </a>
+                                            </div>
+                                        </form>
+
+                                        <!-- Message d'information supplémentaire -->
+                                        <div class="mt-4 p-3 rounded-3" style="background: rgba(239, 68, 68, 0.05); border-left: 4px solid #ef4444;">
+                                            <small class="text-muted d-flex align-items-center gap-2">
+                                                <i class="bx bx-shield-quarter"></i>
+                                                <span>Pour des raisons de sécurité, cette action nécessite votre confirmation explicite.</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl py-3 text-center">
+                            <span class="text-muted">
+                                © 2025 <strong style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EduSocial</strong> 
+                                — Plateforme éducative augmentée par l'IA 🤖
+                            </span>
+                        </div>
+                    </footer>
+                    <div class="content-backdrop fade"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static 'vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'vendor/js/menu.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <script>
+        // Suppression directe avec animation
+        document.getElementById('deleteForm').addEventListener('submit', function(e) {
+            // Animation du bouton lors de la suppression
+            const btn = document.getElementById('deleteButton');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Suppression en cours...';
+            btn.disabled = true;
+            
+            // Désactiver aussi le bouton annuler
+            document.querySelector('.btn-label-secondary').classList.add('disabled');
+        });
+
+        // Effets visuels au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation de pulsation pour le bouton danger
+            const dangerBtn = document.getElementById('deleteButton');
+            setInterval(() => {
+                dangerBtn.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    dangerBtn.style.transform = 'scale(1)';
+                }, 200);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

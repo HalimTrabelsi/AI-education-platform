@@ -8,32 +8,32 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
-        
+
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        
+
         /* Header */
         .header { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header h1 { color: #2c3e50; margin-bottom: 10px; }
         .header .objective-id { color: #7f8c8d; font-size: 14px; }
-        
+
         /* Layout principal */
         .main-layout { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
-        
+
         /* Sections */
         .section { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .section h2 { color: #2c3e50; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #3498db; }
-        
+
         /* Grid pour les informations */
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
         .info-item { padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #3498db; }
         .info-item strong { display: block; color: #2c3e50; margin-bottom: 5px; }
-        
+
         /* Barre de progression */
         .progress-container { margin: 15px 0; }
         .progress-bar { background: #ecf0f1; border-radius: 10px; height: 25px; overflow: hidden; position: relative; }
         .progress-fill { background: linear-gradient(45deg, #3498db, #2980b9); height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; transition: width 0.3s ease; }
         .progress-text { position: absolute; width: 100%; text-align: center; font-weight: bold; color: #2c3e50; }
-        
+
         /* Badges */
         .badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin: 2px; }
         .badge-high { background: #e74c3c; color: white; }
@@ -43,19 +43,19 @@
         .badge-warning { background: #f39c12; color: white; }
         .badge-danger { background: #e74c3c; color: white; }
         .badge-info { background: #3498db; color: white; }
-        
+
         /* QR Code */
         .qr-section { text-align: center; }
         .qr-code img { max-width: 200px; border: 1px solid #ddd; border-radius: 10px; padding: 10px; background: white; transition: transform 0.3s ease; }
         .qr-code img:hover { transform: scale(1.05); }
-        
+
         /* Calendrier */
         .calendar-mini { background: white; border-radius: 10px; padding: 15px; }
         .calendar-event { padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid; }
         .event-deadline { border-left-color: #e74c3c; background: #fdedec; }
         .event-start { border-left-color: #27ae60; background: #eafaf1; }
         .event-warning { border-left-color: #f39c12; background: #fef9e7; }
-        
+
         /* Timeline */
         .timeline { margin-top: 15px; }
         .timeline-item { display: flex; align-items: center; margin: 10px 0; }
@@ -63,7 +63,7 @@
         .timeline-deadline { background: #e74c3c; }
         .timeline-start { background: #27ae60; }
         .timeline-content { flex: 1; }
-        
+
         /* Actions */
         .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 500; transition: all 0.3s ease; border: none; cursor: pointer; font-size: 14px; }
@@ -73,12 +73,12 @@
         .btn-danger { background: #e74c3c; color: white; }
         .btn-info { background: #17a2b8; color: white; }
         .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        
+
         /* Listes */
         .list-items { list-style: none; }
         .list-items li { padding: 8px 0; border-bottom: 1px solid #ecf0f1; display: flex; align-items: center; gap: 10px; }
         .list-items li:before { content: "•"; color: #3498db; font-weight: bold; }
-        
+
         /* Alertes */
         .alert { padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid; }
         .alert-warning { background: #fef9e7; border-left-color: #f39c12; }
@@ -91,15 +91,15 @@
         .ia-card strong { display: block; margin-bottom: 8px; font-size: 14px; }
         .ia-card ul { margin: 0; padding-left: 20px; }
         .ia-card li { margin-bottom: 5px; font-size: 14px; }
-        
+
         .points-forts { border-left-color: #27ae60; }
         .points-amelioration { border-left-color: #f39c12; }
         .risques { border-left-color: #e74c3c; }
         .recommendations { border-left-color: #3498db; }
-        
+
         .ia-badge { font-size: 12px; padding: 3px 8px; border-radius: 12px; margin-left: 5px; }
         .ia-score { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; display: inline-block; margin: 5px 0; }
-        
+
         /* Responsive */
         @media (max-width: 768px) {
             .main-layout { grid-template-columns: 1fr; }
@@ -114,8 +114,8 @@
         <!-- Header -->
         <div class="header">
             <h1>🎯 {{ details.titre }}</h1>
-         
-            
+
+
             <!-- Alertes importantes -->
             {% if calendar_data.deadline_alert %}
             <div class="alert {% if calendar_data.deadline_alert.is_urgent %}alert-danger{% else %}alert-warning{% endif %}" style="margin-top: 15px;">
@@ -162,7 +162,7 @@
                             <div>{{ details.score_priorite_ia }}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Barre de progression améliorée -->
                     <div class="progress-container">
                         <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 10px;">
@@ -180,7 +180,7 @@
                 {% if details.analyse_ia or details.suggestion_ia %}
                 <div class="section ia-section">
                     <h2>🤖 Analyse Intelligence Artificielle</h2>
-                    
+
                     <!-- Score de priorité IA -->
                     {% if details.score_priorite_ia %}
                     <div style="text-align: center; margin-bottom: 20px;">
@@ -317,7 +317,7 @@
                             <div>{{ details.derniere_mise_a_jour }}</div>
                         </div>
                     </div>
-                    
+
                     <!-- Timeline des événements -->
                     <div class="timeline">
                         <h3 style="margin-bottom: 15px;">🕒 Chronologie</h3>
@@ -435,23 +435,23 @@
         <a href="{% url 'objectif:update' objectif.id %}" class="btn btn-warning">
             ✏️ Modifier l'objectif
         </a>
-        
-       
-       <a href="{% url 'objectif:generate_pdf_bilan' objectif.id %}" 
+
+
+       <a href="{% url 'objectif:generate_pdf_bilan' objectif.id %}"
 class="btn btn-info"           style="display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
             <span style="font-size: 18px;">📊</span>
             <span>Télécharger Bilan PDF</span>
         </a>
        <!-- Bouton du Chatbot avec redirection -->
 
- <a href="{% url 'objectif:chatbot' %}" class="btn btn-primary" 
+ <a href="{% url 'objectif:chatbot' %}" class="btn btn-primary"
        style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;">
         <span style="font-size: 18px;">🤖</span>
         <span>Assistant IA</span>
     </a>
 
-     
-        
+
+
         <a href="{% url 'objectif:generate_qrcode' objectif.id %}" class="btn btn-info" download>
             📱 Télécharger QR Code
         </a>
@@ -461,7 +461,7 @@ class="btn btn-info"           style="display: inline-flex; align-items: center;
         <a href="{% url 'objectif:calendar' %}" class="btn btn-primary">
             🗓️ Voir calendrier
         </a>
-        
+
         <!-- Statistiques rapides pour le PDF -->
         <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 8px;">
             <small style="color: #6c757d;">
@@ -521,7 +521,7 @@ class="btn btn-info"           style="display: inline-flex; align-items: center;
                     tempInput.select();
                     document.execCommand('copy');
                     document.body.removeChild(tempInput);
-                    
+
                     // Feedback visuel
                     const originalSrc = qrCode.src;
                     qrCode.style.filter = 'brightness(0.8)';

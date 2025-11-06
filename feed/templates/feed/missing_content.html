@@ -1,0 +1,1012 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ page_title }}</title>
+
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'vendor/fonts/boxicons.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+    <link rel="stylesheet" href="{% static 'vendor/css/theme-default.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/demo.css' %}" />
+
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+            --border-radius: 20px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            min-height: 100vh;
+        }
+
+        /* Glassmorphism Sidebar */
+        .layout-menu {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.06);
+        }
+
+        .app-brand-text {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: 1.5rem;
+        }
+
+        /* Navbar moderne */
+        .layout-navbar {
+            backdrop-filter: blur(20px);
+            background: var(--glass-bg) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Cards avec effet glassmorphism */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            border: none;
+            padding: 1.75rem 2rem;
+            background: transparent;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+        }
+
+        .card-header.bg-label-warning {
+            background: var(--warning-gradient) !important;
+            color: white;
+        }
+
+        .card-header h4 {
+            color: white;
+            font-weight: 700;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        /* Alertes stylées */
+        .alert {
+            border: none;
+            border-radius: 16px;
+            padding: 1.25rem;
+            backdrop-filter: blur(10px);
+            animation: slideInUp 0.5s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.15) 0%, rgba(0, 242, 254, 0.15) 100%);
+            border-left: 5px solid #4facfe;
+            color: #1e40af;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(251, 191, 36, 0.15) 100%);
+            border-left: 5px solid #f59e0b;
+            color: #92400e;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(52, 211, 153, 0.15) 100%);
+            border-left: 5px solid #10b981;
+            color: #065f46;
+        }
+
+        .alert i {
+            font-size: 1.5rem;
+        }
+
+        /* Suggestions warnings avec animation */
+        .suggestion-item {
+            animation: slideInLeft 0.5s ease both;
+            transition: var(--transition);
+        }
+
+        .suggestion-item:nth-child(1) { animation-delay: 0.1s; }
+        .suggestion-item:nth-child(2) { animation-delay: 0.2s; }
+        .suggestion-item:nth-child(3) { animation-delay: 0.3s; }
+        .suggestion-item:nth-child(4) { animation-delay: 0.4s; }
+        .suggestion-item:nth-child(5) { animation-delay: 0.5s; }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .suggestion-item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Breadcrumb moderne */
+        .breadcrumb {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .breadcrumb-item a:hover {
+            color: #764ba2;
+        }
+
+        .breadcrumb-item + .breadcrumb-item::before {
+            content: "›";
+            font-size: 1.3rem;
+            color: #667eea;
+        }
+
+        /* Boutons modernes */
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border: none;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+
+        .btn-label-secondary {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+        }
+
+        .btn-label-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        }
+
+        /* Recommendations list */
+        .recommendations-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations-list li {
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(102, 126, 234, 0.05);
+            margin-bottom: 0.75rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+            animation: fadeInUp 0.6s ease both;
+        }
+
+        .recommendations-list li:nth-child(1) { animation-delay: 0.6s; }
+        .recommendations-list li:nth-child(2) { animation-delay: 0.7s; }
+        .recommendations-list li:nth-child(3) { animation-delay: 0.8s; }
+        .recommendations-list li:nth-child(4) { animation-delay: 0.9s; }
+
+        .recommendations-list li:hover {
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateX(5px);
+        }
+
+        .recommendations-list li::before {
+            content: "💡";
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+
+        /* Distribution card */
+        .distribution-card {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            border-radius: 16px;
+            animation: scaleIn 0.6s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .distribution-item {
+            padding: 0.75rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            transition: var(--transition);
+        }
+
+        .distribution-item:hover {
+            background: white;
+            transform: scale(1.05);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Badge personnalisé */
+        .badge {
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .badge.bg-label-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Info card */
+        .info-card {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.05) 0%, rgba(0, 242, 254, 0.05) 100%);
+            border: 2px solid rgba(79, 172, 254, 0.1);
+            border-radius: 16px;
+            animation: fadeInUp 1s ease;
+        }
+
+        .info-card .card-title {
+            color: #0284c7;
+            font-weight: 700;
+        }
+
+        /* Section title */
+        h5 {
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h5 i {
+            background: var(--warning-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.5rem;
+        }
+
+        /* Footer */
+        .content-footer {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            margin-top: 3rem;
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-gradient);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Success state avec animation */
+        .success-state {
+            text-align: center;
+            padding: 2rem;
+            animation: bounceIn 0.8s ease;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            background: var(--success-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* HR stylé */
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+            margin: 2rem 0;
+        }
+
+        /* Emoji grand format */
+        .emoji-large {
+            font-size: 3rem;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Chart icon animation */
+        .chart-icon {
+            animation: rotate 3s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive improvements */
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 1.5rem;
+            }
+
+            h4 {
+                font-size: 1.25rem;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Navbar title animation */
+        .navbar-title {
+            animation: slideInRight 0.6s ease;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            
+            <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand demo">
+                    <a href="/" class="app-brand-link">
+                        <span class="app-brand-text demo menu-text fw-bolder ms-2">🤖 EduSocial</span>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item">
+                        <a href="/" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                            <div>Accueil</div>
+                        </a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="{% url 'feed:list' %}" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-news"></i>
+                            <div>Feed</div>
+                        </a>
+                    </li>
+                </ul>
+            </aside>
+
+            <div class="layout-page">
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme">
+                    <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+                        <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                            <i class="bx bx-menu bx-sm"></i>
+                        </a>
+                    </div>
+                    <div class="navbar-nav-right d-flex align-items-center">
+                        <div class="navbar-nav align-items-center">
+                            <div class="nav-item d-flex align-items-center gap-2 navbar-title">
+                                <i class="bx bx-brain text-primary fs-4"></i>
+                                <span class="fw-semibold">Analyse IA - Contenus manquants</span>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible">
+                                    <i class="bx bx-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'danger' %}error-circle{% elif message.tags == 'warning' %}error{% else %}info-circle{% endif %} me-2"></i>
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <nav aria-label="breadcrumb" class="mb-4">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item">
+                                    <a href="{% url 'feed:list' %}"><i class="bx bx-home-alt"></i> Feed</a>
+                                </li>
+                                <li class="breadcrumb-item active">Analyse des contenus manquants</li>
+                            </ol>
+                        </nav>
+
+                        <div class="row justify-content-center">
+                            <div class="col-lg-10">
+                                <div class="card shadow-lg">
+                                    <div class="card-header bg-label-warning d-flex align-items-center gap-3">
+                                        <div class="emoji-large">📊</div>
+                                        <h4 class="mb-0">Analyse des contenus manquants</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if suggestions %}
+                                            <div class="alert alert-info d-flex align-items-center">
+                                                <i class="bx bx-chart chart-icon"></i>
+                                                <strong>Résultat de l'analyse (7 derniers jours)</strong>
+                                            </div>
+                                            
+                                            <div class="mb-4">
+                                                {% for suggestion in suggestions %}
+                                                    <div class="alert alert-warning d-flex align-items-start suggestion-item">
+                                                        <i class="bx bx-error-circle"></i>
+                                                        <div>{{ suggestion }}</div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            
+                                            <hr>
+                                            
+                                            <h5 class="mb-4">
+                                                <i class="bx bx-bulb"></i> 
+                                                Recommandations IA
+                                            </h5>
+                                            <ul class="recommendations-list mb-4">
+                                                <li>Maintenez un rythme régulier de publication</li>
+                                                <li>Assurez-vous de couvrir tous les types de contenu</li>
+                                                <li>Planifiez vos publications à l'avance</li>
+                                                <li>Utilisez l'assistant IA pour créer du contenu de qualité</li>
+                                            </ul>
+                                            
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <a href="{% url 'feed:create' %}" class="btn btn-primary">
+                                                    <i class="bx bx-plus-circle"></i> Créer un nouveau contenu
+                                                </a>
+                                                <a href="{% url 'feed:list' %}" class="btn btn-label-secondary">
+                                                    <i class="bx bx-arrow-back"></i> Retour au feed
+                                                </a>
+                                            </div>
+                                        {% else %}
+                                            <div class="success-state">
+                                                <i class="bx bx-check-circle success-icon mb-3"></i>
+                                                <div class="alert alert-success d-inline-flex align-items-center mb-4">
+                                                    <i class="bx bx-check-circle me-2"></i> 
+                                                    <div>
+                                                        <strong>Excellent !</strong> Vous avez publié tous les types de contenu cette semaine.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="text-muted mb-4 text-center">
+                                                Continuez ce bon rythme de publication pour maintenir votre communauté engagée. 
+                                                L'IA a détecté une bonne diversité de contenu.
+                                            </p>
+
+                                            <!-- Statistiques supplémentaires -->
+                                            {% if content_distribution %}
+                                            <div class="card distribution-card mb-4">
+                                                <div class="card-body">
+                                                    <h6 class="card-title mb-4">
+                                                        <i class="bx bx-pie-chart-alt text-primary me-2"></i> 
+                                                        Distribution des contenus (7 derniers jours)
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        {% for content_type, count in content_distribution.items %}
+                                                        <div class="col-md-4">
+                                                            <div class="distribution-item d-flex align-items-center gap-3">
+                                                                <span class="badge bg-label-primary">{{ count }}</span>
+                                                                <span class="text-muted fw-semibold">{{ content_type|title }}</span>
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                                                <a href="{% url 'feed:create' %}" class="btn btn-primary">
+                                                    <i class="bx bx-plus-circle"></i> Créer un nouveau contenu
+                                                </a>
+                                                <a href="{% url 'feed:list' %}" class="btn btn-label-secondary">
+                                                    <i class="bx bx-arrow-back"></i> Retour au feed
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Carte informative sur l'analyse -->
+                                <div class="card info-card mt-4">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-3">
+                                            <i class="bx bx-info-circle"></i> 
+                                            À propos de cette analyse IA
+                                        </h6>
+                                        <p class="text-muted mb-3">
+                                            <i class="bx bx-brain text-primary me-2"></i>
+                                            Cette fonctionnalité utilise l'intelligence artificielle pour analyser 
+                                            les publications des 7 derniers jours et détecter les types de contenu manquants.
+                                        </p>
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bx bx-category-alt text-primary mt-1"></i>
+                                            <div>
+                                                <strong class="d-block mb-1">Types analysés :</strong>
+                                                <div class="d-flex flex-wrap gap-2">
+                                                    <span class="badge bg-label-primary">Programme</span>
+                                                    <span class="badge bg-label-primary">Échéance</span>
+                                                    <span class="badge bg-label-primary">Difficulté</span>
+                                                    <span class="badge bg-label-primary">Ressource</span>
+                                                    <span class="badge bg-label-primary">Annonce</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl py-3 text-center">
+                            <span class="text-muted">
+                                © 2025 <strong style="background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EduSocial</strong> 
+                                — Plateforme éducative augmentée par l'IA 🤖
+                            </span>
+                        </div>
+                    </footer>
+                    <div class="content-backdrop fade"></div>
+                </div>
+            </div>
+        </div>
+        <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+
+    <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static 'vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+    <script src="{% static 'vendor/js/menu.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Animation des suggestions au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.suggestion-item, .recommendations-list li').forEach(item => {
+            observer.observe(item);
+        });
+
+        // Animation de compteur pour les badges de distribution
+        function animateCounter(element, target) {
+            let current = 0;
+            const increment = target / 30;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.ceil(current);
+                }
+            }, 30);
+        }
+
+        document.querySelectorAll('.distribution-item .badge').forEach(badge => {
+            const target = parseInt(badge.textContent);
+            if (!isNaN(target)) {
+                badge.textContent = '0';
+                setTimeout(() => {
+                    animateCounter(badge, target);
+                }, 500);
+            }
+        });
+
+        // Confetti effect pour le success state
+        const successState = document.querySelector('.success-state');
+        if (successState) {
+            // Ajouter un effet de confetti simple
+            setTimeout(() => {
+                for (let i = 0; i < 30; i++) {
+                    createConfetti();
+                }
+            }, 500);
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.style.cssText = `
+                position: fixed;
+                width: 10px;
+                height: 10px;
+                background: ${['#667eea', '#764ba2', '#11998e', '#38ef7d', '#f093fb'][Math.floor(Math.random() * 5)]};
+                top: -10px;
+                left: ${Math.random() * 100}%;
+                opacity: 1;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+            `;
+            document.body.appendChild(confetti);
+
+            const animation = confetti.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+            ], {
+                duration: 2000 + Math.random() * 1000,
+                easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+            });
+
+            animation.onfinish = () => confetti.remove();
+        }
+
+        // Effet de progression pour les recommendations
+        const recommendations = document.querySelectorAll('.recommendations-list li');
+        recommendations.forEach((rec, index) => {
+            rec.style.opacity = '0';
+            rec.style.transform = 'translateX(-30px)';
+            
+            setTimeout(() => {
+                rec.style.transition = 'all 0.6s ease';
+                rec.style.opacity = '1';
+                rec.style.transform = 'translateX(0)';
+            }, 600 + (index * 100));
+        });
+
+        // Effet hover amélioré sur les distribution items
+        document.querySelectorAll('.distribution-item').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.05) translateY(-2px)';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1) translateY(0)';
+            });
+        });
+
+        // Animation du chart icon
+        const chartIcon = document.querySelector('.chart-icon');
+        if (chartIcon) {
+            let rotation = 0;
+            setInterval(() => {
+                rotation += 2;
+                chartIcon.style.transform = `rotate(${rotation}deg)`;
+            }, 30);
+        }
+
+        // Effet typewriter pour le texte de success
+        const successAlert = document.querySelector('.success-state .alert');
+        if (successAlert) {
+            const text = successAlert.textContent;
+            successAlert.textContent = '';
+            let index = 0;
+            
+            function typeWriter() {
+                if (index < text.length) {
+                    successAlert.textContent += text.charAt(index);
+                    index++;
+                    setTimeout(typeWriter, 30);
+                }
+            }
+            
+            setTimeout(typeWriter, 1000);
+        }
+
+        // Smooth scroll pour les boutons
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Animation pulse pour les alertes warning
+        const warningAlerts = document.querySelectorAll('.alert-warning');
+        warningAlerts.forEach((alert, index) => {
+            setInterval(() => {
+                alert.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    alert.style.transform = 'scale(1)';
+                }, 200);
+            }, 3000 + (index * 500));
+        });
+
+        // Loading state pour les boutons
+        document.querySelectorAll('.btn').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.href && !this.href.includes('#')) {
+                    const icon = this.querySelector('i');
+                    if (icon) {
+                        icon.classList.add('bx-spin');
+                    }
+                }
+            });
+        });
+
+        // Effet parallax subtil
+        let ticking = false;
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                window.requestAnimationFrame(function() {
+                    const scrolled = window.pageYOffset;
+                    const cards = document.querySelectorAll('.card');
+                    cards.forEach((card, index) => {
+                        const speed = 0.5 + (index * 0.1);
+                        card.style.transform = `translateY(${scrolled * speed * 0.02}px)`;
+                    });
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        // Auto-dismiss des messages après 5 secondes
+        const messages = document.querySelectorAll('.alert-dismissible');
+        messages.forEach(message => {
+            setTimeout(() => {
+                const closeBtn = message.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.click();
+                }
+            }, 5000);
+        });
+
+        // Effet de glow sur les badges
+        document.querySelectorAll('.badge.bg-label-primary').forEach(badge => {
+            badge.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 8px 30px rgba(102, 126, 234, 0.6)';
+            });
+            
+            badge.addEventListener('mouseleave', function() {
+                this.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+            });
+        });
+
+        // Animation des emojis
+        const emojis = document.querySelectorAll('.emoji-large');
+        emojis.forEach(emoji => {
+            let scale = 1;
+            let growing = true;
+            
+            setInterval(() => {
+                if (growing) {
+                    scale += 0.01;
+                    if (scale >= 1.1) growing = false;
+                } else {
+                    scale -= 0.01;
+                    if (scale <= 1) growing = true;
+                }
+                emoji.style.transform = `scale(${scale})`;
+            }, 50);
+        });
+
+        // Effet de particules sur le background
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: fixed;
+                width: 4px;
+                height: 4px;
+                background: radial-gradient(circle, rgba(102, 126, 234, 0.5), transparent);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 1;
+                top: ${Math.random() * 100}%;
+                left: ${Math.random() * 100}%;
+            `;
+            document.body.appendChild(particle);
+
+            const animation = particle.animate([
+                { opacity: 0, transform: 'translate(0, 0)' },
+                { opacity: 0.5, transform: `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px)` },
+                { opacity: 0, transform: `translate(${Math.random() * 200 - 100}px, ${Math.random() * 200 - 100}px)` }
+            ], {
+                duration: 4000 + Math.random() * 2000,
+                easing: 'ease-in-out'
+            });
+
+            animation.onfinish = () => particle.remove();
+        }
+
+        // Créer des particules périodiquement
+        setInterval(createParticle, 2000);
+
+        // Effet de highlight sur les recommendations au hover
+        document.querySelectorAll('.recommendations-list li').forEach(item => {
+            item.addEventListener('mouseenter', function() {
+                const emoji = this.querySelector('::before') || this;
+                this.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15))';
+            });
+            
+            item.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(102, 126, 234, 0.05)';
+            });
+        });
+
+        // Compteur de statistiques avec effet progressif
+        const distributionItems = document.querySelectorAll('.distribution-item');
+        distributionItems.forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                item.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, 300 + (index * 100));
+        });
+
+        // Progress bar animation pour la distribution (optionnel)
+        const distributionCard = document.querySelector('.distribution-card');
+        if (distributionCard) {
+            const badges = distributionCard.querySelectorAll('.badge');
+            const total = Array.from(badges).reduce((sum, badge) => sum + parseInt(badge.textContent), 0);
+            
+            badges.forEach(badge => {
+                const value = parseInt(badge.textContent);
+                const percentage = (value / total * 100).toFixed(1);
+                badge.setAttribute('title', `${percentage}% du total`);
+            });
+        }
+
+        // Notification toast pour le succès (si applicable)
+        const successIcon = document.querySelector('.success-icon');
+        if (successIcon) {
+            // Jouer un son de succès (optionnel)
+            // new Audio('/static/sounds/success.mp3').play().catch(() => {});
+            
+            // Vibration sur mobile (si supporté)
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        // Log pour debug
+        console.log('🚀 EduSocial AI Analysis - Interface moderne chargée avec succès !');
+        console.log('📊 Animations: ✅ | Interactions: ✅ | Responsive: ✅');
+    });
+    </script>
+</body>
+</html>
